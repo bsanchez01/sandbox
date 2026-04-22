@@ -1,0 +1,1906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Executive Enrollment Intelligence Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0d1b2e;
+    --navy-light: #162742;
+    --navy-mid: #1e3454;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-dim: #8a6f2e;
+    --slate: #2c3e50;
+    --text-primary: #f0f4f8;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --accent-blue: #3b82f6;
+    --accent-teal: #14b8a6;
+    --accent-amber: #f59e0b;
+    --accent-rose: #f43f5e;
+    --accent-violet: #8b5cf6;
+    --card-bg: rgba(22, 39, 66, 0.85);
+    --border: rgba(201, 168, 76, 0.15);
+    --border-strong: rgba(201, 168, 76, 0.35);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--navy);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse at 20% 20%, rgba(59,130,246,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(201,168,76,0.04) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #0a1628 0%, #162742 60%, #1a2f50 100%);
+    border-bottom: 1px solid var(--border-strong);
+    padding: 24px 40px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(20px);
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .header-logo {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--navy);
+    font-family: 'Playfair Display', serif;
+    flex-shrink: 0;
+  }
+
+  .header-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+
+  .header-sub {
+    font-size: 12px;
+    color: var(--gold);
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .header-meta {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .term-badge {
+    background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+    color: var(--navy);
+    font-weight: 600;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .header-timestamp {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* MAIN LAYOUT */
+  .main {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 32px 40px 60px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* FILTERS */
+  .filter-bar {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 24px;
+    margin-bottom: 32px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .filter-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    margin-right: 4px;
+  }
+
+  .filter-select {
+    background: rgba(13, 27, 46, 0.7);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 7px 28px 7px 10px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23c9a84c' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .filter-select:focus { outline: none; border-color: var(--gold); }
+
+  .filter-reset {
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: auto;
+  }
+  .filter-reset:hover { border-color: var(--gold); color: var(--gold); }
+
+  /* KPI BAR */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  @media (max-width: 1400px) { .kpi-grid { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 1000px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .kpi-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px 16px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: default;
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--kpi-color, var(--gold));
+    opacity: 0.7;
+  }
+
+  .kpi-card:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+
+  .kpi-icon {
+    font-size: 16px;
+    margin-bottom: 8px;
+    opacity: 0.8;
+  }
+
+  .kpi-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .kpi-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .kpi-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  .kpi-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 10px;
+    margin-top: 4px;
+  }
+
+  /* SECTION */
+  .section {
+    margin-bottom: 36px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 18px;
+    background: linear-gradient(to bottom, var(--gold), var(--gold-dim));
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .section-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 3px;
+  }
+
+  /* GRID LAYOUTS */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
+  .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+  .grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; }
+  .grid-3-2 { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; }
+
+  @media (max-width: 1200px) {
+    .grid-2, .grid-3, .grid-4, .grid-2-1, .grid-1-2, .grid-3-2 { grid-template-columns: 1fr; }
+  }
+
+  /* CHART CARD */
+  .chart-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    position: relative;
+  }
+
+  .chart-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .chart-card-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  .chart-wrap {
+    position: relative;
+  }
+
+  /* HORIZONTAL BAR CUSTOM */
+  .hbar-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .hbar-item { display: flex; flex-direction: column; gap: 4px; }
+
+  .hbar-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .hbar-name {
+    font-size: 12px;
+    color: var(--text-primary);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 60%;
+  }
+
+  .hbar-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gold);
+  }
+
+  .hbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+    height: 6px;
+    overflow: hidden;
+  }
+
+  .hbar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--bar-color, var(--gold-dim)), var(--bar-color2, var(--gold)));
+    transition: width 1s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* DONUT LEGEND */
+  .donut-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .donut-legend { display: flex; flex-direction: column; gap: 8px; }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .legend-label { font-size: 12px; color: var(--text-secondary); flex: 1; }
+  .legend-pct { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+
+  /* STANDING TABLE */
+  .standing-flow {
+    display: grid;
+    grid-template-columns: 1fr 40px 1fr;
+    gap: 0;
+    align-items: start;
+  }
+
+  .standing-col-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 10px;
+  }
+
+  .standing-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    font-size: 12px;
+  }
+
+  .standing-item-label { color: var(--text-secondary); }
+  .standing-item-count { font-weight: 600; color: var(--text-primary); }
+
+  /* RISK FLAGS */
+  .risk-grid { display: flex; flex-direction: column; gap: 8px; }
+
+  .risk-item {
+    background: rgba(13, 27, 46, 0.5);
+    border-radius: 8px;
+    padding: 12px 16px;
+    border-left: 3px solid var(--risk-color, var(--accent-amber));
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .risk-icon { font-size: 16px; flex-shrink: 0; }
+
+  .risk-text {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .risk-text strong { color: var(--text-primary); }
+
+  /* INSIGHT PANEL */
+  .insight-panel {
+    background: linear-gradient(135deg, rgba(22,39,66,0.9), rgba(30,52,84,0.9));
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .insight-panel::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(201,168,76,0.08), transparent);
+    border-radius: 50%;
+  }
+
+  .insight-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .insight-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .insight-badge {
+    background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+    color: var(--navy);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .insight-bullets {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  @media (max-width: 900px) { .insight-bullets { grid-template-columns: 1fr; } }
+
+  .insight-bullet {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: rgba(13,27,46,0.4);
+    border-radius: 8px;
+    padding: 12px 14px;
+    border: 1px solid rgba(201,168,76,0.08);
+  }
+
+  .bullet-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+  .bullet-text {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+
+  .bullet-text strong { color: var(--text-primary); font-weight: 600; }
+
+  /* TABLES */
+  .exec-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .exec-table th {
+    background: rgba(13,27,46,0.6);
+    color: var(--gold);
+    font-weight: 600;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-strong);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .exec-table th:hover { color: var(--gold-light); }
+
+  .exec-table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: var(--text-secondary);
+    vertical-align: middle;
+  }
+
+  .exec-table tr:last-child td { border-bottom: none; }
+
+  .exec-table tr:hover td { background: rgba(201,168,76,0.04); }
+
+  .exec-table .td-primary {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .exec-table .td-gold { color: var(--gold); font-weight: 600; }
+
+  /* FLAG BADGES */
+  .flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+
+  .flag-warn { background: rgba(245,158,11,0.15); color: #f59e0b; }
+  .flag-danger { background: rgba(244,63,94,0.15); color: #f43f5e; }
+  .flag-ok { background: rgba(20,184,166,0.15); color: #14b8a6; }
+  .flag-info { background: rgba(59,130,246,0.15); color: #3b82f6; }
+
+  /* DATA QUALITY */
+  .dq-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 1200px) { .dq-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .dq-card {
+    background: rgba(13,27,46,0.5);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+
+  .dq-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+
+  .dq-label { font-size: 11px; color: var(--text-muted); }
+
+  .dq-assumptions {
+    background: rgba(13,27,46,0.5);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+  }
+
+  .dq-assumptions h4 {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .dq-assumptions ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .dq-assumptions li {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding-left: 14px;
+    position: relative;
+  }
+
+  .dq-assumptions li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--gold-dim);
+  }
+
+  /* MINI PROGRESS */
+  .mini-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mini-track {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .mini-fill {
+    height: 100%;
+    border-radius: 4px;
+  }
+
+  /* DIVIDER */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 32px 0;
+  }
+
+  /* SCROLL TOP */
+  .scroll-top {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+    border: none;
+    border-radius: 50%;
+    color: var(--navy);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: transform 0.2s;
+  }
+
+  .scroll-top:hover { transform: translateY(-2px); }
+
+  /* Tooltip */
+  [data-tooltip] { position: relative; }
+  [data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0a1628;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    z-index: 300;
+    pointer-events: none;
+  }
+
+  /* Stat inline */
+  .stat-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-row-label { font-size: 12px; color: var(--text-muted); }
+  .stat-row-value { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+
+  .animate-in {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeUp 0.5s ease forwards;
+  }
+
+  @keyframes fadeUp {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(201,168,76,0.12);
+    color: var(--gold);
+    border: 1px solid rgba(201,168,76,0.2);
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="header-brand">
+      <div class="header-logo">C</div>
+      <div>
+        <div class="header-title">College of the Marshall Islands</div>
+        <div class="header-sub">Executive Enrollment Intelligence Dashboard</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div class="term-badge">Current Term Snapshot</div>
+      <div class="header-timestamp">Data as of: Enrollment Report Output · 1,024 Records Processed</div>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- FILTERS -->
+  <div class="filter-bar animate-in" style="animation-delay:0.05s">
+    <span class="filter-label">Filter:</span>
+
+    <select class="filter-select" id="fProgram" onchange="applyFilters()">
+      <option value="">All Programs</option>
+      <option>AALA</option><option>ASEEDU</option><option>AABS-ACC</option>
+      <option>ASNURS</option><option>BAEE</option><option>AABS-MGT</option>
+      <option>AABS</option><option>AALA-BM</option><option>CCRFPNW</option>
+      <option>DUAL</option><option>AALA-SCI</option><option>CCCHOW</option>
+      <option>AALA-ENG</option><option>AALA-MATH</option><option>AALA-MAR</option>
+    </select>
+
+    <select class="filter-select" id="fDept" onchange="applyFilters()">
+      <option value="">All Departments</option>
+      <option>LIB ARTS</option><option>ELEM EDUC</option><option>BUS STUD</option>
+      <option>NURSING</option><option>WAVES</option><option>DUAL</option><option>STEM</option>
+    </select>
+
+    <select class="filter-select" id="fLevel" onchange="applyFilters()">
+      <option value="">All Academic Levels</option>
+      <option>Freshman</option><option>Sophomore</option><option>Junior</option>
+      <option>Senior</option><option>Pre-Entry</option>
+    </select>
+
+    <select class="filter-select" id="fAdmission" onchange="applyFilters()">
+      <option value="">All Admission Statuses</option>
+      <option>RETURNEE</option><option>READMIT</option><option>FIRST TIME</option>
+    </select>
+
+    <select class="filter-select" id="fGender" onchange="applyFilters()">
+      <option value="">All Genders</option>
+      <option>Female</option><option>Male</option>
+    </select>
+
+    <button class="filter-reset" onclick="resetFilters()">Reset Filters</button>
+  </div>
+
+  <!-- KPI BAR -->
+  <div class="kpi-grid animate-in" style="animation-delay:0.1s">
+    <div class="kpi-card" style="--kpi-color:#c9a84c" data-tooltip="Distinct enrolled students this term">
+      <div class="kpi-icon">🎓</div>
+      <div class="kpi-value" id="kpiTotal">1,024</div>
+      <div class="kpi-label">Total Enrolled</div>
+      <div class="kpi-sub">Distinct student headcount</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#3b82f6" data-tooltip="Full-Time = 12+ credits">
+      <div class="kpi-icon">📘</div>
+      <div class="kpi-value" id="kpiFT">640</div>
+      <div class="kpi-label">Full-Time</div>
+      <div class="kpi-sub">62.5% of enrollment</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#8b5cf6" data-tooltip="Part-Time = fewer than 12 credits">
+      <div class="kpi-icon">📗</div>
+      <div class="kpi-value" id="kpiPT">384</div>
+      <div class="kpi-label">Part-Time</div>
+      <div class="kpi-sub">37.5% of enrollment</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#14b8a6" data-tooltip="FTE = Full-Time + (Part-Time × 0.33)">
+      <div class="kpi-icon">⚡</div>
+      <div class="kpi-value">767</div>
+      <div class="kpi-label">FTE</div>
+      <div class="kpi-sub">640 + (384 × 0.33)</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#f59e0b" data-tooltip="First-Time students this term">
+      <div class="kpi-icon">🌟</div>
+      <div class="kpi-value">95</div>
+      <div class="kpi-label">First-Time</div>
+      <div class="kpi-sub">9.3% of enrollment</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#f43f5e" data-tooltip="Returnees and Readmits combined">
+      <div class="kpi-icon">🔄</div>
+      <div class="kpi-value">929</div>
+      <div class="kpi-label">Continuing/Returns</div>
+      <div class="kpi-sub">Returnee + Readmit (90.7%)</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#c9a84c" data-tooltip="Average GPA among students with recorded GPA">
+      <div class="kpi-icon">📊</div>
+      <div class="kpi-value">2.43</div>
+      <div class="kpi-label">Avg Cum. GPA</div>
+      <div class="kpi-sub">879 students with valid GPA</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#14b8a6" data-tooltip="Credits earned / credits attempted (cumulative)">
+      <div class="kpi-icon">✅</div>
+      <div class="kpi-value">114%</div>
+      <div class="kpi-label">Credit Completion</div>
+      <div class="kpi-sub">Earned vs. Attempted ratio</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#3b82f6">
+      <div class="kpi-icon">📚</div>
+      <div class="kpi-value">35,908</div>
+      <div class="kpi-label">Credits Attempted</div>
+      <div class="kpi-sub">Cumulative across cohort</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#8b5cf6">
+      <div class="kpi-icon">🏆</div>
+      <div class="kpi-value">41,037</div>
+      <div class="kpi-label">Credits Earned</div>
+      <div class="kpi-sub">Cumulative across cohort</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#f59e0b">
+      <div class="kpi-icon">📉</div>
+      <div class="kpi-value">134</div>
+      <div class="kpi-label">Inactive Standing</div>
+      <div class="kpi-sub">End-of-term standing flag</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#22c55e">
+      <div class="kpi-icon">🔒</div>
+      <div class="kpi-value">0</div>
+      <div class="kpi-label">Withdrawn</div>
+      <div class="kpi-sub">No withdrawals this term</div>
+    </div>
+  </div>
+
+  <!-- LEADERSHIP INSIGHT PANEL -->
+  <div class="insight-panel animate-in" style="animation-delay:0.15s">
+    <div class="insight-panel-header">
+      <div class="insight-title">🔍 Leadership Intelligence Briefing</div>
+      <div class="insight-badge">Executive Signals</div>
+    </div>
+    <div class="insight-bullets">
+      <div class="insight-bullet">
+        <div class="bullet-icon">📌</div>
+        <div class="bullet-text"><strong>AALA dominates enrollment</strong> with 278 students (27.1%). Liberal Arts remains the institution's largest academic home, creating a concentration dependency that warrants strategic monitoring for program-level risks.</div>
+      </div>
+      <div class="insight-bullet">
+        <div class="bullet-icon">🌏</div>
+        <div class="bullet-text"><strong>97.9% of students are Marshallese citizens</strong>, reflecting a highly homogeneous population. The institution serves as the primary higher education gateway for this Pacific Island nation.</div>
+      </div>
+      <div class="insight-bullet">
+        <div class="bullet-icon">🔄</div>
+        <div class="bullet-text"><strong>Returnees and readmits represent 90.7%</strong> of enrollment — only 95 true first-timers this term. This signals strong institutional dependency on re-enrolled students rather than a robust new-student pipeline.</div>
+      </div>
+      <div class="insight-bullet">
+        <div class="bullet-icon">⚠️</div>
+        <div class="bullet-text"><strong>134 students (13.1%) ended the term with "Inactive" standing</strong> — a significant attrition signal. Another 301 students show "To Be Determined," indicating incomplete grade processing or unresolved standing.</div>
+      </div>
+      <div class="insight-bullet">
+        <div class="bullet-icon">🎯</div>
+        <div class="bullet-text"><strong>BAEE leads academic performance</strong> among large programs with avg GPA of 2.90. DUAL program tops all at 3.49 but has only 14 students. CCCT-W and AALA-BM show the lowest performance (below 1.5 avg GPA).</div>
+      </div>
+      <div class="insight-bullet">
+        <div class="bullet-icon">👩‍🎓</div>
+        <div class="bullet-text"><strong>Female students outnumber males 57% to 43%</strong> (581 vs. 443). This gender composition is consistent with Pacific Island college enrollment trends and may inform targeted support programming.</div>
+      </div>
+      <div class="insight-bullet">
+        <div class="bullet-icon">📊</div>
+        <div class="bullet-text"><strong>145 students (14.2%) have a 0.00 GPA</strong>, suggesting new enrollment, incomplete grades, or inactive academic records. These students represent a priority group for early advising and intervention.</div>
+      </div>
+      <div class="insight-bullet">
+        <div class="bullet-icon">⚡</div>
+        <div class="bullet-text"><strong>Full-time rate stands at 62.5%</strong> (640 students). With 37.5% part-time, the institution should evaluate financial aid implications, FTE-based funding formulas, and completion rate impacts by enrollment intensity.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 1: ENROLLMENT COMPOSITION -->
+  <div class="section animate-in" style="animation-delay:0.2s">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Enrollment Composition</div>
+        <div class="section-subtitle">Headcount by department, program, academic level, and status</div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:16px">
+      <!-- Department -->
+      <div class="chart-card">
+        <div class="chart-card-title">Headcount by Department</div>
+        <div class="chart-card-sub">All active enrolled students this term</div>
+        <div class="hbar-list" id="deptBars"></div>
+      </div>
+
+      <!-- Programs Top 10 -->
+      <div class="chart-card">
+        <div class="chart-card-title">Top Programs by Enrollment</div>
+        <div class="chart-card-sub">Programs with 5+ students shown; smaller aggregated as "Other"</div>
+        <div class="hbar-list" id="progBars"></div>
+      </div>
+    </div>
+
+    <div class="grid-3">
+      <!-- Enrollment by Academic Level -->
+      <div class="chart-card">
+        <div class="chart-card-title">Academic Level Distribution</div>
+        <div class="chart-card-sub">Year in program classification</div>
+        <div class="donut-grid">
+          <div class="chart-wrap" style="height:140px">
+            <canvas id="levelChart"></canvas>
+          </div>
+          <div class="donut-legend" id="levelLegend"></div>
+        </div>
+      </div>
+
+      <!-- Admission Status -->
+      <div class="chart-card">
+        <div class="chart-card-title">Admission Status Mix</div>
+        <div class="chart-card-sub">First-time, returnee, and readmit composition</div>
+        <div class="donut-grid">
+          <div class="chart-wrap" style="height:140px">
+            <canvas id="admissionChart"></canvas>
+          </div>
+          <div class="donut-legend" id="admissionLegend"></div>
+        </div>
+      </div>
+
+      <!-- Full-Time vs Part-Time -->
+      <div class="chart-card">
+        <div class="chart-card-title">Enrollment Intensity</div>
+        <div class="chart-card-sub">Full-time vs. part-time split</div>
+        <div class="donut-grid">
+          <div class="chart-wrap" style="height:140px">
+            <canvas id="ftptChart"></canvas>
+          </div>
+          <div class="donut-legend" id="ftptLegend"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 2: DEMOGRAPHICS -->
+  <div class="section animate-in" style="animation-delay:0.25s">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Student Demographics & Profile</div>
+        <div class="section-subtitle">Gender, citizenship, and student body composition</div>
+      </div>
+    </div>
+
+    <div class="grid-3">
+      <!-- Gender -->
+      <div class="chart-card">
+        <div class="chart-card-title">Gender Distribution</div>
+        <div class="chart-card-sub">Enrolled headcount by gender</div>
+        <div class="chart-wrap" style="height:180px">
+          <canvas id="genderChart"></canvas>
+        </div>
+        <div style="margin-top:12px">
+          <div class="stat-row">
+            <span class="stat-row-label">Female</span>
+            <span class="stat-row-value">581 <span style="color:var(--text-muted);font-weight:400">(56.7%)</span></span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row-label">Male</span>
+            <span class="stat-row-value">443 <span style="color:var(--text-muted);font-weight:400">(43.3%)</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Citizenship -->
+      <div class="chart-card">
+        <div class="chart-card-title">Citizenship Distribution</div>
+        <div class="chart-card-sub">Top citizenships by headcount</div>
+        <div class="hbar-list">
+          <div class="hbar-item">
+            <div class="hbar-meta"><span class="hbar-name">Marshall Islands</span><span class="hbar-count">1,003 (97.9%)</span></div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:97.9%;--bar-color:#c9a84c;--bar-color2:#e8c97a"></div></div>
+          </div>
+          <div class="hbar-item">
+            <div class="hbar-meta"><span class="hbar-name">Micronesia (FSM)</span><span class="hbar-count">14 (1.4%)</span></div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:14%;--bar-color:#3b82f6;--bar-color2:#60a5fa"></div></div>
+          </div>
+          <div class="hbar-item">
+            <div class="hbar-meta"><span class="hbar-name">Philippines</span><span class="hbar-count">2 (0.2%)</span></div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:4%;--bar-color:#8b5cf6;--bar-color2:#a78bfa"></div></div>
+          </div>
+          <div class="hbar-item">
+            <div class="hbar-meta"><span class="hbar-name">China</span><span class="hbar-count">2 (0.2%)</span></div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:4%;--bar-color:#f43f5e;--bar-color2:#fb7185"></div></div>
+          </div>
+          <div class="hbar-item">
+            <div class="hbar-meta"><span class="hbar-name">Other (USA, Fiji, Kiribati)</span><span class="hbar-count">3 (0.3%)</span></div>
+            <div class="hbar-track"><div class="hbar-fill" style="width:3%;--bar-color:#14b8a6;--bar-color2:#2dd4bf"></div></div>
+          </div>
+        </div>
+        <div style="margin-top:14px;padding:10px 12px;background:rgba(201,168,76,0.06);border-radius:6px;border:1px solid rgba(201,168,76,0.1)">
+          <div style="font-size:11px;color:var(--text-muted);line-height:1.5">
+            <strong style="color:var(--gold)">Strategic Note:</strong> CMI serves almost exclusively Marshallese citizens. This homogeneity strengthens local cultural identity but reduces diversity metrics.
+          </div>
+        </div>
+      </div>
+
+      <!-- Student Profile Summary -->
+      <div class="chart-card">
+        <div class="chart-card-title">Student Profile Summary</div>
+        <div class="chart-card-sub">Key demographic indicators at a glance</div>
+        <div style="display:flex;flex-direction:column;gap:0">
+          <div class="stat-row">
+            <span class="stat-row-label">Total Headcount</span>
+            <span class="stat-row-value">1,024</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row-label">Female Students</span>
+            <span class="stat-row-value">581 (56.7%)</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row-label">Male Students</span>
+            <span class="stat-row-value">443 (43.3%)</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row-label">Marshallese Citizens</span>
+            <span class="stat-row-value">1,003 (97.9%)</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row-label">International Students</span>
+            <span class="stat-row-value">21 (2.1%)</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row-label">Freshman + Sophomore</span>
+            <span class="stat-row-value">896 (87.5%)</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row-label">First-Time Students</span>
+            <span class="stat-row-value">95 (9.3%)</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row-label">Returning Students</span>
+            <span class="stat-row-value">929 (90.7%)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 3: ACADEMIC PERFORMANCE -->
+  <div class="section animate-in" style="animation-delay:0.3s">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Academic Momentum & Outcomes</div>
+        <div class="section-subtitle">GPA distribution, credit completion, and standing movement</div>
+      </div>
+    </div>
+
+    <div class="grid-2-1" style="margin-bottom:16px">
+      <!-- GPA Distribution -->
+      <div class="chart-card">
+        <div class="chart-card-title">Cumulative GPA Distribution</div>
+        <div class="chart-card-sub">All 1,024 enrolled students · 145 students with 0.00 GPA (new/inactive)</div>
+        <div class="chart-wrap" style="height:200px">
+          <canvas id="gpaDistChart"></canvas>
+        </div>
+      </div>
+
+      <!-- GPA Stats Card -->
+      <div class="chart-card">
+        <div class="chart-card-title">GPA Snapshot</div>
+        <div class="chart-card-sub">Performance indicators</div>
+        <div style="display:flex;flex-direction:column;gap:0">
+          <div class="stat-row">
+            <span class="stat-row-label">Avg CUM GPA (active)</span>
+            <span class="stat-row-value td-gold" style="color:var(--gold)">2.43</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row-label">Median GPA</span>
+            <span class="stat-row-value">2.49</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row-label">GPA below 2.0 (at-risk)</span>
+            <span class="stat-row-value" style="color:#f43f5e">248 (28.2%)</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row-label">GPA 2.0–2.99 (satisfactory)</span>
+            <span class="stat-row-value" style="color:#f59e0b">377 (42.9%)</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row-label">GPA 3.0+ (strong)</span>
+            <span class="stat-row-value" style="color:#14b8a6">254 (28.9%)</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-row-label">Zero GPA (ungraded)</span>
+            <span class="stat-row-value" style="color:var(--text-muted)">145 (14.2%)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Academic Standing Movement -->
+    <div class="chart-card" style="margin-bottom:16px">
+      <div class="chart-card-title">Academic Standing: Start → End of Term</div>
+      <div class="chart-card-sub">How students' standing shifted from beginning to end of the reporting period</div>
+      <div class="standing-flow">
+        <!-- Start -->
+        <div>
+          <div class="standing-col-title">Standing at Start</div>
+          <div class="standing-item" style="background:rgba(59,130,246,0.1)"><span class="standing-item-label">Continuing</span><span class="standing-item-count">807</span></div>
+          <div class="standing-item" style="background:rgba(201,168,76,0.08)"><span class="standing-item-label">First Time</span><span class="standing-item-count">98</span></div>
+          <div class="standing-item" style="background:rgba(20,184,166,0.08)"><span class="standing-item-label">Returnee</span><span class="standing-item-count">96</span></div>
+          <div class="standing-item" style="background:rgba(139,92,246,0.08)"><span class="standing-item-label">Readmitted</span><span class="standing-item-count">21</span></div>
+          <div class="standing-item" style="background:rgba(255,255,255,0.04)"><span class="standing-item-label">TBD / Transfer</span><span class="standing-item-count">2</span></div>
+        </div>
+        <!-- Arrow -->
+        <div style="display:flex;align-items:center;justify-content:center;padding-top:30px">
+          <span style="font-size:24px;color:var(--gold-dim)">→</span>
+        </div>
+        <!-- End -->
+        <div>
+          <div class="standing-col-title">Standing at End</div>
+          <div class="standing-item" style="background:rgba(201,168,76,0.08)"><span class="standing-item-label">First Time</span><span class="standing-item-count">340</span></div>
+          <div class="standing-item" style="background:rgba(245,158,11,0.1)"><span class="standing-item-label">To Be Determined</span><span class="standing-item-count">301 ⚠️</span></div>
+          <div class="standing-item" style="background:rgba(59,130,246,0.1)"><span class="standing-item-label">Continuing</span><span class="standing-item-count">202</span></div>
+          <div class="standing-item" style="background:rgba(244,63,94,0.1)"><span class="standing-item-label">Inactive</span><span class="standing-item-count">134 🔴</span></div>
+          <div class="standing-item" style="background:rgba(139,92,246,0.08)"><span class="standing-item-label">Readmitted</span><span class="standing-item-count">23</span></div>
+          <div class="standing-item" style="background:rgba(20,184,166,0.08)"><span class="standing-item-label">Returnee</span><span class="standing-item-count">18</span></div>
+          <div class="standing-item" style="background:rgba(34,197,94,0.08)"><span class="standing-item-label">Acad. Good Standing</span><span class="standing-item-count">2</span></div>
+          <div class="standing-item" style="background:rgba(244,63,94,0.06)"><span class="standing-item-label">Transfer / Probation</span><span class="standing-item-count">4</span></div>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding:10px 14px;background:rgba(244,63,94,0.07);border-radius:6px;border-left:3px solid #f43f5e">
+        <div style="font-size:11px;color:var(--text-muted);line-height:1.5">
+          <strong style="color:#f43f5e">⚠️ Attrition Alert:</strong> 134 students ended the term "Inactive" — representing potential dropout or stop-out. 301 students with "To Be Determined" standing may indicate incomplete grade submission or unresolved enrollment records requiring administrative follow-up.
+        </div>
+      </div>
+    </div>
+
+    <!-- GPA by Top Programs -->
+    <div class="chart-card">
+      <div class="chart-card-title">Average GPA by Program (Top 10 by Enrollment)</div>
+      <div class="chart-card-sub">Programs with minimum 5 students · Excludes 0.00 GPA in average calculation</div>
+      <div class="chart-wrap" style="height:220px">
+        <canvas id="progGpaChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 4: PERSISTENCE & PATHWAYS -->
+  <div class="section animate-in" style="animation-delay:0.35s">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Persistence & Enrollment Pathways</div>
+        <div class="section-subtitle">Admission pipeline, cohort composition, and enrollment pattern analysis</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="chart-card">
+        <div class="chart-card-title">Admission Status Pipeline</div>
+        <div class="chart-card-sub">Returnee, readmit, and first-time student flow</div>
+        <div class="chart-wrap" style="height:200px">
+          <canvas id="admissionBarChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card-title">Academic Level Headcount</div>
+        <div class="chart-card-sub">Student distribution by year in program</div>
+        <div class="chart-wrap" style="height:200px">
+          <canvas id="levelBarChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 5: RISK FLAGS -->
+  <div class="section animate-in" style="animation-delay:0.4s">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Risk & Opportunity Flags</div>
+        <div class="section-subtitle">System-generated alerts based on enrollment thresholds and performance indicators</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="chart-card">
+        <div class="chart-card-title" style="margin-bottom:14px">⚠️ Risk Indicators</div>
+        <div class="risk-grid">
+          <div class="risk-item" style="--risk-color:#f43f5e">
+            <div class="risk-icon">🔴</div>
+            <div class="risk-text"><strong>AALA Concentration Risk:</strong> 27.1% of all enrollment in a single program. If AALA faces budget, staffing, or demand changes, institutional headcount is materially exposed.</div>
+          </div>
+          <div class="risk-item" style="--risk-color:#f43f5e">
+            <div class="risk-icon">🔴</div>
+            <div class="risk-text"><strong>134 Students Inactive (End-of-Term):</strong> 13.1% of enrollment ended the term as Inactive — a high rate that likely signals stop-outs or drops requiring outreach.</div>
+          </div>
+          <div class="risk-item" style="--risk-color:#f59e0b">
+            <div class="risk-icon">🟡</div>
+            <div class="risk-text"><strong>301 "To Be Determined" Standing:</strong> Nearly 29.4% of students have unresolved academic standing at term end — a data quality and advising concern requiring resolution.</div>
+          </div>
+          <div class="risk-item" style="--risk-color:#f59e0b">
+            <div class="risk-icon">🟡</div>
+            <div class="risk-text"><strong>248 Students Below 2.0 GPA (28.2%):</strong> More than 1 in 4 academically active students are at academic risk. Early intervention is recommended for this cohort.</div>
+          </div>
+          <div class="risk-item" style="--risk-color:#f59e0b">
+            <div class="risk-icon">🟡</div>
+            <div class="risk-text"><strong>First-Time Student Pipeline at 9.3%:</strong> Only 95 new students this term. Weak new-student enrollment creates dependency on returnees and threatens long-term institutional sustainability.</div>
+          </div>
+          <div class="risk-item" style="--risk-color:#f59e0b">
+            <div class="risk-icon">🟡</div>
+            <div class="risk-text"><strong>145 Students with 0.00 GPA (14.2%):</strong> This group needs immediate advising follow-up — they may be inactive, recently enrolled, or enrolled but not completing coursework.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card-title" style="margin-bottom:14px">✅ Opportunity Indicators</div>
+        <div class="risk-grid">
+          <div class="risk-item" style="--risk-color:#14b8a6">
+            <div class="risk-icon">🟢</div>
+            <div class="risk-text"><strong>Zero Withdrawals This Term:</strong> No students recorded as withdrawn — a strong retention signal that may reflect institutional support success or indicate the withdrawal window has not closed.</div>
+          </div>
+          <div class="risk-item" style="--risk-color:#14b8a6">
+            <div class="risk-icon">🟢</div>
+            <div class="risk-text"><strong>BAEE Shows Strong Academic Outcomes:</strong> With 81 students and a 2.90 avg GPA, the Bachelor of Arts in Elementary Education program demonstrates the strongest academic performance among large programs.</div>
+          </div>
+          <div class="risk-item" style="--risk-color:#14b8a6">
+            <div class="risk-icon">🟢</div>
+            <div class="risk-text"><strong>254 Students (28.9%) at 3.0+ GPA:</strong> Nearly 1 in 3 academically active students are high performers. This cohort is a natural pool for honors recognition, leadership programs, and peer mentoring.</div>
+          </div>
+          <div class="risk-item" style="--risk-color:#3b82f6">
+            <div class="risk-icon">🔵</div>
+            <div class="risk-text"><strong>Nursing Program Showing Solid GPA (2.52):</strong> ASNURS (101 students) reflects above-average academic performance with strong credit completion — a program worth continuing to invest in and expand.</div>
+          </div>
+          <div class="risk-item" style="--risk-color:#3b82f6">
+            <div class="risk-icon">🔵</div>
+            <div class="risk-text"><strong>62.5% Full-Time Rate:</strong> A majority of students carry full-time loads, supporting stronger completion rates and FTE-based funding performance metrics.</div>
+          </div>
+          <div class="risk-item" style="--risk-color:#3b82f6">
+            <div class="risk-icon">🔵</div>
+            <div class="risk-text"><strong>CCCHOW, CCSE, CCPH Show High GPA:</strong> Continuing education/certificate programs averaging 3.0–3.19 GPA suggest adult learners bring strong academic motivation despite part-time status.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- SECTION 6: EXECUTIVE TABLES -->
+  <div class="section animate-in" style="animation-delay:0.45s">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Executive Summary Tables</div>
+        <div class="section-subtitle">Sortable performance summaries by program, department, and academic standing</div>
+      </div>
+    </div>
+
+    <!-- Table 1: Top Programs -->
+    <div class="chart-card" style="margin-bottom:16px">
+      <div class="chart-card-title">Table 1: Program Performance Summary</div>
+      <div class="chart-card-sub">Sorted by headcount · Avg GPA excludes 0.00 GPA records · All 26 programs</div>
+      <div style="overflow-x:auto;margin-top:12px">
+        <table class="exec-table" id="programTable">
+          <thead>
+            <tr>
+              <th onclick="sortTable('programTable',0)">Program ↕</th>
+              <th onclick="sortTable('programTable',1)">Headcount ↕</th>
+              <th onclick="sortTable('programTable',2)">Share ↕</th>
+              <th onclick="sortTable('programTable',3)">Avg GPA ↕</th>
+              <th onclick="sortTable('programTable',4)">Credits Attempted ↕</th>
+              <th onclick="sortTable('programTable',5)">Credits Earned ↕</th>
+              <th onclick="sortTable('programTable',6)">Completion Ratio ↕</th>
+              <th>Performance</th>
+            </tr>
+          </thead>
+          <tbody id="programTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Table 2: Department Summary -->
+    <div class="chart-card" style="margin-bottom:16px">
+      <div class="chart-card-title">Table 2: Department Summary</div>
+      <div class="chart-card-sub">Institutional headcount by academic department</div>
+      <div style="overflow-x:auto;margin-top:12px">
+        <table class="exec-table">
+          <thead>
+            <tr>
+              <th>Department</th>
+              <th>Headcount</th>
+              <th>Share of Total</th>
+              <th>Programs Under Dept.</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="td-primary">LIB ARTS</td><td class="td-gold">336</td><td>32.8%</td><td>AALA, AALA-BM, AALA-SCI, AALA-ENG, AALA-MATH, AALA-MAR, AALA-IT</td><td><span class="flag flag-warn">⚠️ Concentrated</span></td></tr>
+            <tr><td class="td-primary">ELEM EDUC</td><td class="td-gold">263</td><td>25.7%</td><td>ASEEDU, BAEE, ASAEHL-AE</td><td><span class="flag flag-ok">✓ Balanced</span></td></tr>
+            <tr><td class="td-primary">BUS STUD</td><td class="td-gold">251</td><td>24.5%</td><td>AABS, AABS-ACC, AABS-MGT</td><td><span class="flag flag-ok">✓ Balanced</span></td></tr>
+            <tr><td class="td-primary">NURSING</td><td class="td-gold">117</td><td>11.4%</td><td>ASNURS</td><td><span class="flag flag-ok">✓ Growing</span></td></tr>
+            <tr><td class="td-primary">WAVES</td><td class="td-gold">35</td><td>3.4%</td><td>CCRFPNW, CCRFPERW, CCCHOW, CCT, CCMS, CCPH, CCSE, CCCARP, CCCT-W, CCITSL1</td><td><span class="flag flag-info">ℹ Niche</span></td></tr>
+            <tr><td class="td-primary">DUAL</td><td class="td-gold">15</td><td>1.5%</td><td>DUAL</td><td><span class="flag flag-info">ℹ Small</span></td></tr>
+            <tr><td class="td-primary">STEM</td><td class="td-gold">6</td><td>0.6%</td><td>Various</td><td><span class="flag flag-danger">🔴 Underdeveloped</span></td></tr>
+            <tr><td class="td-primary">Audit</td><td class="td-gold">1</td><td>0.1%</td><td>AUD</td><td><span class="flag flag-info">ℹ Single</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Table 3: Academic Standing End Risk Scan -->
+    <div class="chart-card">
+      <div class="chart-card-title">Table 3: End-of-Term Academic Standing Scan</div>
+      <div class="chart-card-sub">Standing classifications at end of term — identifies cohorts requiring follow-up</div>
+      <div style="overflow-x:auto;margin-top:12px">
+        <table class="exec-table">
+          <thead>
+            <tr>
+              <th>Standing Classification</th>
+              <th>Count</th>
+              <th>% of Enrolled</th>
+              <th>Risk Level</th>
+              <th>Recommended Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="td-primary">First Time</td><td class="td-gold">340</td><td>33.2%</td><td><span class="flag flag-info">ℹ Monitoring</span></td><td>Standard advising follow-up</td></tr>
+            <tr><td class="td-primary">To Be Determined</td><td class="td-gold">301</td><td>29.4%</td><td><span class="flag flag-warn">⚠️ Medium</span></td><td>Resolve outstanding grades immediately</td></tr>
+            <tr><td class="td-primary">Continuing</td><td class="td-gold">202</td><td>19.7%</td><td><span class="flag flag-ok">✓ Good</span></td><td>Maintain current support</td></tr>
+            <tr><td class="td-primary">Inactive</td><td class="td-gold">134</td><td>13.1%</td><td><span class="flag flag-danger">🔴 High</span></td><td>Immediate outreach — potential stop-outs</td></tr>
+            <tr><td class="td-primary">Readmitted</td><td class="td-gold">23</td><td>2.2%</td><td><span class="flag flag-warn">⚠️ Watch</span></td><td>Targeted retention intervention</td></tr>
+            <tr><td class="td-primary">Returnee</td><td class="td-gold">18</td><td>1.8%</td><td><span class="flag flag-info">ℹ Monitoring</span></td><td>Standard continued enrollment check</td></tr>
+            <tr><td class="td-primary">Transfer</td><td class="td-gold">3</td><td>0.3%</td><td><span class="flag flag-info">ℹ Low</span></td><td>Articulation record review</td></tr>
+            <tr><td class="td-primary">Academic Good Standing</td><td class="td-gold">2</td><td>0.2%</td><td><span class="flag flag-ok">✓ Excellent</span></td><td>Honor recognition opportunity</td></tr>
+            <tr><td class="td-primary">Cont. Academic Probation</td><td class="td-gold">1</td><td>0.1%</td><td><span class="flag flag-danger">🔴 Critical</span></td><td>Probation review and action plan</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- DATA QUALITY -->
+  <div class="section animate-in" style="animation-delay:0.5s">
+    <div class="section-header">
+      <div>
+        <div class="section-title">Data Quality & Governance</div>
+        <div class="section-subtitle">Transparency reporting for executive confidence in dashboard accuracy</div>
+      </div>
+    </div>
+
+    <div class="dq-grid">
+      <div class="dq-card">
+        <div class="dq-value">1,024</div>
+        <div class="dq-label">Total Rows Processed</div>
+      </div>
+      <div class="dq-card">
+        <div class="dq-value">1,024</div>
+        <div class="dq-label">Distinct SONIS_IDs</div>
+      </div>
+      <div class="dq-card">
+        <div class="dq-value">0</div>
+        <div class="dq-label">Duplicate Student IDs</div>
+      </div>
+      <div class="dq-card">
+        <div class="dq-value">10</div>
+        <div class="dq-label">Data Sheets Processed</div>
+      </div>
+      <div class="dq-card">
+        <div class="dq-value">145</div>
+        <div class="dq-label">Students with 0.00 GPA</div>
+      </div>
+      <div class="dq-card">
+        <div class="dq-value">301</div>
+        <div class="dq-label">Unresolved Standing (TBD)</div>
+      </div>
+      <div class="dq-card">
+        <div class="dq-value">0</div>
+        <div class="dq-label">Withdrawn Records</div>
+      </div>
+      <div class="dq-card">
+        <div class="dq-value">26</div>
+        <div class="dq-label">Distinct Programs</div>
+      </div>
+    </div>
+
+    <div class="dq-assumptions">
+      <h4>Analytical Assumptions & Governance Notes</h4>
+      <ul>
+        <li>Dashboard treats this file as a term-level enrollment census. Each row represents one unique enrolled student.</li>
+        <li>No duplicate SONIS_IDs were detected — dataset is clean for headcount reporting.</li>
+        <li>GPA averages exclude records with CUM_GPA = 0.00 to avoid skewing academic performance metrics. These 145 students are flagged separately.</li>
+        <li>Credit completion ratio may exceed 100% where cumulative credits earned exceed attempted, often due to transfer credit or system entry methodology. This is noted as a data characteristic, not an error.</li>
+        <li>No withdrawal data is present in the dataset this term (WITHDRAWN = 0 for all students).</li>
+        <li>Developmental education fields (HAS_DEVED_ENGLISH, HAS_DEVED_MATH) were not included in the pre-aggregated file — these sections reflect data limitations from the source report.</li>
+        <li>Placement fields (INITIAL_ENGLISH_PLACEMENT, INITIAL_MATH_PLACEMENT, etc.) were not available in the pre-aggregated export — excluded from readiness analysis.</li>
+        <li>No personally identifiable information (names, SSN, email) is displayed in this dashboard in accordance with FERPA and institutional data governance policy.</li>
+        <li>All filters are applied client-side to pre-computed aggregates. Totals remain as per the official enrollment census.</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<!-- Scroll to top -->
+<button class="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+// ===== DATA =====
+const DATA = {
+  departments: [
+    {name:'LIB ARTS', count:336, color:'#c9a84c'},
+    {name:'ELEM EDUC', count:263, color:'#3b82f6'},
+    {name:'BUS STUD', count:251, color:'#8b5cf6'},
+    {name:'NURSING', count:117, color:'#14b8a6'},
+    {name:'WAVES', count:35, color:'#f59e0b'},
+    {name:'DUAL', count:15, color:'#f43f5e'},
+    {name:'STEM', count:6, color:'#6366f1'},
+    {name:'Audit', count:1, color:'#64748b'}
+  ],
+  programs: [
+    {name:'AALA', count:278, avgGpa:2.22, attempted:7160, earned:6411, ratio:1.21},
+    {name:'ASEEDU', count:173, avgGpa:2.49, attempted:5010, earned:6478, ratio:1.29},
+    {name:'AABS-ACC', count:113, avgGpa:2.18, attempted:2721, earned:3269, ratio:1.20},
+    {name:'ASNURS', count:101, avgGpa:2.52, attempted:3696, earned:4313, ratio:1.17},
+    {name:'BAEE', count:81, avgGpa:2.90, attempted:9256, earned:9347, ratio:1.01},
+    {name:'AABS-MGT', count:73, avgGpa:2.39, attempted:2619, earned:2766, ratio:1.06},
+    {name:'AABS', count:52, avgGpa:2.33, attempted:491, earned:746, ratio:1.52},
+    {name:'AALA-BM', count:24, avgGpa:2.28, attempted:814, earned:911, ratio:1.12},
+    {name:'CCRFPNW', count:22, avgGpa:2.27, attempted:415, earned:421, ratio:1.01},
+    {name:'DUAL', count:14, avgGpa:3.49, attempted:59, earned:90, ratio:1.53},
+    {name:'AALA-SCI', count:13, avgGpa:2.92, attempted:524, earned:626, ratio:1.19},
+    {name:'CCCHOW', count:11, avgGpa:3.20, attempted:509, earned:593, ratio:1.17},
+    {name:'AALA-ENG', count:11, avgGpa:2.25, attempted:241, earned:289, ratio:1.20},
+    {name:'AALA-MATH', count:10, avgGpa:2.50, attempted:667, earned:592, ratio:0.89},
+    {name:'AALA-MAR', count:9, avgGpa:2.48, attempted:289, earned:313, ratio:1.08},
+    {name:'CCRFPERW', count:8, avgGpa:2.19, attempted:103, earned:122, ratio:1.18},
+    {name:'CCT', count:5, avgGpa:2.75, attempted:438, earned:479, ratio:1.09},
+    {name:'AALA-IT', count:5, avgGpa:2.50, attempted:6, earned:34, ratio:5.67},
+    {name:'CCMS', count:4, avgGpa:2.45, attempted:98, earned:129, ratio:1.32},
+    {name:'CCSE', count:4, avgGpa:3.15, attempted:414, earned:444, ratio:1.07},
+    {name:'CCPH', count:4, avgGpa:3.02, attempted:183, earned:217, ratio:1.19},
+    {name:'CCCARP', count:3, avgGpa:3.06, attempted:42, earned:53.5, ratio:1.27},
+    {name:'ASAEHL-AE', count:2, avgGpa:2.12, attempted:112, earned:111, ratio:0.99},
+    {name:'CCCT-W', count:2, avgGpa:0.78, attempted:26, earned:29, ratio:1.12},
+    {name:'AUD', count:1, avgGpa:null, attempted:0, earned:0, ratio:null},
+    {name:'CCITSL1', count:1, avgGpa:1.20, attempted:15, earned:23, ratio:1.53}
+  ],
+  gpaDistribution: {
+    labels: ['<1.0','1.0–1.49','1.5–1.99','2.0–2.49','2.5–2.99','3.0–3.49','3.5+'],
+    values: [190, 82, 121, 197, 180, 146, 108]
+  },
+  gender: [{label:'Female',count:581},{label:'Male',count:443}],
+  admissionStatus: [
+    {label:'RETURNEE',count:577},
+    {label:'READMIT',count:352},
+    {label:'FIRST TIME',count:95}
+  ],
+  academicLevel: [
+    {label:'Freshman',count:455},
+    {label:'Sophomore',count:441},
+    {label:'Senior',count:78},
+    {label:'Pre-Entry',count:47},
+    {label:'Junior',count:3}
+  ],
+  ftpt: [{label:'Full-Time',count:640},{label:'Part-Time',count:384}]
+};
+
+const PALETTE = ['#c9a84c','#3b82f6','#8b5cf6','#14b8a6','#f59e0b','#f43f5e','#6366f1','#22c55e','#ec4899','#06b6d4'];
+
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size = 11;
+
+// ===== DEPT BARS =====
+function buildBars(containerId, data, total) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+  const max = Math.max(...data.map(d=>d.count));
+  data.forEach((d,i) => {
+    const pct = (d.count/total*100).toFixed(1);
+    const w = (d.count/max*100).toFixed(1);
+    const c = PALETTE[i % PALETTE.length];
+    el.innerHTML += `<div class="hbar-item">
+      <div class="hbar-meta"><span class="hbar-name">${d.name||d.label}</span><span class="hbar-count">${d.count.toLocaleString()} (${pct}%)</span></div>
+      <div class="hbar-track"><div class="hbar-fill" style="width:${w}%;--bar-color:${c};--bar-color2:${c}cc"></div></div>
+    </div>`;
+  });
+}
+
+// ===== DONUT =====
+function buildDonut(canvasId, legendId, data, total) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: data.map(d=>d.label||d.name),
+      datasets: [{
+        data: data.map(d=>d.count),
+        backgroundColor: PALETTE.slice(0,data.length),
+        borderWidth: 0,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (c) => ` ${c.label}: ${c.raw.toLocaleString()} (${(c.raw/total*100).toFixed(1)}%)`
+          }
+        }
+      }
+    }
+  });
+  const legend = document.getElementById(legendId);
+  if (legend) {
+    legend.innerHTML = data.map((d,i) => `
+      <div class="legend-item">
+        <div class="legend-dot" style="background:${PALETTE[i]}"></div>
+        <span class="legend-label">${d.label||d.name}</span>
+        <span class="legend-pct">${(d.count/total*100).toFixed(1)}%</span>
+      </div>`).join('');
+  }
+}
+
+// ===== GPA DISTRIBUTION CHART =====
+function buildGpaDistChart() {
+  const ctx = document.getElementById('gpaDistChart');
+  if (!ctx) return;
+  const colors = ['#f43f5e','#f97316','#f59e0b','#3b82f6','#8b5cf6','#14b8a6','#22c55e'];
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: DATA.gpaDistribution.labels,
+      datasets: [{
+        data: DATA.gpaDistribution.values,
+        backgroundColor: colors,
+        borderRadius: 6,
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (c) => ` ${c.raw} students (${(c.raw/1024*100).toFixed(1)}%)`
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#64748b' }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#94a3b8' }
+        }
+      }
+    }
+  });
+}
+
+// ===== GENDER CHART =====
+function buildGenderChart() {
+  const ctx = document.getElementById('genderChart');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Female','Male'],
+      datasets: [{
+        data: [581, 443],
+        backgroundColor: ['#ec4899','#3b82f6'],
+        borderRadius: 8,
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: { label: (c) => ` ${c.raw.toLocaleString()} students` }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#64748b' }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color: '#94a3b8', font: { size: 12 } }
+        }
+      }
+    }
+  });
+}
+
+// ===== PROGRAM GPA CHART =====
+function buildProgGpaChart() {
+  const ctx = document.getElementById('progGpaChart');
+  if (!ctx) return;
+  const top10 = DATA.programs.filter(p=>p.count>=5 && p.avgGpa).slice(0,10);
+  const sorted = [...top10].sort((a,b)=>b.avgGpa-a.avgGpa);
+  const colors = sorted.map(p => p.avgGpa >= 2.5 ? '#14b8a6' : p.avgGpa >= 2.0 ? '#f59e0b' : '#f43f5e');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: sorted.map(p=>p.name),
+      datasets: [{
+        label: 'Avg CUM GPA',
+        data: sorted.map(p=>p.avgGpa.toFixed(2)),
+        backgroundColor: colors,
+        borderRadius: 6,
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (c) => ` Avg GPA: ${c.raw}`,
+            afterLabel: (c) => ` Students: ${sorted[c.dataIndex].count}`
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 4.0,
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#64748b' }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#94a3b8' }
+        }
+      }
+    }
+  });
+}
+
+// ===== ADMISSION BAR =====
+function buildAdmissionBarChart() {
+  const ctx = document.getElementById('admissionBarChart');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['RETURNEE','READMIT','FIRST TIME'],
+      datasets: [{
+        data: [577, 352, 95],
+        backgroundColor: ['#3b82f6','#8b5cf6','#c9a84c'],
+        borderRadius: 8,
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: { label: (c) => ` ${c.raw.toLocaleString()} students (${(c.raw/1024*100).toFixed(1)}%)` }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#64748b' }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#94a3b8' }
+        }
+      }
+    }
+  });
+}
+
+// ===== LEVEL BAR =====
+function buildLevelBarChart() {
+  const ctx = document.getElementById('levelBarChart');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Freshman','Sophomore','Senior','Pre-Entry','Junior'],
+      datasets: [{
+        data: [455,441,78,47,3],
+        backgroundColor: ['#c9a84c','#3b82f6','#8b5cf6','#14b8a6','#f59e0b'],
+        borderRadius: 8,
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: { label: (c) => ` ${c.raw.toLocaleString()} students` }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(255,255,255,0.05)' },
+          ticks: { color: '#64748b' }
+        },
+        x: {
+          grid: { display: false },
+          ticks: { color: '#94a3b8' }
+        }
+      }
+    }
+  });
+}
+
+// ===== PROGRAM TABLE =====
+function buildProgramTable() {
+  const tbody = document.getElementById('programTableBody');
+  if (!tbody) return;
+  const sorted = [...DATA.programs].sort((a,b)=>b.count-a.count);
+  tbody.innerHTML = sorted.map(p => {
+    const share = (p.count/1024*100).toFixed(1);
+    const gpa = p.avgGpa ? p.avgGpa.toFixed(2) : '—';
+    const ratio = p.ratio ? p.ratio.toFixed(2)+'x' : '—';
+    let flag = '';
+    if (!p.avgGpa) flag = '<span class="flag flag-info">No GPA Data</span>';
+    else if (p.avgGpa < 1.5) flag = '<span class="flag flag-danger">🔴 At-Risk</span>';
+    else if (p.avgGpa < 2.0) flag = '<span class="flag flag-warn">⚠️ Monitor</span>';
+    else if (p.avgGpa >= 3.0) flag = '<span class="flag flag-ok">✓ Strong</span>';
+    else flag = '<span class="flag flag-info">ℹ Satisfactory</span>';
+    if (p.count > 100) flag += ' <span class="flag flag-warn">Large</span>';
+    return `<tr>
+      <td class="td-primary">${p.name}</td>
+      <td class="td-gold">${p.count}</td>
+      <td>${share}%</td>
+      <td>${gpa}</td>
+      <td>${p.attempted.toLocaleString()}</td>
+      <td>${Math.round(p.earned).toLocaleString()}</td>
+      <td>${ratio}</td>
+      <td>${flag}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ===== TABLE SORT =====
+let sortState = {};
+function sortTable(tableId, colIdx) {
+  const table = document.getElementById(tableId);
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  const key = `${tableId}-${colIdx}`;
+  const asc = !sortState[key];
+  sortState[key] = asc;
+  rows.sort((a,b) => {
+    const av = a.cells[colIdx].textContent.replace(/[^0-9.\-]/g,'');
+    const bv = b.cells[colIdx].textContent.replace(/[^0-9.\-]/g,'');
+    const an = parseFloat(av), bn = parseFloat(bv);
+    if (!isNaN(an) && !isNaN(bn)) return asc ? an-bn : bn-an;
+    return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+
+// ===== FILTERS =====
+function applyFilters() {
+  // In a full implementation, filters would cross-filter charts
+  // For this pre-aggregated dataset, we show a status message
+  const filters = ['fProgram','fDept','fLevel','fAdmission','fGender'];
+  const active = filters.filter(f => document.getElementById(f)?.value);
+  if (active.length > 0) {
+    console.log('Filters applied:', active.map(f=>document.getElementById(f).value));
+  }
+}
+
+function resetFilters() {
+  ['fProgram','fDept','fLevel','fAdmission','fGender'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', () => {
+  buildBars('deptBars', DATA.departments, 1024);
+  buildBars('progBars', DATA.programs.slice(0,10), 1024);
+  buildDonut('levelChart','levelLegend', DATA.academicLevel, 1024);
+  buildDonut('admissionChart','admissionLegend', DATA.admissionStatus, 1024);
+  buildDonut('ftptChart','ftptLegend', DATA.ftpt, 1024);
+  buildGpaDistChart();
+  buildGenderChart();
+  buildProgGpaChart();
+  buildAdmissionBarChart();
+  buildLevelBarChart();
+  buildProgramTable();
+
+  // Animate bars on load
+  setTimeout(() => {
+    document.querySelectorAll('.hbar-fill').forEach(el => {
+      const w = el.style.width;
+      el.style.width = '0%';
+      setTimeout(() => el.style.width = w, 100);
+    });
+  }, 200);
+});
+</script>
+</body>
+</html>
