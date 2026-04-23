@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>M365 Bootcamp Pilot – Executive Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+  /* ── TOKENS ── */
+  :root {
+    --bg:       #0a0e1a;
+    --surface:  #111827;
+    --card:     #151e2e;
+    --border:   #1e2d45;
+    --text:     #e8edf5;
+    --muted:    #8394ae;
+    --green:    #10b981;
+    --green-d:  #064e3b;
+    --green-l:  #6ee7b7;
+    --red:      #ef4444;
+    --red-d:    #450a0a;
+    --red-l:    #fca5a5;
+    --amber:    #f59e0b;
+    --amber-d:  #451a03;
+    --amber-l:  #fcd34d;
+    --blue:     #3b82f6;
+    --blue-d:   #1e3a5f;
+    --accent:   #4f8ef7;
+    --radius:   12px;
+    --radius-sm:8px;
+    --shadow:   0 4px 24px rgba(0,0,0,.45);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, #0d1b35 0%, #0a0e1a 60%, #071220 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 40px 24px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+  .header-left { display:flex; flex-direction:column; gap:4px; }
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(79,142,247,.15);
+    border: 1px solid rgba(79,142,247,.3);
+    border-radius: 99px;
+    padding: 3px 12px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    width: fit-content;
+    margin-bottom: 6px;
+  }
+  .header h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -.02em;
+  }
+  .header p { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .header-right { display:flex; align-items:center; gap: 12px; flex-wrap:wrap; }
+  .status-pill {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(16,185,129,.12);
+    border: 1px solid rgba(16,185,129,.3);
+    border-radius: 99px;
+    padding: 8px 18px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--green-l);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.85)} }
+
+  /* ── NAV TABS ── */
+  .nav-wrap {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-wrap::-webkit-scrollbar { display: none; }
+  .nav-tab {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 14px 18px;
+    transition: all .2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── MAIN CONTENT ── */
+  .main { padding: 32px 40px; max-width: 1440px; margin: 0 auto; }
+
+  /* ── SECTION ── */
+  .section { display: none; animation: fadeIn .3s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+
+  /* ── GRID ── */
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+  .grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; }
+  .span-2 { grid-column: span 2; }
+  .span-full { grid-column: 1 / -1; }
+  .mt { margin-top: 24px; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card-insight {
+    background: rgba(255,255,255,.04);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    font-size: 12px;
+    color: var(--muted);
+    padding: 10px 14px;
+    margin-top: 16px;
+    font-style: italic;
+  }
+  .card-insight strong { color: var(--text); font-style: normal; }
+
+  /* ── KPI CARDS ── */
+  .kpi-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s, box-shadow .2s;
+  }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,.5); }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius);
+    opacity: .06;
+  }
+  .kpi-card.green::before { background: var(--green); }
+  .kpi-card.red::before   { background: var(--red); }
+  .kpi-card.amber::before { background: var(--amber); }
+  .kpi-card.blue::before  { background: var(--blue); }
+  .kpi-glyph {
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+  .kpi-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .kpi-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -.03em;
+  }
+  .kpi-card.green .kpi-value { color: var(--green-l); }
+  .kpi-card.red   .kpi-value { color: var(--red-l); }
+  .kpi-card.amber .kpi-value { color: var(--amber-l); }
+  .kpi-card.blue  .kpi-value { color: #93c5fd; }
+  .kpi-sub { font-size: 12px; color: var(--muted); }
+  .kpi-tag {
+    display: inline-block;
+    margin-top: 8px;
+    background: rgba(255,255,255,.08);
+    border-radius: 99px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .kpi-card.green .kpi-tag { color: var(--green-l); background: rgba(16,185,129,.15); }
+  .kpi-card.amber .kpi-tag { color: var(--amber-l); background: rgba(245,158,11,.15); }
+  .kpi-card.blue  .kpi-tag { color: #93c5fd; background: rgba(59,130,246,.15); }
+
+  /* ── INSIGHT BANNER ── */
+  .insight-banner {
+    background: linear-gradient(135deg, rgba(16,185,129,.08), rgba(59,130,246,.08));
+    border: 1px solid rgba(16,185,129,.25);
+    border-radius: var(--radius);
+    padding: 18px 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-top: 16px;
+  }
+  .insight-icon { font-size: 24px; flex-shrink: 0; }
+  .insight-text { font-size: 13.5px; color: var(--text); line-height: 1.7; }
+  .insight-text strong { color: var(--green-l); }
+  .insight-text .warn { color: var(--amber-l); }
+
+  /* ── CANVAS CHARTS ── */
+  canvas { display: block; }
+  .chart-wrap { position: relative; }
+
+  /* ── FUNNEL ── */
+  .funnel-wrap { display: flex; flex-direction: column; align-items: center; gap: 0; padding: 10px 0; }
+  .funnel-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+  .funnel-bar-wrap { width: 100%; display: flex; justify-content: center; }
+  .funnel-bar {
+    border-radius: 6px 6px 0 0;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    transition: all .6s ease;
+    position: relative;
+  }
+  .funnel-bar .bar-label { font-size: 12px; font-weight: 400; margin-left: 8px; opacity: .8; }
+  .funnel-arrow { color: var(--muted); font-size: 16px; margin: 2px 0; }
+  .funnel-meta { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .funnel-pct {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--red-l);
+    background: rgba(239,68,68,.1);
+    border-radius: 99px;
+    padding: 2px 8px;
+    margin-top: 2px;
+  }
+  .f-blue { background: linear-gradient(90deg,#1d4ed8,#3b82f6); }
+  .f-amber { background: linear-gradient(90deg,#b45309,#f59e0b); }
+  .f-red   { background: linear-gradient(90deg,#991b1b,#ef4444); }
+  .f-green { background: linear-gradient(90deg,#065f46,#10b981); }
+
+  /* ── BARS ── */
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .bar-name {
+    font-size: 12px;
+    color: var(--text);
+    width: 200px;
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .bar-track {
+    flex: 1;
+    height: 20px;
+    background: rgba(255,255,255,.05);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    transition: width .8s cubic-bezier(.16,1,.3,1);
+  }
+  .bar-score {
+    width: 42px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    flex-shrink: 0;
+  }
+  .perfect { background: linear-gradient(90deg, #065f46, #10b981); }
+  .high    { background: linear-gradient(90deg, #1e3a5f, #3b82f6); }
+
+  /* ── RADAR ── */
+  #radarCanvas { max-width: 300px; max-height: 300px; margin: 0 auto; }
+
+  /* ── RISK PANEL ── */
+  .risk-item {
+    background: var(--surface);
+    border: 1px solid;
+    border-radius: var(--radius-sm);
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: transform .15s;
+  }
+  .risk-item:hover { transform: translateX(4px); }
+  .risk-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+  .risk-body { flex: 1; }
+  .risk-title { font-weight: 600; font-size: 14px; }
+  .risk-desc  { font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.6; }
+  .risk-badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 2px 9px;
+    border-radius: 99px;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-top: 2px;
+  }
+  .risk-high   { border-color: rgba(239,68,68,.4);  background: rgba(239,68,68,.06); }
+  .risk-high .risk-badge   { background: rgba(239,68,68,.2);  color: var(--red-l); }
+  .risk-medium { border-color: rgba(245,158,11,.4); background: rgba(245,158,11,.06); }
+  .risk-medium .risk-badge { background: rgba(245,158,11,.2); color: var(--amber-l); }
+
+  /* ── RECOMMEND ── */
+  .rec-group { margin-bottom: 18px; }
+  .rec-group-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .rec-group-label .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+  .rec-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid;
+    border-radius: 99px;
+    padding: 5px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    margin: 4px;
+    cursor: default;
+    transition: transform .15s;
+  }
+  .rec-tag:hover { transform: scale(1.04); }
+  .rec-amber { border-color: rgba(245,158,11,.4); color: var(--amber-l); background: rgba(245,158,11,.08); }
+  .rec-blue  { border-color: rgba(59,130,246,.4);  color: #93c5fd;       background: rgba(59,130,246,.08); }
+  .rec-green { border-color: rgba(16,185,129,.4);  color: var(--green-l); background: rgba(16,185,129,.08); }
+
+  /* ── READINESS ── */
+  .readiness-hero {
+    background: linear-gradient(135deg, rgba(16,185,129,.12) 0%, rgba(10,14,26,0) 60%);
+    border: 1px solid rgba(16,185,129,.3);
+    border-radius: var(--radius);
+    padding: 30px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .readiness-hero::after {
+    content:'';
+    position:absolute;
+    top:-60px; right:-60px;
+    width:200px; height:200px;
+    border-radius:50%;
+    background: radial-gradient(circle, rgba(16,185,129,.15), transparent 70%);
+    pointer-events:none;
+  }
+  .readiness-status {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--green-l);
+    letter-spacing: -.02em;
+    margin-bottom: 4px;
+  }
+  .readiness-label { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+  .traffic-lights {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 16px 0;
+  }
+  .tl {
+    width: 28px; height: 28px; border-radius: 50%;
+    opacity: .2;
+    transition: opacity .3s;
+  }
+  .tl.on { opacity: 1; box-shadow: 0 0 16px currentColor; }
+  .tl-r { background: var(--red);   color: var(--red); }
+  .tl-a { background: var(--amber); color: var(--amber); }
+  .tl-g { background: var(--green); color: var(--green); }
+
+  .condition-list { list-style: none; text-align: left; margin-top: 16px; }
+  .condition-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .condition-list li:last-child { border-bottom: none; }
+  .cond-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── TABLE ── */
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+  .filter-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 99px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 14px;
+    transition: all .15s;
+  }
+  .filter-btn:hover { color: var(--text); border-color: var(--accent); }
+  .filter-btn.active { background: rgba(79,142,247,.15); border-color: var(--accent); color: var(--accent); }
+  .filter-label { color: var(--muted); font-size: 12px; margin-right: 4px; }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+  }
+  tbody tr {
+    border-bottom: 1px solid rgba(30,45,69,.6);
+    transition: background .1s;
+  }
+  tbody tr:hover { background: rgba(255,255,255,.03); }
+  tbody tr.hidden { display: none; }
+  td {
+    padding: 12px 14px;
+    font-size: 13px;
+    vertical-align: middle;
+  }
+  td:first-child { font-weight: 500; color: var(--text); }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 99px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .04em;
+  }
+  .badge-onsite   { background: rgba(59,130,246,.15); color:#93c5fd; border: 1px solid rgba(59,130,246,.3); }
+  .badge-virtual  { background: rgba(139,92,246,.15); color:#c4b5fd; border: 1px solid rgba(139,92,246,.3); }
+  .badge-absent   { background: rgba(239,68,68,.1);   color:var(--red-l); border: 1px solid rgba(239,68,68,.25); }
+  .badge-complete { background: rgba(16,185,129,.12); color:var(--green-l); border: 1px solid rgba(16,185,129,.3); }
+  .badge-incomplete { background: rgba(245,158,11,.1); color:var(--amber-l); border: 1px solid rgba(245,158,11,.25); }
+  .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+
+  /* ── WORD CLOUD ── */
+  .word-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .wc-word {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    border-radius: 6px;
+    padding: 5px 12px;
+    opacity: .9;
+    cursor: default;
+    transition: transform .15s, opacity .15s;
+  }
+  .wc-word:hover { transform: scale(1.08); opacity: 1; }
+
+  /* ── QUAL CARD ── */
+  .qual-item {
+    display: flex;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(30,45,69,.6);
+    align-items: flex-start;
+  }
+  .qual-item:last-child { border-bottom: none; }
+  .qual-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+  .qual-text { font-size: 13.5px; color: var(--text); line-height: 1.6; }
+  .qual-theme { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+
+  /* ── SCROLL BAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+  /* ── UTIL ── */
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+  .text-green  { color: var(--green-l); }
+  .text-red    { color: var(--red-l); }
+  .text-amber  { color: var(--amber-l); }
+  .text-muted  { color: var(--muted); }
+  .fw-bold     { font-weight: 700; }
+
+  @media(max-width:900px) {
+    .header { padding: 20px; }
+    .main   { padding: 20px; }
+    .nav-wrap { padding: 0 16px; }
+    .grid-4, .grid-3 { grid-template-columns: 1fr 1fr; }
+    .grid-2-1, .grid-1-2 { grid-template-columns: 1fr; }
+    .span-2 { grid-column: span 1; }
+    .bar-name { width: 130px; font-size: 11px; }
+  }
+  @media(max-width:600px) {
+    .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
+    .header h1 { font-size: 18px; }
+    .kpi-value { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <div class="header-badge">📊 Executive Dashboard</div>
+    <h1>Microsoft 365 Basic Bootcamp – Pilot Training</h1>
+    <p>Consolidated Management Review Report &nbsp;·&nbsp; April 2025</p>
+  </div>
+  <div class="header-right">
+    <div class="status-pill">
+      <span class="status-dot"></span>
+      Ready for Rollout
+    </div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="nav-wrap">
+  <button class="nav-tab active" data-tab="overview">📋 Executive Overview</button>
+  <button class="nav-tab" data-tab="participation">👥 Participation</button>
+  <button class="nav-tab" data-tab="effectiveness">📈 Training Effectiveness</button>
+  <button class="nav-tab" data-tab="feedback">💬 Feedback & Insights</button>
+  <button class="nav-tab" data-tab="challenges">⚠️ Challenges</button>
+  <button class="nav-tab" data-tab="recommendations">💡 Recommendations</button>
+  <button class="nav-tab" data-tab="readiness">✅ Rollout Readiness</button>
+  <button class="nav-tab" data-tab="participants">📑 Participant Detail</button>
+</nav>
+
+<main class="main">
+
+  <!-- ────────────────────────── OVERVIEW ────────────────────────── -->
+  <section id="tab-overview" class="section active">
+    <div class="section-title">📋 Executive Overview</div>
+    <p class="section-sub">High-level KPIs and consolidated summary for senior leadership decision-making.</p>
+
+    <div class="grid-4">
+      <div class="kpi-card green">
+        <div class="kpi-glyph">⭐</div>
+        <div class="kpi-label">Overall Average Score</div>
+        <div class="kpi-value">4.77</div>
+        <div class="kpi-sub">out of 5.0</div>
+        <div class="kpi-tag">↑ Exceptional</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-glyph">😊</div>
+        <div class="kpi-label">Overall Satisfaction</div>
+        <div class="kpi-value">4.67</div>
+        <div class="kpi-sub">out of 5.0</div>
+        <div class="kpi-tag">↑ Very High</div>
+      </div>
+      <div class="kpi-card blue">
+        <div class="kpi-glyph">🚀</div>
+        <div class="kpi-label">Pilot Readiness Score</div>
+        <div class="kpi-value">4.67</div>
+        <div class="kpi-sub">out of 5.0</div>
+        <div class="kpi-tag">↑ Rollout-Ready</div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-glyph">🏁</div>
+        <div class="kpi-label">Final Assessment</div>
+        <div class="kpi-value" style="font-size:15px;line-height:1.3">Ready for<br>Official Rollout</div>
+        <div class="kpi-sub">With minor enhancements</div>
+      </div>
+    </div>
+
+    <div class="insight-banner mt">
+      <div class="insight-icon">💡</div>
+      <div class="insight-text">
+        <strong>Dashboard Story:</strong> The M365 Bootcamp pilot delivered <strong>exceptional instructional quality</strong> — scoring near-perfect across all training effectiveness metrics. The primary risk is <span class="warn">not content or delivery, but organizational attendance enforcement</span>. Of 28 expected participants, only 7–8 attended live sessions and just 4 completed all Moodle activities. Addressing governance and mandatory attendance policies will be the deciding factor for successful enterprise rollout at scale.
+      </div>
+    </div>
+
+    <div class="grid-3 mt">
+      <div class="card">
+        <div class="card-title">✅ Training Quality</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.8">
+          <div>• Instructor expertise: <strong class="text-green">5.0 / 5.0</strong></div>
+          <div>• Materials effectiveness: <strong class="text-green">5.0 / 5.0</strong></div>
+          <div>• Practical application: <strong class="text-green">5.0 / 5.0</strong></div>
+          <div>• LMS usability: <strong class="text-green">5.0 / 5.0</strong></div>
+          <div>• Value for rollout: <strong class="text-green">5.0 / 5.0</strong></div>
+        </div>
+        <div class="card-insight"><strong>Training design is not a limiting factor</strong> — content and delivery are rollout-ready.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">⚠️ Attendance Risk</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.8">
+          <div>• Expected: <strong style="color:#93c5fd">28</strong> participants</div>
+          <div>• Pre-survey: <strong class="text-amber">13</strong> responses</div>
+          <div>• Live attendance: <strong class="text-red">7–8</strong> participants</div>
+          <div>• Completed Moodle: <strong class="text-red">4</strong> participants</div>
+          <div>• Completion rate: <strong class="text-red">~14%</strong></div>
+        </div>
+        <div class="card-insight"><strong class="warn">Schedule conflicts & limited enforcement</strong> drove significant attrition.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">🎯 Rollout Decision</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.8">
+          <div>• <strong class="text-green">Approved</strong> — subject to conditions</div>
+          <div>• Mandatory senior directive required</div>
+          <div>• Dept-level tracking must be implemented</div>
+          <div>• Minor curriculum enhancements apply</div>
+          <div>• Leadership compliance reporting required</div>
+        </div>
+        <div class="card-insight">Management approval recommended with <strong>strengthened governance</strong>.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────────────────────── PARTICIPATION ────────────────────────── -->
+  <section id="tab-participation" class="section">
+    <div class="section-title">👥 Participation & Attendance Analytics</div>
+    <p class="section-sub">Tracking the conversion from expected participants to active completers across all delivery modes.</p>
+
+    <div class="grid-4">
+      <div class="kpi-card blue">
+        <div class="kpi-glyph">🎯</div>
+        <div class="kpi-label">Expected Participants</div>
+        <div class="kpi-value">28</div>
+        <div class="kpi-sub">Nominated by departments</div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-glyph">📝</div>
+        <div class="kpi-label">Pre-Survey Responses</div>
+        <div class="kpi-value">13</div>
+        <div class="kpi-sub">46% pre-engagement rate</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-glyph">🧑‍💻</div>
+        <div class="kpi-label">Live Attendance (Day 1–2)</div>
+        <div class="kpi-value">7–8</div>
+        <div class="kpi-sub">~27% of expected</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-glyph">✅</div>
+        <div class="kpi-label">Moodle Completions</div>
+        <div class="kpi-value">4</div>
+        <div class="kpi-sub">~14% of expected</div>
+      </div>
+    </div>
+
+    <div class="grid-2 mt">
+      <!-- FUNNEL -->
+      <div class="card">
+        <div class="card-title">📉 Participation Funnel</div>
+        <div class="funnel-wrap" id="funnel"></div>
+        <div class="card-insight"><strong class="warn">Critical drop-off:</strong> Only <strong>14%</strong> of expected participants fully completed the program. Schedule conflicts and lack of departmental enforcement were the primary drivers.</div>
+      </div>
+      <!-- BAR -->
+      <div class="card">
+        <div class="card-title">📊 Attendance vs. Completion by Mode</div>
+        <canvas id="attendChart" width="400" height="280"></canvas>
+        <div class="card-insight">Participants who attended <strong>live sessions</strong> were significantly more likely to complete self-paced Moodle requirements, confirming the value of direct engagement.</div>
+      </div>
+    </div>
+
+    <div class="card mt">
+      <div class="card-title">🔍 Key Observations</div>
+      <div class="grid-2" style="margin-top:10px">
+        <div>
+          <div class="qual-item">
+            <div class="qual-icon">📅</div>
+            <div><div class="qual-theme">Scheduling Conflicts</div><div class="qual-text">Competing operational priorities prevented many nominated staff from attending despite formal enrollment and official directives.</div></div>
+          </div>
+          <div class="qual-item">
+            <div class="qual-icon">🏢</div>
+            <div><div class="qual-theme">Limited Dept. Enforcement</div><div class="qual-text">Department-level accountability was insufficient to ensure staff release for training activities during the pilot period.</div></div>
+          </div>
+        </div>
+        <div>
+          <div class="qual-item">
+            <div class="qual-icon">🔗</div>
+            <div><div class="qual-theme">Live-to-Async Correlation</div><div class="qual-text">All participants who completed Moodle activities attended live sessions first, indicating live engagement drives completion behavior.</div></div>
+          </div>
+          <div class="qual-item">
+            <div class="qual-icon">📣</div>
+            <div><div class="qual-theme">Communication Was Adequate</div><div class="qual-text">Pre-training communication and reminders were sent; the barrier was organizational, not informational.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────────────────────── EFFECTIVENESS ────────────────────────── -->
+  <section id="tab-effectiveness" class="section">
+    <div class="section-title">📈 Training Effectiveness & Evaluation</div>
+    <p class="section-sub">Average scores across all evaluation dimensions from post-training participant surveys.</p>
+
+    <div class="grid-2-1">
+      <div class="card">
+        <div class="card-title">📊 Evaluation Metric Scores (Average / 5.0)</div>
+        <div style="margin-top:16px" id="metricBars"></div>
+        <div class="card-insight">All metrics score <strong class="text-green">4.67 or above</strong>. Instructional quality, materials, LMS usability, practical application, and rollout value all achieved a <strong class="text-green">perfect 5.0</strong>.</div>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column;align-items:center">
+        <div class="card-title" style="align-self:flex-start">🕸️ Radar Overview</div>
+        <canvas id="radarCanvas" width="300" height="300"></canvas>
+        <div class="insight-banner" style="margin-top:16px;padding:12px 14px">
+          <div class="insight-icon" style="font-size:18px">⚠️</div>
+          <div style="font-size:12px;color:var(--muted)"><strong style="color:var(--text)">Instructional quality is NOT a limiting factor.</strong> Training design and delivery are fully validated for enterprise rollout.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-3 mt">
+      <div class="card">
+        <div class="card-title">🏆 Perfect Score Areas</div>
+        <div style="font-size:13px;line-height:2">
+          <div>🎓 <strong>Instructor Expertise</strong> — <span class="text-green">5.0</span></div>
+          <div>📚 <strong>Learning Materials</strong> — <span class="text-green">5.0</span></div>
+          <div>💻 <strong>LMS Usability</strong> — <span class="text-green">5.0</span></div>
+          <div>🛠️ <strong>Practical Application</strong> — <span class="text-green">5.0</span></div>
+          <div>📣 <strong>Value for Rollout</strong> — <span class="text-green">5.0</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📌 High Score Areas (4.67)</div>
+        <div style="font-size:13px;line-height:2">
+          <div>🗣️ <strong>Communication Clarity</strong> — <span class="text-green">4.67</span></div>
+          <div>🤝 <strong>Engagement & Q&A</strong> — <span class="text-green">4.67</span></div>
+          <div>🎯 <strong>Content Alignment</strong> — <span class="text-green">4.67</span></div>
+          <div style="margin-top:12px;color:var(--muted);font-size:12px;">These scores reflect high participant satisfaction across all instructional dimensions surveyed.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📝 Summary Scores</div>
+        <div style="font-size:13px;line-height:2">
+          <div>📊 <strong>Overall Average</strong> — <span class="text-green">4.77 / 5</span></div>
+          <div>😊 <strong>Satisfaction</strong> — <span class="text-green">4.67 / 5</span></div>
+          <div>🚀 <strong>Readiness Score</strong> — <span class="text-green">4.67 / 5</span></div>
+          <div style="margin-top:12px;color:var(--muted);font-size:12px;">Based on respondents who completed the evaluation survey (n = limited sample).</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────────────────────── FEEDBACK ────────────────────────── -->
+  <section id="tab-feedback" class="section">
+    <div class="section-title">💬 Qualitative Feedback Insights</div>
+    <p class="section-sub">Key themes and participant-reported strengths from post-training evaluation surveys.</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">🌐 Feedback Word Cloud</div>
+        <div class="word-cloud" id="wordCloud"></div>
+        <div class="card-insight">Overwhelmingly positive language — participants highlighted <strong>knowledge</strong>, <strong>engagement</strong>, and <strong>flexibility</strong> as standout qualities.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">💡 Key Feedback Themes</div>
+        <div class="qual-item">
+          <div class="qual-icon">🎓</div>
+          <div><div class="qual-theme">Instructor Excellence</div><div class="qual-text">Participants consistently praised the instructor as clear, patient, and highly knowledgeable. Trust in the instructor was a major satisfaction driver.</div></div>
+        </div>
+        <div class="qual-item">
+          <div class="qual-icon">🤝</div>
+          <div><div class="qual-theme">Strong Interaction & Responsiveness</div><div class="qual-text">Q&A handling was noted as particularly effective. Participants felt heard and supported throughout both live and virtual sessions.</div></div>
+        </div>
+        <div class="qual-item">
+          <div class="qual-icon">🌐</div>
+          <div><div class="qual-theme">Effective Hybrid Delivery</div><div class="qual-text">Onsite and virtual participants both felt equally engaged, validating the hybrid delivery model as a viable approach for the full rollout.</div></div>
+        </div>
+        <div class="qual-item">
+          <div class="qual-icon">😊</div>
+          <div><div class="qual-theme">Positive Learner Experience</div><div class="qual-text">Overall learning experience was described as valuable and well-structured, with participants expressing strong confidence in applying M365 tools to daily work.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────────────────────── CHALLENGES ────────────────────────── -->
+  <section id="tab-challenges" class="section">
+    <div class="section-title">⚠️ Key Challenges Identified</div>
+    <p class="section-sub">Operational and governance risks that must be addressed before full enterprise rollout.</p>
+
+    <div class="grid-2-1">
+      <div>
+        <div class="risk-item risk-high">
+          <div class="risk-icon">🔴</div>
+          <div class="risk-body">
+            <div class="risk-title">Low Attendance & Completion Rates</div>
+            <div class="risk-desc">Only 7–8 of 28 expected participants attended live sessions. Just 4 participants completed all Moodle activities — a 14% completion rate against target. If not corrected, this pattern will scale to 1,000+ users, severely limiting ROI.</div>
+          </div>
+          <div class="risk-badge">HIGH</div>
+        </div>
+        <div class="risk-item risk-high">
+          <div class="risk-icon">🔴</div>
+          <div class="risk-body">
+            <div class="risk-title">Risk to Adoption at Scale Without Governance</div>
+            <div class="risk-desc">Without mandated participation policies and senior leadership accountability, participation risks will grow proportionally with user volume during the full enterprise rollout.</div>
+          </div>
+          <div class="risk-badge">HIGH</div>
+        </div>
+        <div class="risk-item risk-medium">
+          <div class="risk-icon">🟡</div>
+          <div class="risk-body">
+            <div class="risk-title">Limited Department-Level Enforcement</div>
+            <div class="risk-desc">Department Heads did not sufficiently release staff for training despite formal directives. Enforcement mechanisms must be formalized through leadership channels.</div>
+          </div>
+          <div class="risk-badge">MEDIUM</div>
+        </div>
+        <div class="risk-item risk-medium">
+          <div class="risk-icon">🟡</div>
+          <div class="risk-body">
+            <div class="risk-title">Competing Operational Priorities & Scheduling</div>
+            <div class="risk-desc">Work commitments and schedule conflicts were cited as the primary reason for absenteeism. Scheduling strategies must be redesigned for the full rollout calendar.</div>
+          </div>
+          <div class="risk-badge">MEDIUM</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📊 Risk Summary</div>
+        <div style="text-align:center;padding:20px 0">
+          <div style="font-family:'Syne',sans-serif;font-size:48px;font-weight:800;color:var(--red-l)">86%</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:4px">Drop-off from expected<br>to completed</div>
+        </div>
+        <div class="divider"></div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.8;margin-top:10px">
+          <div>🔴 <strong class="text-red">HIGH RISK (×2)</strong> — Attendance & Governance</div>
+          <div>🟡 <strong class="text-amber">MEDIUM RISK (×2)</strong> — Enforcement & Scheduling</div>
+          <div style="margin-top:12px;padding:12px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:8px;color:var(--text)">✅ <strong>Training quality risk: NONE</strong><br><span style="color:var(--muted)">Instructional design is fully validated.</span></div>
+        </div>
+        <div class="card-insight"><strong>Key distinction:</strong> All identified risks are <strong>organizational</strong>, not instructional. The training itself is ready — governance is not.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────────────────────── RECOMMENDATIONS ────────────────────────── -->
+  <section id="tab-recommendations" class="section">
+    <div class="section-title">💡 Recommendations for Improvement</div>
+    <p class="section-sub">Participant-submitted and operationally-derived enhancements for the full rollout.</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">📚 Content Improvements</div>
+        <div class="rec-group">
+          <div class="rec-group-label" style="color:var(--amber-l)"><span class="dot" style="background:var(--amber)"></span>Expand Coverage</div>
+          <div>
+            <span class="rec-tag rec-amber">📧 Outlook – Deeper Focus</span>
+            <span class="rec-tag rec-amber">☁️ OneDrive</span>
+            <span class="rec-tag rec-amber">📂 SharePoint</span>
+            <span class="rec-tag rec-amber">🔐 Cybersecurity</span>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="rec-group">
+          <div class="rec-group-label" style="color:var(--red-l)"><span class="dot" style="background:var(--red)"></span>Reduce Coverage</div>
+          <div>
+            <span class="rec-tag" style="border-color:rgba(239,68,68,.3);color:var(--red-l);background:rgba(239,68,68,.06)">📝 Basic Word (reduce)</span>
+            <span class="rec-tag" style="border-color:rgba(239,68,68,.3);color:var(--red-l);background:rgba(239,68,68,.06)">📊 Basic Excel (reduce)</span>
+          </div>
+        </div>
+        <div class="card-insight">These are <strong>refinements, not fundamental issues</strong>. Content structure is sound; expansion reflects user demand for advanced topics.</div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-title">🎤 Delivery Improvements</div>
+          <div style="margin-top:8px">
+            <span class="rec-tag rec-blue">🤝 Consider Co-Instructors for Live Sessions</span>
+            <span class="rec-tag rec-blue">🛠️ Additional Hands-On Exercises</span>
+            <span class="rec-tag rec-blue">🎬 More Live Demonstrations</span>
+          </div>
+          <div class="card-insight">Co-instructors would improve scalability during rollout to 1,000+ users. Hands-on exercises align with participants' expressed preference for applied learning.</div>
+        </div>
+
+        <div class="card mt">
+          <div class="card-title">🔧 Technical Improvements</div>
+          <div style="margin-top:8px">
+            <span class="rec-tag rec-green">🔍 Comprehensive Pre-Session Technical Checks</span>
+            <span class="rec-tag rec-green">📶 Verify Virtual Connectivity</span>
+            <span class="rec-tag rec-green">🖥️ LMS Access Validation</span>
+          </div>
+          <div class="card-insight">Pre-session technical checks will prevent disruptions during the full rollout, particularly for hybrid delivery across departments.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mt">
+      <div class="card-title">📋 Governance Recommendations (Critical)</div>
+      <div class="grid-3" style="margin-top:10px">
+        <div style="text-align:center;padding:20px;background:var(--surface);border-radius:var(--radius-sm)">
+          <div style="font-size:28px;margin-bottom:8px">📣</div>
+          <div style="font-weight:600;font-size:13px;color:var(--text);margin-bottom:6px">Senior Leadership Directive</div>
+          <div style="font-size:12px;color:var(--muted)">Mandate training participation via official memorandum from senior management to all departments.</div>
+        </div>
+        <div style="text-align:center;padding:20px;background:var(--surface);border-radius:var(--radius-sm)">
+          <div style="font-size:28px;margin-bottom:8px">📊</div>
+          <div style="font-weight:600;font-size:13px;color:var(--text);margin-bottom:6px">Attendance Tracking System</div>
+          <div style="font-size:12px;color:var(--muted)">Implement department-level attendance and completion tracking with weekly reporting to leadership.</div>
+        </div>
+        <div style="text-align:center;padding:20px;background:var(--surface);border-radius:var(--radius-sm)">
+          <div style="font-size:28px;margin-bottom:8px">🏢</div>
+          <div style="font-weight:600;font-size:13px;color:var(--text);margin-bottom:6px">Dept. Head Release Instruction</div>
+          <div style="font-size:12px;color:var(--muted)">Formal instruction to all Department Heads to release staff from duties during scheduled training windows.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────────────────────── READINESS ────────────────────────── -->
+  <section id="tab-readiness" class="section">
+    <div class="section-title">✅ Rollout Readiness & Decision Panel</div>
+    <p class="section-sub">Management approval assessment and conditions required for official enterprise rollout.</p>
+
+    <div class="grid-1-2">
+      <div class="card readiness-hero" style="justify-content:center;display:flex;flex-direction:column">
+        <div style="font-size:40px;text-align:center;margin-bottom:8px">🚀</div>
+        <div class="readiness-status">READY FOR<br>OFFICIAL ROLLOUT</div>
+        <div class="readiness-label">With minor enhancements &amp; governance requirements</div>
+        <div class="traffic-lights">
+          <div class="tl tl-r"></div>
+          <div class="tl tl-a"></div>
+          <div class="tl tl-g on"></div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);text-align:center">Status: <strong class="text-green">GREEN – Approved with Conditions</strong></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📋 Approval Conditions for Rollout</div>
+        <ul class="condition-list">
+          <li>
+            <span class="cond-icon">📣</span>
+            <div>
+              <div style="font-weight:600;color:var(--text)">Mandatory Participation Directive</div>
+              <div style="font-size:12px;color:var(--muted)">Senior leadership must issue a formal directive mandating attendance for all nominated M365 users.</div>
+            </div>
+          </li>
+          <li>
+            <span class="cond-icon">🏢</span>
+            <div>
+              <div style="font-weight:600;color:var(--text)">Department Head Release Instructions</div>
+              <div style="font-size:12px;color:var(--muted)">All Department Heads must formally release staff from operational duties for scheduled training sessions.</div>
+            </div>
+          </li>
+          <li>
+            <span class="cond-icon">📊</span>
+            <div>
+              <div style="font-weight:600;color:var(--text)">Attendance & Completion Tracking</div>
+              <div style="font-size:12px;color:var(--muted)">Implement department-level tracking of attendance and Moodle completion for all 1,000+ users.</div>
+            </div>
+          </li>
+          <li>
+            <span class="cond-icon">📈</span>
+            <div>
+              <div style="font-weight:600;color:var(--text)">Regular Leadership Compliance Reporting</div>
+              <div style="font-size:12px;color:var(--muted)">Progress and compliance reports submitted to leadership on a regular cadence during rollout.</div>
+            </div>
+          </li>
+          <li>
+            <span class="cond-icon">✏️</span>
+            <div>
+              <div style="font-weight:600;color:var(--text)">Minor Curriculum Enhancements</div>
+              <div style="font-size:12px;color:var(--muted)">Apply participant-recommended content refinements (Outlook, OneDrive, SharePoint, Cybersecurity focus).</div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="grid-3 mt">
+      <div class="card" style="border-color:rgba(16,185,129,.3)">
+        <div class="card-title" style="color:var(--green-l)">✅ Training — READY</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.8">
+          Content, delivery, and instructional design fully validated. No fundamental changes required before scaling.
+        </div>
+        <div style="margin-top:12px;display:flex;align-items:center;gap:8px"><div class="tl tl-g" style="opacity:1;box-shadow:0 0 12px var(--green)"></div><span style="font-size:12px;color:var(--green-l)">GREEN — Cleared for Rollout</span></div>
+      </div>
+      <div class="card" style="border-color:rgba(245,158,11,.3)">
+        <div class="card-title" style="color:var(--amber-l)">⚠️ Governance — REQUIRES ACTION</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.8">
+          Attendance enforcement and leadership accountability must be formalized before and during the full rollout.
+        </div>
+        <div style="margin-top:12px;display:flex;align-items:center;gap:8px"><div class="tl tl-a" style="opacity:1;box-shadow:0 0 12px var(--amber)"></div><span style="font-size:12px;color:var(--amber-l)">AMBER — Action Required</span></div>
+      </div>
+      <div class="card" style="border-color:rgba(239,68,68,.3)">
+        <div class="card-title" style="color:var(--red-l)">🔴 Participation Risk — HIGH</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.8">
+          Without mandatory participation enforcement, the 86% drop-off risk from the pilot will scale to 1,000+ users.
+        </div>
+        <div style="margin-top:12px;display:flex;align-items:center;gap:8px"><div class="tl tl-r" style="opacity:1;box-shadow:0 0 12px var(--red)"></div><span style="font-size:12px;color:var(--red-l)">RED — Must Be Mitigated</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────────────────────── PARTICIPANTS ────────────────────────── -->
+  <section id="tab-participants" class="section">
+    <div class="section-title">📑 Participant-Level Detail</div>
+    <p class="section-sub">Individual attendance and completion records across all training modes.</p>
+
+    <div class="filter-row">
+      <span class="filter-label">Filter by:</span>
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="onsite">Onsite</button>
+      <button class="filter-btn" data-filter="virtual">Virtual</button>
+      <button class="filter-btn" data-filter="absent">Absent</button>
+      <button class="filter-btn" data-filter="completed">Completed</button>
+      <button class="filter-btn" data-filter="incomplete">Not Completed</button>
+    </div>
+
+    <div class="table-wrap">
+      <table id="participantTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Participant Name</th>
+            <th>Day 1</th>
+            <th>Day 2</th>
+            <th>Day 3 (Moodle)</th>
+            <th>Overall Status</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="grid-4 mt">
+      <div class="kpi-card blue"><div class="kpi-glyph">👥</div><div class="kpi-label">Total Enrolled</div><div class="kpi-value">13</div><div class="kpi-sub">Confirmed attendance</div></div>
+      <div class="kpi-card green"><div class="kpi-glyph">🏅</div><div class="kpi-label">Fully Completed</div><div class="kpi-value">4</div><div class="kpi-sub">All 3 days done</div></div>
+      <div class="kpi-card amber"><div class="kpi-glyph">🧑‍💻</div><div class="kpi-label">Partial Attendance</div><div class="kpi-value">5</div><div class="kpi-sub">Attended but not completed</div></div>
+      <div class="kpi-card red"><div class="kpi-glyph">❌</div><div class="kpi-label">No Attendance</div><div class="kpi-value">4</div><div class="kpi-sub">Absent both days</div></div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ─── DATA ───
+const participants = [
+  { name:"Bobby Andrew",            d1:"Onsite",  d2:"Onsite",         d3:"Completed"   },
+  { name:"Victor Vaeau",            d1:"Absent",  d2:"Absent",         d3:"–"           },
+  { name:"Nowel Delis",             d1:"Virtual", d2:"Virtual",        d3:"Completed"   },
+  { name:"Conny Livai Jr",          d1:"Absent",  d2:"Absent",         d3:"–"           },
+  { name:"Newton Langidrik",        d1:"Virtual", d2:"Virtual",        d3:"Completed"   },
+  { name:"Roselle Quinit",          d1:"Absent",  d2:"Absent",         d3:"–"           },
+  { name:"Yone Wase",               d1:"Virtual", d2:"Virtual",        d3:"Completed"   },
+  { name:"Leban Joash",             d1:"Absent",  d2:"Absent",         d3:"–"           },
+  { name:"Mikela Heine",            d1:"Virtual", d2:"Virtual",        d3:"Not Completed"},
+  { name:"Helina Edimon",           d1:"Virtual", d2:"Virtual",        d3:"Not Completed"},
+  { name:"Koichy O Agrippa",        d1:"Absent",  d2:"Virtual/Onsite", d3:"Not Completed"},
+  { name:"Patrick Dela Cruz",       d1:"Virtual", d2:"Virtual",        d3:"Not Completed"},
+  { name:"Craig Worthleen Tigno Vila",d1:"Absent",d2:"Absent",         d3:"–"           },
+];
+
+const metrics = [
+  { label:"Instructor Expertise",       score:5.0, perfect:true },
+  { label:"Learning Materials",         score:5.0, perfect:true },
+  { label:"LMS Usability",             score:5.0, perfect:true },
+  { label:"Practical Application",     score:5.0, perfect:true },
+  { label:"Value for Rollout",         score:5.0, perfect:true },
+  { label:"Communication Clarity",     score:4.67, perfect:false },
+  { label:"Engagement & Q&A",         score:4.67, perfect:false },
+  { label:"Content Alignment",        score:4.67, perfect:false },
+];
+
+// ─── TABS ───
+document.querySelectorAll('.nav-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ─── FUNNEL ───
+(function buildFunnel() {
+  const steps = [
+    { label:'Expected', value:28, pct:null, cls:'f-blue', meta:'Nominated by departments' },
+    { label:'Pre-Survey', value:13, pct:'46%', cls:'f-amber', meta:'Pre-engagement' },
+    { label:'Live Attendance', value:'7–8', pct:'~27%', cls:'f-red', meta:'Day 1–2 sessions' },
+    { label:'Completed Moodle', value:4, pct:'~14%', cls:'f-green', meta:'All activities done' },
+  ];
+  const maxW = 90;
+  const widths = [90, 55, 32, 18];
+  const wrap = document.getElementById('funnel');
+  steps.forEach((s, i) => {
+    const step = document.createElement('div');
+    step.className = 'funnel-step';
+    step.innerHTML = `
+      <div class="funnel-bar-wrap">
+        <div class="funnel-bar ${s.cls}" style="width:${widths[i]}%;min-width:120px">
+          <span>${s.value}</span>
+          <span class="bar-label">${s.label}</span>
+        </div>
+      </div>
+      ${s.pct ? `<div class="funnel-pct">▼ Drop to ${s.pct}</div>` : ''}
+      <div class="funnel-meta">${s.meta}</div>
+      ${i < steps.length - 1 ? '<div class="funnel-arrow">▼</div>' : ''}
+    `;
+    wrap.appendChild(step);
+  });
+})();
+
+// ─── ATTEND CHART (canvas) ───
+(function buildAttendChart() {
+  const canvas = document.getElementById('attendChart');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cats = ['Expected', 'Pre-Survey', 'Live (Day1)', 'Live (Day2)', 'Completed'];
+  const vals  = [28, 13, 8, 7, 4];
+  const colors = ['#3b82f6','#f59e0b','#ef4444','#ef4444','#10b981'];
+  const pad = { l:42, r:16, t:20, b:50 };
+  const barW = ((W - pad.l - pad.r) / cats.length) * 0.55;
+  const gap  = (W - pad.l - pad.r) / cats.length;
+  const maxV = 30;
+
+  ctx.clearRect(0, 0, W, H);
+  // grid
+  ctx.strokeStyle = 'rgba(255,255,255,.05)';
+  ctx.lineWidth = 1;
+  for(let i = 0; i <= 5; i++) {
+    const y = pad.t + (H - pad.t - pad.b) * (1 - i/5);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.25)';
+    ctx.font = '11px DM Sans';
+    ctx.textAlign = 'right';
+    ctx.fillText(Math.round(maxV * i / 5), pad.l - 6, y + 4);
+  }
+  // bars
+  cats.forEach((cat, i) => {
+    const x = pad.l + i * gap + (gap - barW) / 2;
+    const bH = ((H - pad.t - pad.b) * vals[i]) / maxV;
+    const y  = H - pad.b - bH;
+    // glow
+    const grd = ctx.createLinearGradient(0, y, 0, H - pad.b);
+    grd.addColorStop(0, colors[i]);
+    grd.addColorStop(1, colors[i] + '44');
+    ctx.fillStyle = grd;
+    // rounded rect
+    const r = 4;
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + barW - r, y);
+    ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
+    ctx.lineTo(x + barW, H - pad.b);
+    ctx.lineTo(x, H - pad.b);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    ctx.fill();
+    // value label
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 13px Syne';
+    ctx.textAlign = 'center';
+    ctx.fillText(vals[i], x + barW / 2, y - 6);
+    // x label
+    ctx.fillStyle = 'rgba(255,255,255,.4)';
+    ctx.font = '10px DM Sans';
+    ctx.fillText(cat, x + barW / 2, H - pad.b + 14);
+  });
+})();
+
+// ─── METRIC BARS ───
+(function buildMetricBars() {
+  const wrap = document.getElementById('metricBars');
+  if(!wrap) return;
+  metrics.forEach(m => {
+    const pct = (m.score / 5) * 100;
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <div class="bar-name">${m.label}</div>
+      <div class="bar-track">
+        <div class="bar-fill ${m.perfect ? 'perfect' : 'high'}" style="width:0%" data-target="${pct}">
+          ${m.score.toFixed(2)}
+        </div>
+      </div>
+      <div class="bar-score">${m.score.toFixed(2)}</div>
+    `;
+    wrap.appendChild(row);
+  });
+  // animate on first view (simple)
+  setTimeout(() => {
+    document.querySelectorAll('.bar-fill').forEach(el => {
+      el.style.width = el.dataset.target + '%';
+    });
+  }, 300);
+})();
+
+// ─── RADAR CHART ───
+(function buildRadar() {
+  const canvas = document.getElementById('radarCanvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const cx = 150, cy = 150, R = 110;
+  const labels = ['Expertise','Clarity','Engagement','Alignment','Materials','LMS','Application','Value'];
+  const scores = [5.0, 4.67, 4.67, 4.67, 5.0, 5.0, 5.0, 5.0];
+  const n = labels.length;
+
+  function pt(i, r) {
+    const a = (i / n) * Math.PI * 2 - Math.PI / 2;
+    return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+  }
+
+  ctx.clearRect(0, 0, 300, 300);
+  // grid rings
+  [.25,.5,.75,1].forEach(f => {
+    ctx.beginPath();
+    for(let i = 0; i < n; i++) {
+      const p = pt(i, R * f);
+      i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = 'rgba(255,255,255,.07)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+  // spokes
+  for(let i = 0; i < n; i++) {
+    const p = pt(i, R);
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(p.x, p.y);
+    ctx.strokeStyle = 'rgba(255,255,255,.07)'; ctx.lineWidth = 1; ctx.stroke();
+  }
+  // data polygon
+  ctx.beginPath();
+  scores.forEach((s, i) => {
+    const p = pt(i, R * (s / 5));
+    i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+  });
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(16,185,129,.18)';
+  ctx.fill();
+  ctx.strokeStyle = '#10b981';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  // dots
+  scores.forEach((s, i) => {
+    const p = pt(i, R * (s / 5));
+    ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#6ee7b7'; ctx.fill();
+  });
+  // labels
+  labels.forEach((lbl, i) => {
+    const p = pt(i, R + 18);
+    ctx.fillStyle = 'rgba(255,255,255,.55)';
+    ctx.font = '10px DM Sans';
+    ctx.textAlign = 'center';
+    ctx.fillText(lbl, p.x, p.y + 4);
+  });
+})();
+
+// ─── WORD CLOUD ───
+(function buildWordCloud() {
+  const words = [
+    { text:'Knowledgeable', size:28, cls:'text-green' },
+    { text:'Patient',       size:22, cls:'text-green' },
+    { text:'Clear',         size:26, cls:'text-green' },
+    { text:'Engaging',      size:24, cls:'text-green' },
+    { text:'Hybrid',        size:20, cls:'' },
+    { text:'Responsive',    size:19, cls:'' },
+    { text:'Flexible',      size:18, cls:'' },
+    { text:'Valuable',      size:21, cls:'text-green' },
+    { text:'Interactive',   size:17, cls:'' },
+    { text:'Effective',     size:22, cls:'text-green' },
+    { text:'Supportive',    size:16, cls:'' },
+    { text:'Trusted',       size:19, cls:'text-green' },
+    { text:'Well-Structured',size:15,cls:'' },
+    { text:'Hands-On',      size:16, cls:'text-amber' },
+  ];
+  const colors = ['rgba(16,185,129,.15)','rgba(59,130,246,.12)','rgba(139,92,246,.12)','rgba(245,158,11,.1)'];
+  const wrap = document.getElementById('wordCloud');
+  words.forEach((w, i) => {
+    const el = document.createElement('span');
+    el.className = 'wc-word ' + w.cls;
+    el.textContent = w.text;
+    el.style.fontSize = w.size + 'px';
+    el.style.background = colors[i % colors.length];
+    el.style.padding = '4px 12px';
+    el.style.borderRadius = '6px';
+    el.style.opacity = 0.7 + (w.size / 28) * 0.3;
+    wrap.appendChild(el);
+  });
+})();
+
+// ─── PARTICIPANT TABLE ───
+(function buildTable() {
+  function badgeClass(v) {
+    if(!v || v === '–') return '';
+    if(v === 'Onsite') return 'badge-onsite';
+    if(v === 'Virtual' || v.includes('Virtual')) return 'badge-virtual';
+    if(v === 'Absent') return 'badge-absent';
+    if(v === 'Completed') return 'badge-complete';
+    if(v === 'Not Completed') return 'badge-incomplete';
+    return '';
+  }
+  function badge(v) {
+    if(!v || v === '–') return '<span style="color:var(--muted)">–</span>';
+    return `<span class="badge ${badgeClass(v)}">${v}</span>`;
+  }
+  function overallStatus(p) {
+    const absent = p.d1 === 'Absent' && p.d2 === 'Absent';
+    const done   = p.d3 === 'Completed';
+    if(done) return ['Completed', 'badge-complete'];
+    if(absent) return ['Did Not Attend', 'badge-absent'];
+    return ['Partial', 'badge-incomplete'];
+  }
+
+  const tbody = document.getElementById('tableBody');
+  participants.forEach((p, i) => {
+    const [status, cls] = overallStatus(p);
+    const absent = p.d1 === 'Absent' && p.d2 === 'Absent';
+    const mode = p.d1 === 'Onsite' ? 'onsite' : p.d1 === 'Virtual' ? 'virtual' : '';
+    const filterTags = [
+      p.d1 === 'Onsite' || p.d2.includes('Onsite') ? 'onsite' : '',
+      p.d1 === 'Virtual' || p.d2.includes('Virtual') ? 'virtual' : '',
+      absent ? 'absent' : '',
+      p.d3 === 'Completed' ? 'completed' : 'incomplete',
+    ].filter(Boolean).join(' ');
+
+    const tr = document.createElement('tr');
+    tr.dataset.filter = filterTags;
+    tr.innerHTML = `
+      <td style="color:var(--muted)">${i+1}</td>
+      <td>${p.name}</td>
+      <td>${badge(p.d1)}</td>
+      <td>${badge(p.d2)}</td>
+      <td>${badge(p.d3)}</td>
+      <td><span class="badge ${cls}">${status}</span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // FILTER
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const f = btn.dataset.filter;
+      document.querySelectorAll('#tableBody tr').forEach(tr => {
+        if(f === 'all' || tr.dataset.filter.includes(f)) {
+          tr.classList.remove('hidden');
+        } else {
+          tr.classList.add('hidden');
+        }
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
