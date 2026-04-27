@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ICS 130 — Student Performance Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ── Design System ── */
+:root {
+  --bg:        #0a0c10;
+  --surface:   #10141c;
+  --card:      #141923;
+  --card2:     #1a2130;
+  --border:    #1f2c3d;
+  --border2:   #263547;
+  --gold:      #f5c842;
+  --gold2:     #e8a020;
+  --teal:      #34d4b8;
+  --sky:       #60b8f5;
+  --rose:      #f07171;
+  --sage:      #6bcf8f;
+  --lavender:  #a78cf8;
+  --text:      #edf0f5;
+  --text2:     #8fa3bc;
+  --text3:     #4d6480;
+  --radius:    16px;
+  --radius-sm: 10px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.65;
+  min-height: 100vh;
+}
+
+/* ── Noise texture overlay ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity: 0.4;
+}
+.container { max-width: 1360px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+/* ══════════════════════════════
+   HERO HEADER
+══════════════════════════════ */
+.hero {
+  background: linear-gradient(135deg, #0d1420 0%, #111b2e 40%, #0c1828 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 36px 0 32px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::after {
+  content: 'ICS 130';
+  position: absolute; right: -20px; top: -10px;
+  font-family: 'Playfair Display'; font-size: 160px; font-weight: 900;
+  color: rgba(245,200,66,0.04); line-height: 1; pointer-events: none;
+  letter-spacing: -8px; user-select: none;
+}
+.hero-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 24px; }
+.hero-left { display: flex; align-items: center; gap: 20px; }
+.avatar {
+  width: 64px; height: 64px; border-radius: 16px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Playfair Display'; font-size: 24px; font-weight: 900;
+  color: #0a0c10; box-shadow: 0 0 32px rgba(245,200,66,0.3);
+}
+.hero-name { font-family: 'Playfair Display'; font-size: 28px; font-weight: 900; letter-spacing: -0.5px; color: var(--text); line-height: 1.1; }
+.hero-sub { font-size: 13px; color: var(--text2); margin-top: 3px; }
+.hero-email { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.hero-right { text-align: right; }
+.hero-score { font-family: 'Playfair Display'; font-size: 72px; font-weight: 900; line-height: 1; color: var(--gold); letter-spacing: -3px; }
+.hero-score-label { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 2px; font-weight: 600; margin-top: 2px; }
+.hero-grade { display: inline-block; background: rgba(245,200,66,0.12); border: 1px solid rgba(245,200,66,0.3); color: var(--gold); border-radius: 8px; padding: 4px 14px; font-size: 13px; font-weight: 700; margin-top: 6px; letter-spacing: 1px; }
+
+/* ══════════════════════════════
+   MAIN
+══════════════════════════════ */
+.main { padding: 32px 0 64px; position: relative; z-index: 1; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.grid-3-1 { display: grid; grid-template-columns: 3fr 1fr; gap: 20px; }
+.grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+@media(max-width:960px) { .grid-2,.grid-3,.grid-3-1,.grid-1-2 { grid-template-columns: 1fr; } }
+.mb-20 { margin-bottom: 20px; }
+.mb-32 { margin-bottom: 32px; }
+
+/* ── Section title ── */
+.section-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 2px; color: var(--text3); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-label::before { content: ''; display: block; width: 20px; height: 2px; background: var(--gold); border-radius: 2px; }
+
+/* ── Card ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  transition: border-color 0.2s;
+}
+.card:hover { border-color: var(--border2); }
+.card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+.card-title .icon { font-size: 16px; }
+
+/* ── KPI row ── */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.kpi {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px;
+  position: relative; overflow: hidden;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.kpi:hover { transform: translateY(-2px); border-color: var(--border2); }
+.kpi-accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; border-radius: var(--radius) var(--radius) 0 0; }
+.kpi-icon { font-size: 20px; margin-bottom: 8px; }
+.kpi-val { font-family: 'Playfair Display'; font-size: 32px; font-weight: 900; line-height: 1; margin-bottom: 3px; }
+.kpi-lbl { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.kpi-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+/* ── Score bar ── */
+.score-bar-list { display: flex; flex-direction: column; gap: 14px; }
+.score-bar-item {}
+.score-bar-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; gap: 8px; }
+.score-bar-label { font-size: 12px; color: var(--text2); font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.score-bar-val { font-size: 13px; font-weight: 700; flex-shrink: 0; }
+.score-bar-bg { background: var(--surface); border-radius: 6px; height: 8px; overflow: hidden; }
+.score-bar-fill { height: 100%; border-radius: 6px; transition: width 1s cubic-bezier(.4,0,.2,1); }
+.score-bar-missing { height: 8px; border-radius: 6px; background: repeating-linear-gradient(45deg, var(--border) 0, var(--border) 4px, transparent 4px, transparent 8px); }
+
+/* ── Score pill ── */
+.pill {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 700;
+  min-width: 52px;
+}
+.pill-a  { background: rgba(107,207,143,0.15); color: var(--sage); }
+.pill-b  { background: rgba(52,212,184,0.15); color: var(--teal); }
+.pill-c  { background: rgba(245,200,66,0.15); color: var(--gold); }
+.pill-d  { background: rgba(240,113,113,0.15); color: var(--rose); }
+.pill-na { background: rgba(77,100,128,0.12); color: var(--text3); font-size: 11px; }
+
+/* ── Chart ── */
+.chart-wrap canvas { max-height: 260px; }
+.chart-wrap-tall canvas { max-height: 340px; }
+
+/* ── Category cards ── */
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.cat-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px;
+  border-left: 4px solid;
+  transition: transform 0.2s;
+}
+.cat-card:hover { transform: translateY(-2px); }
+.cat-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.cat-name { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.3; }
+.cat-score-big { font-family: 'Playfair Display'; font-size: 36px; font-weight: 900; line-height: 1; }
+.cat-items { font-size: 11px; color: var(--text3); margin-top: 4px; }
+.cat-progress-bg { background: var(--surface); border-radius: 4px; height: 5px; margin-top: 10px; overflow: hidden; }
+.cat-progress-fill { height: 100%; border-radius: 4px; transition: width 1s cubic-bezier(.4,0,.2,1); }
+
+/* ── Table ── */
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead tr { border-bottom: 1px solid var(--border2); }
+thead th { text-align: left; padding: 9px 14px; font-size: 10px; color: var(--text3); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; cursor: pointer; }
+thead th:hover { color: var(--gold); }
+thead th.sorted { color: var(--gold); }
+tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+tbody tr:hover { background: rgba(245,200,66,0.03); }
+tbody td { padding: 10px 14px; font-size: 13px; color: var(--text2); white-space: nowrap; }
+tbody td.bold { color: var(--text); font-weight: 600; }
+
+/* ── Missing / alerts ── */
+.alert-list { display: flex; flex-direction: column; gap: 10px; }
+.alert-item {
+  border-radius: var(--radius-sm); padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.alert-item.missing { background: rgba(240,113,113,0.07); border: 1px solid rgba(240,113,113,0.2); }
+.alert-item.info { background: rgba(245,200,66,0.06); border: 1px solid rgba(245,200,66,0.15); }
+.alert-name { font-size: 12px; font-weight: 600; color: var(--text); }
+.alert-cat { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.alert-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px; }
+.alert-badge.missing { background: rgba(240,113,113,0.15); color: var(--rose); }
+.alert-badge.info { background: rgba(245,200,66,0.12); color: var(--gold); }
+
+/* ── Strong/good box ── */
+.highlight-box {
+  border-radius: var(--radius-sm); padding: 14px 18px; margin-bottom: 10px;
+}
+.highlight-box.success { background: rgba(107,207,143,0.07); border: 1px solid rgba(107,207,143,0.18); }
+.highlight-box.warning { background: rgba(245,200,66,0.06); border: 1px solid rgba(245,200,66,0.18); }
+.highlight-box.danger  { background: rgba(240,113,113,0.06); border: 1px solid rgba(240,113,113,0.18); }
+.highlight-box h4 { font-size: 12px; font-weight: 700; margin-bottom: 5px; }
+.highlight-box p  { font-size: 11px; color: var(--text2); }
+.highlight-box.success h4 { color: var(--sage); }
+.highlight-box.warning h4 { color: var(--gold); }
+.highlight-box.danger  h4 { color: var(--rose); }
+
+/* ── Footer ── */
+.footer-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px 28px; margin-top: 32px; }
+.footer-card h3 { font-family: 'Playfair Display'; font-size: 17px; color: var(--gold); margin-bottom: 16px; }
+.dict-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+.dict-item { display: flex; gap: 8px; font-size: 12px; }
+.dict-term { color: var(--text); font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+.dict-def { color: var(--text2); }
+.note-list { list-style: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+.note-list li { font-size: 12px; color: var(--text2); padding: 4px 0 4px 16px; position: relative; }
+.note-list li::before { content: '→'; position: absolute; left: 0; color: var(--gold); }
+
+/* ── Grade scale sidebar ── */
+.grade-scale { display: flex; flex-direction: column; gap: 6px; }
+.grade-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; }
+.grade-row.active { background: rgba(245,200,66,0.1); border: 1px solid rgba(245,200,66,0.25); }
+.grade-letter { font-family: 'Playfair Display'; font-size: 20px; font-weight: 900; width: 24px; }
+.grade-range { font-size: 11px; color: var(--text3); font-weight: 600; }
+.grade-desc { font-size: 11px; color: var(--text2); flex: 1; }
+
+/* ── Gauge ring ── */
+.gauge-wrap { display: flex; align-items: center; justify-content: center; margin: 8px 0 16px; }
+.gauge-wrap svg { overflow: visible; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ── Export ── */
+.export-btn {
+  background: rgba(107,207,143,0.1); border: 1px solid rgba(107,207,143,0.2);
+  color: var(--sage); padding: 5px 12px; border-radius: 8px;
+  font-size: 11px; font-weight: 600; cursor: pointer; font-family: 'Inter';
+  transition: all 0.2s;
+}
+.export-btn:hover { background: rgba(107,207,143,0.18); }
+
+/* ── Animations ── */
+@keyframes fadeUp { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: none; } }
+.card, .kpi, .cat-card { animation: fadeUp 0.5s ease both; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ HERO ══════════════ -->
+<header class="hero">
+<div class="container">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="avatar">ST</div>
+      <div>
+        <div class="hero-name">ICS 130 </div>
+        <div class="hero-sub">ICS 130 — Introduction to Information Systems</div>
+        <div class="hero-email">startios@cmistudent.com</div>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="hero-score">93.1<span style="font-size:32px;opacity:.6">%</span></div>
+      <div class="hero-score-label">Course Total Score</div>
+      <div class="hero-grade">A — Excellent</div>
+    </div>
+  </div>
+</div>
+</header>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<main class="main">
+<div class="container">
+
+  <!-- KPI ROW -->
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-accent" style="background:linear-gradient(90deg,var(--gold),var(--gold2))"></div>
+      <div class="kpi-icon">🎓</div>
+      <div class="kpi-val" style="color:var(--gold)">93.1%</div>
+      <div class="kpi-lbl">Course Total</div>
+      <div class="kpi-sub">Letter Grade: A</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-accent" style="background:linear-gradient(90deg,var(--sage),var(--teal))"></div>
+      <div class="kpi-icon">🧠</div>
+      <div class="kpi-val" style="color:var(--sage)">93.5%</div>
+      <div class="kpi-lbl">Quizzes / Exams</div>
+      <div class="kpi-sub">6 of 8 scored</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-accent" style="background:linear-gradient(90deg,var(--sky),var(--lavender))"></div>
+      <div class="kpi-icon">📝</div>
+      <div class="kpi-val" style="color:var(--sky)">85%</div>
+      <div class="kpi-lbl">Assignments / HW</div>
+      <div class="kpi-sub">2 of 4 submitted</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-accent" style="background:linear-gradient(90deg,var(--teal),var(--sage))"></div>
+      <div class="kpi-icon">📅</div>
+      <div class="kpi-val" style="color:var(--teal)">100%</div>
+      <div class="kpi-lbl">Attendance</div>
+      <div class="kpi-sub">Perfect attendance</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-accent" style="background:linear-gradient(90deg,var(--rose),#f0a171)"></div>
+      <div class="kpi-icon">⚠️</div>
+      <div class="kpi-val" style="color:var(--rose)">7</div>
+      <div class="kpi-lbl">Missing Items</div>
+      <div class="kpi-sub">Not yet submitted</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-accent" style="background:linear-gradient(90deg,var(--lavender),var(--sky))"></div>
+      <div class="kpi-icon">✅</div>
+      <div class="kpi-val" style="color:var(--lavender)">11</div>
+      <div class="kpi-lbl">Completed Items</div>
+      <div class="kpi-sub">Out of 18 total</div>
+    </div>
+  </div>
+
+  <!-- CATEGORY CARDS -->
+  <div class="section-label">Grade Categories</div>
+  <div class="cat-grid mb-20">
+    <div class="cat-card" style="border-color:var(--teal)">
+      <div class="cat-header">
+        <div>
+          <div class="cat-name">Attendance &amp; Participation</div>
+          <div class="cat-items">1 item · All submitted</div>
+        </div>
+        <div style="text-align:right">
+          <div class="cat-score-big" style="color:var(--teal)">100%</div>
+          <div style="margin-top:4px"><span class="pill pill-a">A</span></div>
+        </div>
+      </div>
+      <div class="cat-progress-bg"><div class="cat-progress-fill" style="width:100%;background:var(--teal)"></div></div>
+    </div>
+    <div class="cat-card" style="border-color:var(--sage)">
+      <div class="cat-header">
+        <div>
+          <div class="cat-name">Quizzes &amp; Exams</div>
+          <div class="cat-items">8 quizzes · 6 graded · 2 missing</div>
+        </div>
+        <div style="text-align:right">
+          <div class="cat-score-big" style="color:var(--sage)">93.5%</div>
+          <div style="margin-top:4px"><span class="pill pill-a">A</span></div>
+        </div>
+      </div>
+      <div class="cat-progress-bg"><div class="cat-progress-fill" style="width:93.5%;background:var(--sage)"></div></div>
+    </div>
+    <div class="cat-card" style="border-color:var(--sky)">
+      <div class="cat-header">
+        <div>
+          <div class="cat-name">Assignments &amp; Homework</div>
+          <div class="cat-items">4 items · 2 graded · 2 missing</div>
+        </div>
+        <div style="text-align:right">
+          <div class="cat-score-big" style="color:var(--sky)">85%</div>
+          <div style="margin-top:4px"><span class="pill pill-b">B</span></div>
+        </div>
+      </div>
+      <div class="cat-progress-bg"><div class="cat-progress-fill" style="width:85%;background:var(--sky)"></div></div>
+    </div>
+    <div class="cat-card" style="border-color:var(--rose)">
+      <div class="cat-header">
+        <div>
+          <div class="cat-name">Final Exam / Project Report</div>
+          <div class="cat-items">Not yet submitted</div>
+        </div>
+        <div style="text-align:right">
+          <div class="cat-score-big" style="color:var(--rose)">—</div>
+          <div style="margin-top:4px"><span class="pill pill-na">MISSING</span></div>
+        </div>
+      </div>
+      <div class="cat-progress-bg"><div class="score-bar-missing" style="width:100%"></div></div>
+    </div>
+    <div class="cat-card" style="border-color:var(--rose)">
+      <div class="cat-header">
+        <div>
+          <div class="cat-name">Projects</div>
+          <div class="cat-items">Not yet submitted</div>
+        </div>
+        <div style="text-align:right">
+          <div class="cat-score-big" style="color:var(--rose)">—</div>
+          <div style="margin-top:4px"><span class="pill pill-na">MISSING</span></div>
+        </div>
+      </div>
+      <div class="cat-progress-bg"><div class="score-bar-missing" style="width:100%"></div></div>
+    </div>
+    <div class="cat-card" style="border-color:var(--rose)">
+      <div class="cat-header">
+        <div>
+          <div class="cat-name">Lab &amp; Activities</div>
+          <div class="cat-items">Not yet submitted</div>
+        </div>
+        <div style="text-align:right">
+          <div class="cat-score-big" style="color:var(--rose)">—</div>
+          <div style="margin-top:4px"><span class="pill pill-na">MISSING</span></div>
+        </div>
+      </div>
+      <div class="cat-progress-bg"><div class="score-bar-missing" style="width:100%"></div></div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 1 -->
+  <div class="grid-1-2 mb-20">
+
+    <!-- Radar / gauge -->
+    <div class="card">
+      <div class="card-title"><span class="icon">🎯</span>Performance Radar</div>
+      <div class="chart-wrap"><canvas id="chart-radar"></canvas></div>
+    </div>
+
+    <!-- Quiz bar chart -->
+    <div class="card">
+      <div class="card-title"><span class="icon">📊</span>Individual Quiz &amp; Exam Scores</div>
+      <div class="chart-wrap-tall"><canvas id="chart-quizzes"></canvas></div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 2 -->
+  <div class="grid-2 mb-20">
+    <div class="card">
+      <div class="card-title"><span class="icon">📚</span>Assignment Scores</div>
+      <div class="chart-wrap"><canvas id="chart-assignments"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">🥧</span>Score Distribution by Category</div>
+      <div class="chart-wrap"><canvas id="chart-pie"></canvas></div>
+    </div>
+  </div>
+
+  <!-- FULL DETAIL TABLE + GRADE SCALE -->
+  <div class="grid-3-1 mb-20">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div class="card-title" style="margin-bottom:0"><span class="icon">📋</span>Full Grade Sheet</div>
+        <button class="export-btn" onclick="exportTable()">⬇ Export CSV</button>
+      </div>
+      <div class="tbl-wrap">
+        <table id="grade-table">
+          <thead><tr>
+            <th onclick="sortTbl(0)">Item</th>
+            <th onclick="sortTbl(1)">Category</th>
+            <th onclick="sortTbl(2)">Score</th>
+            <th onclick="sortTbl(3)">Grade</th>
+            <th onclick="sortTbl(4)">Status</th>
+          </tr></thead>
+          <tbody id="grade-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Grade scale + findings -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card" style="flex:0 0 auto">
+        <div class="card-title"><span class="icon">📏</span>Grade Scale</div>
+        <div class="grade-scale">
+          <div class="grade-row active">
+            <div class="grade-letter" style="color:var(--sage)">A</div>
+            <div>
+              <div class="grade-range">90–100%</div>
+              <div class="grade-desc">Excellent — Current standing</div>
+            </div>
+          </div>
+          <div class="grade-row">
+            <div class="grade-letter" style="color:var(--teal)">B</div>
+            <div><div class="grade-range">80–89%</div><div class="grade-desc">Above Average</div></div>
+          </div>
+          <div class="grade-row">
+            <div class="grade-letter" style="color:var(--gold)">C</div>
+            <div><div class="grade-range">70–79%</div><div class="grade-desc">Average</div></div>
+          </div>
+          <div class="grade-row">
+            <div class="grade-letter" style="color:var(--rose)">D</div>
+            <div><div class="grade-range">60–69%</div><div class="grade-desc">Below Average</div></div>
+          </div>
+          <div class="grade-row">
+            <div class="grade-letter" style="color:var(--rose)">F</div>
+            <div><div class="grade-range">Below 60%</div><div class="grade-desc">Failing</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="flex:1">
+        <div class="card-title"><span class="icon">💡</span>Key Insights</div>
+        <div class="highlight-box success" style="margin-bottom:10px">
+          <h4>✅ Perfect Attendance</h4>
+          <p>100% attendance score — demonstrates strong commitment and reliability in attending all class sessions.</p>
+        </div>
+        <div class="highlight-box success" style="margin-bottom:10px">
+          <h4>🏆 Strong Quiz Performance</h4>
+          <p>Average of 93.5% across 6 completed quizzes; scored 100% on Quiz 1 and Quiz 2. Mastery demonstrated in core IS concepts.</p>
+        </div>
+        <div class="highlight-box warning" style="margin-bottom:10px">
+          <h4>⚠️ 7 Items Not Yet Submitted</h4>
+          <p>Quizzes 7 &amp; 8, Web Exercises, Assignment #3, Final Exam Report, Projects, and Lab &amp; Activities are missing — completing these is critical to maintaining the A grade.</p>
+        </div>
+        <div class="highlight-box danger">
+          <h4>🚨 Final Exam Not Submitted</h4>
+          <p>The Final Exam / Project Report is not yet graded. This is likely a high-weight item that could significantly impact the final course total.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MISSING ITEMS -->
+  <div class="grid-2 mb-20">
+    <div class="card">
+      <div class="card-title"><span class="icon">📭</span>Missing / Unsubmitted Items</div>
+      <div class="alert-list">
+        <div class="alert-item missing">
+          <div><div class="alert-name">Final Exam — Project Report</div><div class="alert-cat">Final Exam / Project category</div></div>
+          <span class="alert-badge missing">MISSING</span>
+        </div>
+        <div class="alert-item missing">
+          <div><div class="alert-name">Quiz #7 — System Development Acquisition</div><div class="alert-cat">Chapter 8 · Quizzes/Exams</div></div>
+          <span class="alert-badge missing">MISSING</span>
+        </div>
+        <div class="alert-item missing">
+          <div><div class="alert-name">Quiz #8 — Cybercrime &amp; Information Systems</div><div class="alert-cat">Chapter 9 · Quizzes/Exams</div></div>
+          <span class="alert-badge missing">MISSING</span>
+        </div>
+        <div class="alert-item missing">
+          <div><div class="alert-name">Web Exercises</div><div class="alert-cat">Assignments/Homework</div></div>
+          <span class="alert-badge missing">MISSING</span>
+        </div>
+        <div class="alert-item missing">
+          <div><div class="alert-name">Assignment #3</div><div class="alert-cat">Assignments/Homework</div></div>
+          <span class="alert-badge missing">MISSING</span>
+        </div>
+        <div class="alert-item missing">
+          <div><div class="alert-name">Projects</div><div class="alert-cat">Projects category</div></div>
+          <span class="alert-badge missing">MISSING</span>
+        </div>
+        <div class="alert-item missing">
+          <div><div class="alert-name">Lab &amp; Activities</div><div class="alert-cat">Lab category</div></div>
+          <span class="alert-badge missing">MISSING</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">🏅</span>Completed &amp; Scored Items</div>
+      <div class="score-bar-list">
+        <div class="score-bar-item">
+          <div class="score-bar-header"><span class="score-bar-label">Attendance</span><span class="score-bar-val" style="color:var(--sage)">100%</span></div>
+          <div class="score-bar-bg"><div class="score-bar-fill" style="width:100%;background:var(--sage)"></div></div>
+        </div>
+        <div class="score-bar-item">
+          <div class="score-bar-header"><span class="score-bar-label">Quiz 1 — Introduction to Information Systems</span><span class="score-bar-val" style="color:var(--sage)">100%</span></div>
+          <div class="score-bar-bg"><div class="score-bar-fill" style="width:100%;background:var(--sage)"></div></div>
+        </div>
+        <div class="score-bar-item">
+          <div class="score-bar-header"><span class="score-bar-label">Quiz 2 — Hardware and Software (Ch. 2)</span><span class="score-bar-val" style="color:var(--sage)">100%</span></div>
+          <div class="score-bar-bg"><div class="score-bar-fill" style="width:100%;background:var(--sage)"></div></div>
+        </div>
+        <div class="score-bar-item">
+          <div class="score-bar-header"><span class="score-bar-label">Quiz 6 — Business Analytics</span><span class="score-bar-val" style="color:var(--sage)">95%</span></div>
+          <div class="score-bar-bg"><div class="score-bar-fill" style="width:95%;background:var(--sage)"></div></div>
+        </div>
+        <div class="score-bar-item">
+          <div class="score-bar-header"><span class="score-bar-label">Quiz 4 — Hardware, Software, DB &amp; Networks</span><span class="score-bar-val" style="color:var(--teal)">90%</span></div>
+          <div class="score-bar-bg"><div class="score-bar-fill" style="width:90%;background:var(--teal)"></div></div>
+        </div>
+        <div class="score-bar-item">
+          <div class="score-bar-header"><span class="score-bar-label">Quiz 5 — Business IS (TPS, MIS, DSS, EIS)</span><span class="score-bar-val" style="color:var(--teal)">90%</span></div>
+          <div class="score-bar-bg"><div class="score-bar-fill" style="width:90%;background:var(--teal)"></div></div>
+        </div>
+        <div class="score-bar-item">
+          <div class="score-bar-header"><span class="score-bar-label">Quiz 3 — Database</span><span class="score-bar-val" style="color:var(--teal)">87.5%</span></div>
+          <div class="score-bar-bg"><div class="score-bar-fill" style="width:87.5%;background:var(--teal)"></div></div>
+        </div>
+        <div class="score-bar-item">
+          <div class="score-bar-header"><span class="score-bar-label">Assignment #1</span><span class="score-bar-val" style="color:var(--sky)">85%</span></div>
+          <div class="score-bar-bg"><div class="score-bar-fill" style="width:85%;background:var(--sky)"></div></div>
+        </div>
+        <div class="score-bar-item">
+          <div class="score-bar-header"><span class="score-bar-label">Assignment #2</span><span class="score-bar-val" style="color:var(--sky)">85%</span></div>
+          <div class="score-bar-bg"><div class="score-bar-fill" style="width:85%;background:var(--sky)"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATA DICTIONARY -->
+  <div class="footer-card">
+    <h3>📖 Data Dictionary &amp; Assumptions</h3>
+    <div class="dict-grid">
+      <div class="dict-item"><span class="dict-term">Course Total&nbsp;</span><span class="dict-def">93.1% — the Moodle-computed weighted course aggregate from the exported gradebook.</span></div>
+      <div class="dict-item"><span class="dict-term">Quizzes/Exams Total&nbsp;</span><span class="dict-def">93.5% — the Moodle-computed category aggregate for all quiz/exam items.</span></div>
+      <div class="dict-item"><span class="dict-term">Assignments/HW Total&nbsp;</span><span class="dict-def">85% — Moodle category aggregate for homework/assignment items.</span></div>
+      <div class="dict-item"><span class="dict-term">Missing (—)&nbsp;</span><span class="dict-def">Cells containing "-" in the ODS export, indicating not yet submitted or not yet graded.</span></div>
+      <div class="dict-item"><span class="dict-term">Score Band&nbsp;</span><span class="dict-def">A=90–100, B=80–89, C=70–79, D=60–69, F=below 60.</span></div>
+      <div class="dict-item"><span class="dict-term">Real (suffix)&nbsp;</span><span class="dict-def">Moodle column suffix meaning the raw numerical value (as opposed to percentage or letter).</span></div>
+    </div>
+    <ul class="note-list">
+      <li><strong>"-" values treated as missing</strong>, not zero. Moodle uses "-" for unsubmitted or excluded items. They are counted as incomplete.</li>
+      <li><strong>Duplicate "Final Exam – Project Report" column</strong>: The export has two identically-named columns. Both are "-", treated as one item.</li>
+      <li><strong>Projects, Lab &amp; Activities totals are "-"</strong>: These category totals are blank, likely because no individual items within them have been submitted yet.</li>
+      <li><strong>Only one student in the export.</strong> This is a single-student gradebook extract — no peer comparisons are possible.</li>
+      <li><strong>Last downloaded timestamp</strong> (1777266000) is a Unix epoch value in milliseconds, corresponding to the export date/time.</li>
+    </ul>
+  </div>
+
+</div><!-- /container -->
+</main>
+
+<script>
+// ═══════════════════════════════════════
+// CHART DEFAULTS
+// ═══════════════════════════════════════
+Chart.defaults.color = '#8fa3bc';
+Chart.defaults.font = { family: "'Inter', sans-serif", size: 11 };
+
+const GOLD     = '#f5c842';
+const TEAL     = '#34d4b8';
+const SKY      = '#60b8f5';
+const SAGE     = '#6bcf8f';
+const ROSE     = '#f07171';
+const LAVENDER = '#a78cf8';
+const MISSING_PATTERN = 'rgba(77,100,128,0.25)';
+
+// ── RADAR CHART ──
+new Chart(document.getElementById('chart-radar'), {
+  type: 'radar',
+  data: {
+    labels: ['Attendance', 'Quizzes/\nExams', 'Assignments/\nHW', 'Course\nTotal'],
+    datasets: [{
+      label: 'Tartios, Smith Edmond',
+      data: [100, 93.5, 85, 93.1],
+      backgroundColor: 'rgba(245,200,66,0.12)',
+      borderColor: GOLD, borderWidth: 2.5,
+      pointBackgroundColor: GOLD, pointRadius: 5,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: true,
+    scales: {
+      r: {
+        min: 0, max: 105,
+        grid: { color: '#1f2c3d' },
+        angleLines: { color: '#1f2c3d' },
+        pointLabels: { color: '#8fa3bc', font: { size: 11, family: "'Inter'" } },
+        ticks: { display: false, stepSize: 25 }
+      }
+    },
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.label}: ${c.parsed.r}%` } } }
+  }
+});
+
+// ── QUIZ BAR CHART ──
+const quizData = [
+  { label: 'Quiz 1\nIntro to IS',                      score: 100  },
+  { label: 'Quiz 2\nHW & Software',                    score: 100  },
+  { label: 'Quiz 6\nBusiness Analytics',               score: 95   },
+  { label: 'Quiz 4\nHW/SW/DB/Networks',                score: 90   },
+  { label: 'Quiz 5\nBusiness IS',                      score: 90   },
+  { label: 'Quiz 3\nDatabase',                         score: 87.5 },
+  { label: 'Quiz 7\nSys Dev Acquisition',              score: null  },
+  { label: 'Quiz 8\nCybercrime & IS',                  score: null  },
+];
+
+new Chart(document.getElementById('chart-quizzes'), {
+  type: 'bar',
+  data: {
+    labels: quizData.map(d => d.label),
+    datasets: [{
+      label: 'Score',
+      data: quizData.map(d => d.score !== null ? d.score : 0),
+      backgroundColor: quizData.map(d => d.score !== null
+        ? (d.score >= 90 ? 'rgba(107,207,143,0.7)' : d.score >= 80 ? 'rgba(52,212,184,0.7)' : 'rgba(245,200,66,0.7)')
+        : MISSING_PATTERN),
+      borderColor: quizData.map(d => d.score !== null
+        ? (d.score >= 90 ? SAGE : d.score >= 80 ? TEAL : GOLD)
+        : '#4d6480'),
+      borderWidth: 1.5, borderRadius: 6, borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: true, aspectRatio: 1.6,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ctx.parsed.y === 0 && quizData[ctx.dataIndex].score === null ? 'Not submitted' : ` Score: ${ctx.parsed.y}%` } }
+    },
+    scales: {
+      x: { grid: { color: '#1f2c3d' }, ticks: { font: { size: 9 } } },
+      y: { min: 0, max: 110, grid: { color: '#1f2c3d' }, ticks: { callback: v => v + '%' },
+           annotation: { lines: [{ y: 93.5, borderColor: SAGE, label: { text: 'Category Avg 93.5%' } }] }
+      }
+    }
+  }
+});
+
+// ── ASSIGNMENT BAR ──
+const assignData = [
+  { label: 'Assignment #1',  score: 85,   cat: 'Assignments' },
+  { label: 'Assignment #2',  score: 85,   cat: 'Assignments' },
+  { label: 'Web Exercises',  score: null, cat: 'Assignments' },
+  { label: 'Assignment #3',  score: null, cat: 'Assignments' },
+];
+
+new Chart(document.getElementById('chart-assignments'), {
+  type: 'bar',
+  data: {
+    labels: assignData.map(d => d.label),
+    datasets: [{
+      label: 'Score',
+      data: assignData.map(d => d.score !== null ? d.score : 0),
+      backgroundColor: assignData.map(d => d.score !== null ? 'rgba(96,184,245,0.7)' : MISSING_PATTERN),
+      borderColor: assignData.map(d => d.score !== null ? SKY : '#4d6480'),
+      borderWidth: 1.5, borderRadius: 8, borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: true, aspectRatio: 2,
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ctx.parsed.y === 0 && assignData[ctx.dataIndex].score === null ? 'Not submitted' : ` Score: ${ctx.parsed.y}%` } }
+    },
+    scales: {
+      x: { grid: { color: '#1f2c3d' } },
+      y: { min: 0, max: 110, grid: { color: '#1f2c3d' }, ticks: { callback: v => v + '%' } }
+    }
+  }
+});
+
+// ── PIE CHART ──
+new Chart(document.getElementById('chart-pie'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Attendance (100%)', 'Quizzes/Exams (93.5%)', 'Assignments/HW (85%)', 'Missing / Unscored'],
+    datasets: [{
+      data: [100, 93.5, 85, 0],
+      backgroundColor: ['rgba(52,212,184,0.75)', 'rgba(107,207,143,0.75)', 'rgba(96,184,245,0.75)', 'rgba(77,100,128,0.3)'],
+      borderColor: [TEAL, SAGE, SKY, '#4d6480'],
+      borderWidth: 2,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: true, aspectRatio: 1.7,
+    plugins: {
+      legend: { position: 'bottom', labels: { padding: 12, font: { size: 11 }, boxWidth: 12 } },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.label}` } }
+    }
+  }
+});
+
+// ═══════════════════════════════════════
+// GRADE TABLE
+// ═══════════════════════════════════════
+const ITEMS = [
+  { name: 'Attendance',                               cat: 'Attendance',    score: 100,  },
+  { name: 'Attendance & Participation Total',         cat: 'Category Total',score: 100,  },
+  { name: 'Quiz 1 — Introduction to Information Systems', cat: 'Quiz/Exam', score: 100  },
+  { name: 'Quiz 2 — Chapter 2: Hardware & Software', cat: 'Quiz/Exam',      score: 100  },
+  { name: 'Quiz 6 — Business Analytics',             cat: 'Quiz/Exam',      score: 95   },
+  { name: 'Quiz 4 — Hardware, Software, DB & Networks', cat: 'Quiz/Exam',   score: 90   },
+  { name: 'Quiz 5 — Business IS (TPS, MIS, DSS, EIS)', cat: 'Quiz/Exam',   score: 90   },
+  { name: 'Quiz 3 — Database',                       cat: 'Quiz/Exam',      score: 87.5 },
+  { name: 'Quizzes/Exams Category Total',            cat: 'Category Total', score: 93.5 },
+  { name: 'Assignment #1',                           cat: 'Assignment/HW',  score: 85   },
+  { name: 'Assignment #2',                           cat: 'Assignment/HW',  score: 85   },
+  { name: 'Assignments/HW Category Total',           cat: 'Category Total', score: 85   },
+  { name: 'Quiz 7 — System Development Acquisition',cat: 'Quiz/Exam',      score: null },
+  { name: 'Quiz 8 — Cybercrime & Information Systems',cat:'Quiz/Exam',      score: null },
+  { name: 'Web Exercises',                           cat: 'Assignment/HW',  score: null },
+  { name: 'Assignment #3',                           cat: 'Assignment/HW',  score: null },
+  { name: 'Final Exam — Project Report',             cat: 'Final Exam',     score: null },
+  { name: 'Projects',                                cat: 'Projects',       score: null },
+  { name: 'Lab & Activities',                        cat: 'Lab/Activities', score: null },
+  { name: 'Course Total',                            cat: 'COURSE TOTAL',   score: 93.1 },
+];
+
+function gradePill(score) {
+  if (score === null) return '<span class="pill pill-na">—</span>';
+  if (score >= 90) return `<span class="pill pill-a">A</span>`;
+  if (score >= 80) return `<span class="pill pill-b">B</span>`;
+  if (score >= 70) return `<span class="pill pill-c">C</span>`;
+  if (score >= 60) return `<span class="pill pill-d">D</span>`;
+  return `<span class="pill pill-d">F</span>`;
+}
+function scorePill(score) {
+  if (score === null) return '<span class="pill pill-na">Missing</span>';
+  const color = score >= 90 ? 'color:var(--sage)' : score >= 80 ? 'color:var(--teal)' : 'color:var(--sky)';
+  return `<span style="${color};font-weight:700">${score}%</span>`;
+}
+
+const tbody = document.getElementById('grade-tbody');
+tbody.innerHTML = ITEMS.map(item => {
+  const isCat = item.cat === 'Category Total' || item.cat === 'COURSE TOTAL';
+  const rowStyle = isCat ? 'background:rgba(245,200,66,0.04);font-style:italic' : '';
+  const status = item.score !== null ? '<span style="color:var(--sage);font-weight:600">✓ Graded</span>' : '<span style="color:var(--rose);font-weight:600">⚠ Missing</span>';
+  return `<tr style="${rowStyle}">
+    <td class="bold" style="max-width:300px;white-space:normal">${item.name}</td>
+    <td><span style="font-size:11px;color:var(--text3)">${item.cat}</span></td>
+    <td>${scorePill(item.score)}</td>
+    <td>${gradePill(item.score)}</td>
+    <td>${status}</td>
+  </tr>`;
+}).join('');
+
+// ═══════════════════════════════════════
+// SORT
+// ═══════════════════════════════════════
+const sortState = {};
+function sortTbl(colIdx) {
+  const table = document.getElementById('grade-table');
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  const key = colIdx;
+  const asc = !sortState[key]; sortState[key] = asc;
+  rows.sort((a,b) => {
+    const av = a.cells[colIdx].innerText.trim();
+    const bv = b.cells[colIdx].innerText.trim();
+    const an = parseFloat(av); const bn = parseFloat(bv);
+    if (!isNaN(an) && !isNaN(bn)) return asc ? an - bn : bn - an;
+    return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+  rows.forEach(r => tbody.appendChild(r));
+  table.querySelectorAll('th').forEach((th,i) => th.classList.toggle('sorted', i===colIdx));
+}
+
+// ═══════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════
+function exportTable() {
+  const table = document.getElementById('grade-table');
+  const rows = Array.from(table.querySelectorAll('tr'));
+  const csv = rows.map(r => Array.from(r.querySelectorAll('th,td')).map(c => '"' + c.innerText.replace(/"/g,'""').trim() + '"').join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'ICS130_Grades.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
