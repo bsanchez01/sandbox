@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MindTap Student Performance Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #080d18;
+  --surface: #0f1624;
+  --card: #141d2e;
+  --card2: #19243a;
+  --border: #1e2d46;
+  --border2: #263550;
+  --accent: #38bdf8;
+  --accent2: #7c6af7;
+  --teal: #2dd4bf;
+  --green: #4ade80;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --purple: #c084fc;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --text3: #64748b;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 48px rgba(0,0,0,0.5);
+  --radius: 14px;
+  --radius-sm: 8px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+h1,h2,h3,h4 { font-family: 'Syne', sans-serif; }
+
+/* ── Layout ── */
+.container { max-width: 1400px; margin: 0 auto; padding: 0 20px; }
+
+/* ── Header ── */
+.header {
+  background: linear-gradient(135deg, #0f1a2e 0%, #0d1e3a 50%, #091529 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 24px 0 20px;
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(12px);
+}
+.header-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.header-brand { display: flex; align-items: center; gap: 14px; }
+.header-icon {
+  width: 44px; height: 44px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; box-shadow: 0 0 24px rgba(56,189,248,0.3);
+}
+.header-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: var(--text); }
+.header-subtitle { font-size: 12px; color: var(--text3); font-weight: 400; }
+.header-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+.badge {
+  background: var(--card2); border: 1px solid var(--border2);
+  border-radius: 20px; padding: 4px 12px; font-size: 11px;
+  color: var(--text2); font-weight: 500;
+}
+.badge.live { border-color: var(--teal); color: var(--teal); }
+.badge.live::before { content: '●'; margin-right: 5px; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ── Main ── */
+.main { padding: 28px 0 60px; }
+
+/* ── Section ── */
+.section { margin-bottom: 32px; }
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+.section-title { font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.section-title .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+/* ── Filter Bar ── */
+.filter-bar {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 28px;
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
+}
+.filter-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 160px; }
+.filter-group label { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.filter-group select, .filter-group input {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); color: var(--text); padding: 8px 12px;
+  font-size: 13px; font-family: 'DM Sans', sans-serif; outline: none;
+  transition: border-color 0.2s;
+}
+.filter-group select:focus, .filter-group input:focus { border-color: var(--accent); }
+.filter-group select option { background: #1a2540; }
+.btn {
+  background: linear-gradient(135deg, var(--accent), #0ea5e9);
+  color: #fff; border: none; border-radius: var(--radius-sm);
+  padding: 9px 18px; font-size: 13px; font-weight: 600;
+  font-family: 'DM Sans', sans-serif; cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  white-space: nowrap; align-self: flex-end;
+}
+.btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-outline {
+  background: transparent; border: 1px solid var(--border2);
+  color: var(--text2); transition: all 0.2s;
+}
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); background: rgba(56,189,248,0.05); }
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+.threshold-wrap { display: flex; align-items: center; gap: 8px; }
+.threshold-wrap input[type=range] { width: 100px; accent-color: var(--red); }
+.threshold-val { font-size: 12px; color: var(--red); font-weight: 700; min-width: 32px; }
+
+/* ── KPI Cards ── */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+.kpi-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px 20px;
+  position: relative; overflow: hidden;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.kpi-card:hover { transform: translateY(-2px); border-color: var(--border2); }
+.kpi-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.kpi-card.blue::before { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+.kpi-card.teal::before { background: linear-gradient(90deg, var(--teal), var(--green)); }
+.kpi-card.green::before { background: linear-gradient(90deg, var(--green), var(--teal)); }
+.kpi-card.amber::before { background: linear-gradient(90deg, var(--amber), #f97316); }
+.kpi-card.red::before { background: linear-gradient(90deg, var(--red), #f97316); }
+.kpi-card.purple::before { background: linear-gradient(90deg, var(--purple), var(--accent2)); }
+.kpi-icon { font-size: 22px; margin-bottom: 8px; }
+.kpi-label { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.kpi-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+.kpi-sub { font-size: 11px; color: var(--text3); }
+.kpi-card.blue .kpi-value { color: var(--accent); }
+.kpi-card.teal .kpi-value { color: var(--teal); }
+.kpi-card.green .kpi-value { color: var(--green); }
+.kpi-card.amber .kpi-value { color: var(--amber); }
+.kpi-card.red .kpi-value { color: var(--red); }
+.kpi-card.purple .kpi-value { color: var(--purple); }
+
+/* ── Charts ── */
+.charts-row { display: grid; gap: 16px; }
+.charts-row-2 { grid-template-columns: 1fr 1fr; }
+.charts-row-3 { grid-template-columns: 2fr 1fr; }
+@media(max-width:900px) { .charts-row-2, .charts-row-3 { grid-template-columns: 1fr; } }
+.chart-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px 22px;
+}
+.chart-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.chart-title .chip {
+  font-size: 10px; font-family: 'DM Sans'; font-weight: 500;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 20px; padding: 2px 8px; color: var(--text3);
+}
+.chart-wrap { position: relative; }
+.chart-wrap canvas { max-height: 280px; }
+
+/* ── Student Table ── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead tr { border-bottom: 1px solid var(--border2); }
+thead th {
+  text-align: left; padding: 10px 14px; font-size: 11px;
+  color: var(--text3); font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.5px; white-space: nowrap; cursor: pointer;
+}
+thead th:hover { color: var(--accent); }
+thead th.sorted { color: var(--accent); }
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+tbody tr:hover { background: rgba(56,189,248,0.04); }
+tbody td { padding: 10px 14px; font-size: 13px; color: var(--text2); white-space: nowrap; }
+tbody td.bold { color: var(--text); font-weight: 600; }
+.score-pill {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  min-width: 52px;
+}
+.score-90 { background: rgba(74,222,128,0.15); color: var(--green); }
+.score-80 { background: rgba(56,189,248,0.15); color: var(--accent); }
+.score-70 { background: rgba(251,191,36,0.15); color: var(--amber); }
+.score-60 { background: rgba(251,115,0,0.15); color: #fb923c; }
+.score-fail { background: rgba(248,113,113,0.15); color: var(--red); }
+.score-na { background: rgba(100,116,139,0.1); color: var(--text3); font-size: 11px; }
+
+/* ── Heatmap ── */
+.heatmap-scroll { overflow-x: auto; }
+.heatmap-table { border-collapse: collapse; font-size: 11px; }
+.heatmap-table th { padding: 6px 10px; background: var(--surface); color: var(--text3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; font-size: 10px; white-space: nowrap; border: 1px solid var(--border); }
+.heatmap-table td { border: 1px solid var(--border); padding: 4px 6px; text-align: center; white-space: nowrap; width: 70px; }
+.heatmap-table td.student-name { text-align: left; padding: 6px 12px; font-weight: 600; color: var(--text); background: var(--surface); position: sticky; left: 0; z-index: 2; width: 200px; font-size: 12px; }
+.heatmap-table th.assign-head { writing-mode: vertical-lr; transform: rotate(180deg); min-height: 80px; max-width: 30px; padding: 8px 4px; text-align: left; font-size: 9px; }
+.heatmap-cell { border-radius: 4px; padding: 3px 4px; font-weight: 600; font-size: 11px; display: block; }
+.hm-90 { background: rgba(74,222,128,0.25); color: #86efac; }
+.hm-80 { background: rgba(56,189,248,0.2); color: #7dd3fc; }
+.hm-70 { background: rgba(251,191,36,0.2); color: #fde68a; }
+.hm-60 { background: rgba(251,115,0,0.18); color: #fdba74; }
+.hm-fail { background: rgba(248,113,113,0.2); color: #fca5a5; }
+.hm-none { background: rgba(100,116,139,0.08); color: var(--text3); }
+
+/* ── Progress Bars ── */
+.progress-list { display: flex; flex-direction: column; gap: 10px; }
+.progress-item { }
+.progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.progress-label { font-size: 12px; color: var(--text2); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
+.progress-pct { font-size: 12px; font-weight: 700; }
+.progress-bar-bg { background: var(--surface); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+
+/* ── At-risk list ── */
+.at-risk-list { display: flex; flex-direction: column; gap: 10px; }
+.at-risk-item {
+  background: rgba(248,113,113,0.06); border: 1px solid rgba(248,113,113,0.2);
+  border-radius: var(--radius-sm); padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.at-risk-name { font-weight: 600; color: var(--text); font-size: 13px; }
+.at-risk-score { font-family: 'Syne'; font-weight: 800; font-size: 18px; color: var(--red); }
+.at-risk-detail { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.all-clear {
+  text-align: center; padding: 24px; color: var(--green);
+  font-size: 13px; background: rgba(74,222,128,0.05);
+  border: 1px solid rgba(74,222,128,0.15); border-radius: var(--radius-sm);
+}
+.all-clear .icon { font-size: 28px; margin-bottom: 8px; }
+
+/* ── Missing assignments ── */
+.missing-list { display: flex; flex-direction: column; gap: 8px; }
+.missing-item {
+  background: rgba(251,191,36,0.05); border: 1px solid rgba(251,191,36,0.15);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+}
+.missing-name { font-weight: 600; color: var(--text); font-size: 12px; margin-bottom: 4px; }
+.missing-students { font-size: 11px; color: var(--amber); }
+.missing-module { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+/* ── Student cards ── */
+.student-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 28px; }
+.student-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 22px;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.student-card:hover { transform: translateY(-2px); border-color: var(--border2); }
+.student-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+.student-avatar {
+  width: 46px; height: 46px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne'; font-size: 17px; font-weight: 800; color: #fff;
+  flex-shrink: 0;
+}
+.student-info { flex: 1; margin-left: 12px; }
+.student-full-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.student-id { font-size: 11px; color: var(--text3); }
+.student-overall { font-family: 'Syne'; font-size: 30px; font-weight: 800; }
+.student-band { font-size: 10px; color: var(--text3); text-align: right; margin-top: 2px; }
+.student-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 14px 0; border-top: 1px solid var(--border); }
+.student-stat-val { font-family: 'Syne'; font-size: 18px; font-weight: 700; color: var(--text); }
+.student-stat-label { font-size: 10px; color: var(--text3); font-weight: 500; }
+.student-module-bars { margin-top: 14px; }
+
+/* ── Score bands legend ── */
+.score-bands { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.band-tag {
+  padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer;
+}
+
+/* ── Footer / Data Dict ── */
+.footer-section {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 24px 28px;
+  margin-top: 36px;
+}
+.footer-section h3 { font-size: 15px; margin-bottom: 14px; color: var(--accent); }
+.dict-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.dict-item { display: flex; gap: 10px; }
+.dict-term { font-weight: 700; color: var(--text); font-size: 12px; white-space: nowrap; }
+.dict-def { font-size: 12px; color: var(--text2); }
+.assumptions-list { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+.assumptions-list li { font-size: 12px; color: var(--text2); margin-bottom: 6px; padding-left: 14px; position: relative; }
+.assumptions-list li::before { content: '→'; position: absolute; left: 0; color: var(--accent); }
+.interpretation-box {
+  background: rgba(56,189,248,0.05); border: 1px solid rgba(56,189,248,0.2);
+  border-radius: var(--radius-sm); padding: 16px 18px; margin-top: 16px;
+}
+.interpretation-box h4 { font-size: 13px; color: var(--accent); margin-bottom: 10px; }
+.interpretation-box p { font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+
+/* ── Export button ── */
+.export-btn {
+  background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.25);
+  color: var(--green); padding: 6px 14px; border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 600; cursor: pointer; font-family: 'DM Sans';
+  transition: all 0.2s;
+}
+.export-btn:hover { background: rgba(74,222,128,0.18); }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* ── Responsive ── */
+@media(max-width:640px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .header-title { font-size: 17px; }
+  .kpi-value { font-size: 22px; }
+}
+
+/* ── Tabs ── */
+.tab-bar { display: flex; gap: 4px; background: var(--surface); border-radius: var(--radius-sm); padding: 4px; width: fit-content; margin-bottom: 16px; }
+.tab-btn {
+  padding: 6px 16px; border-radius: 6px; font-size: 12px; font-weight: 600;
+  font-family: 'DM Sans'; cursor: pointer; border: none; color: var(--text3);
+  background: transparent; transition: all 0.2s;
+}
+.tab-btn.active { background: var(--card2); color: var(--accent); border: 1px solid var(--border2); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<header class="header">
+<div class="container">
+  <div class="header-inner">
+    <div class="header-brand">
+      <div class="header-icon">📊</div>
+      <div>
+        <div class="header-title">MindTap Performance Dashboard</div>
+        <div class="header-subtitle">CompTIA A+ Core 1 &amp; Core 2 — Student Analytics</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <span class="badge live">Live Data</span>
+      <span class="badge" id="cohort-badge">Cohort: 2 Students</span>
+      <span class="badge" id="assign-badge">109 Assignments</span>
+    </div>
+  </div>
+</div>
+</header>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<main class="main">
+<div class="container">
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar">
+    <div class="filter-group">
+      <label>Student</label>
+      <select id="filter-student">
+        <option value="all">All Students</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Module</label>
+      <select id="filter-module">
+        <option value="all">All Modules</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Assignment Type</label>
+      <select id="filter-type">
+        <option value="all">All Types</option>
+        <option value="Quiz/Knowledge Check">Quiz / Knowledge Check</option>
+        <option value="Hardware Lab Simulation">Hardware Lab Simulation</option>
+        <option value="Advanced Hardware Lab">Advanced Hardware Lab</option>
+        <option value="Live Virtual Machine Lab">Live Virtual Machine Lab</option>
+        <option value="Software Lab Simulation">Software Lab Simulation</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Completion</label>
+      <select id="filter-completion">
+        <option value="all">All</option>
+        <option value="completed">Completed Only</option>
+        <option value="missing">Missing Only</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>At-Risk Threshold</label>
+      <div class="threshold-wrap">
+        <input type="range" id="threshold-range" min="50" max="90" value="75" step="5"/>
+        <span class="threshold-val" id="threshold-display">75%</span>
+      </div>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="resetFilters()">Reset</button>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="section">
+    <div class="kpi-grid">
+      <div class="kpi-card blue">
+        <div class="kpi-icon">👥</div>
+        <div class="kpi-label">Total Students</div>
+        <div class="kpi-value" id="kpi-students">—</div>
+        <div class="kpi-sub">In current cohort</div>
+      </div>
+      <div class="kpi-card teal">
+        <div class="kpi-icon">📈</div>
+        <div class="kpi-label">Class Average</div>
+        <div class="kpi-value" id="kpi-avg">—</div>
+        <div class="kpi-sub">Overall score</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-icon">🏆</div>
+        <div class="kpi-label">Highest Score</div>
+        <div class="kpi-value" id="kpi-high">—</div>
+        <div class="kpi-sub" id="kpi-high-name">—</div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-icon">📉</div>
+        <div class="kpi-label">Lowest Score</div>
+        <div class="kpi-value" id="kpi-low">—</div>
+        <div class="kpi-sub" id="kpi-low-name">—</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-icon">⚠️</div>
+        <div class="kpi-label">At-Risk Students</div>
+        <div class="kpi-value" id="kpi-atrisk">—</div>
+        <div class="kpi-sub" id="kpi-atrisk-sub">Below threshold</div>
+      </div>
+      <div class="kpi-card purple">
+        <div class="kpi-icon">✅</div>
+        <div class="kpi-label">Avg Completion</div>
+        <div class="kpi-value" id="kpi-completion">—</div>
+        <div class="kpi-sub">Assignments submitted</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDENT OVERVIEW CARDS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title"><span class="dot"></span>Student Overview</div>
+    </div>
+    <div class="student-cards" id="student-cards-container"></div>
+  </div>
+
+  <!-- CHARTS ROW 1: Module Performance + Score Bands -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title"><span class="dot"></span>Performance by Module</div>
+    </div>
+    <div class="charts-row charts-row-3">
+      <div class="chart-card">
+        <div class="chart-title">Module Average Scores <span class="chip">Grouped by Student</span></div>
+        <div class="chart-wrap"><canvas id="chart-modules"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Score Band Distribution <span class="chip">All Assignments</span></div>
+        <div class="chart-wrap"><canvas id="chart-bands"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 2: Assignment Type + Trend -->
+  <div class="section">
+    <div class="charts-row charts-row-2">
+      <div class="chart-card">
+        <div class="chart-title">Avg Score by Assignment Type</div>
+        <div class="chart-wrap"><canvas id="chart-types"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Module Completion Rate <span class="chip">% Submitted</span></div>
+        <div class="chart-wrap"><canvas id="chart-completion"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDENT RANKINGS TABLE -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title"><span class="dot"></span>Student Rankings</div>
+      <button class="export-btn" onclick="exportTable('ranking-table','student_rankings.csv')">⬇ Export CSV</button>
+    </div>
+    <div class="chart-card">
+      <div class="table-wrap">
+        <table id="ranking-table">
+          <thead><tr>
+            <th onclick="sortTable('ranking-table',0)">Rank</th>
+            <th onclick="sortTable('ranking-table',1)">Student Name</th>
+            <th onclick="sortTable('ranking-table',2)">User ID</th>
+            <th onclick="sortTable('ranking-table',3)">Overall Score</th>
+            <th onclick="sortTable('ranking-table',4)">Band</th>
+            <th onclick="sortTable('ranking-table',5)">Total Points</th>
+            <th onclick="sortTable('ranking-table',6)">Completed</th>
+            <th onclick="sortTable('ranking-table',7)">Completion %</th>
+            <th onclick="sortTable('ranking-table',8)">vs Class Avg</th>
+          </tr></thead>
+          <tbody id="ranking-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS: At-Risk / Missing Assignments -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title"><span class="dot"></span>Risk &amp; Gap Analysis</div>
+    </div>
+    <div class="charts-row charts-row-2">
+      <!-- At-Risk -->
+      <div class="chart-card">
+        <div class="chart-title">⚠️ At-Risk Students</div>
+        <div id="at-risk-container"></div>
+      </div>
+      <!-- Missing Assignments -->
+      <div class="chart-card">
+        <div class="chart-title">📭 Missing / Incomplete Assignments</div>
+        <div class="tab-bar">
+          <button class="tab-btn active" onclick="switchTab('missing-all')">All Missing</button>
+          <button class="tab-btn" onclick="switchTab('missing-s0')">Heine</button>
+          <button class="tab-btn" onclick="switchTab('missing-s1')">Tartios</button>
+        </div>
+        <div id="missing-all" class="tab-content active"></div>
+        <div id="missing-s0" class="tab-content"></div>
+        <div id="missing-s1" class="tab-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ASSIGNMENT HEATMAP -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title"><span class="dot"></span>Assignment Score Heatmap</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span class="band-tag score-90">90–100</span>
+        <span class="band-tag score-80">80–89</span>
+        <span class="band-tag score-70">70–79</span>
+        <span class="band-tag score-60">60–69</span>
+        <span class="band-tag score-fail">&lt;60</span>
+        <span class="band-tag score-na">—</span>
+        <button class="export-btn" onclick="exportHeatmap()">⬇ Export CSV</button>
+      </div>
+    </div>
+    <div class="chart-card" style="padding:16px">
+      <div class="heatmap-scroll">
+        <table class="heatmap-table" id="heatmap-table"></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODULE DETAIL TABLE -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title"><span class="dot"></span>Module Performance Detail</div>
+      <button class="export-btn" onclick="exportTable('module-detail-table','module_performance.csv')">⬇ Export CSV</button>
+    </div>
+    <div class="chart-card">
+      <div class="table-wrap">
+        <table id="module-detail-table">
+          <thead><tr>
+            <th>Module</th>
+            <th>Assignments</th>
+            <th>Heine Avg</th>
+            <th>Tartios Avg</th>
+            <th>Class Avg</th>
+            <th>Heine Completion</th>
+            <th>Tartios Completion</th>
+          </tr></thead>
+          <tbody id="module-detail-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATA DICTIONARY & INTERPRETATION -->
+  <div class="footer-section">
+    <h3>📖 Data Dictionary</h3>
+    <div class="dict-grid">
+      <div class="dict-item"><span class="dict-term">Overall Score&nbsp;</span><span class="dict-def">Weighted % of total possible points earned to date (from MindTap gradebook).</span></div>
+      <div class="dict-item"><span class="dict-term">Total Points&nbsp;</span><span class="dict-def">Raw cumulative points accumulated across all completed assignments.</span></div>
+      <div class="dict-item"><span class="dict-term">Module Score&nbsp;</span><span class="dict-def">Arithmetic mean of all scored (non-null) assignments within a module.</span></div>
+      <div class="dict-item"><span class="dict-term">Completion Rate&nbsp;</span><span class="dict-def">% of the 109 graded assignments that have a recorded score (non-blank).</span></div>
+      <div class="dict-item"><span class="dict-term">At-Risk&nbsp;</span><span class="dict-def">Student whose Overall Score falls below the user-selected threshold (default 75%).</span></div>
+      <div class="dict-item"><span class="dict-term">Score Band&nbsp;</span><span class="dict-def">Categorical bucket: 90–100 (A), 80–89 (B), 70–79 (C), 60–69 (D), &lt;60 (F).</span></div>
+      <div class="dict-item"><span class="dict-term">Class Avg&nbsp;</span><span class="dict-def">87.97% — pulled directly from the MindTap export aggregate row.</span></div>
+      <div class="dict-item"><span class="dict-term">Missing&nbsp;</span><span class="dict-def">Any assignment with a blank/null cell in the student's row (not yet submitted or graded).</span></div>
+    </div>
+
+    <ul class="assumptions-list" style="margin-top:18px">
+      <li><strong>Blank cells = Not completed.</strong> MindTap leaves cells blank for unsubmitted or ungraded work. These are counted as missing — <em>not</em> as zero.</li>
+      <li><strong>Module 10 &amp; 20 absent.</strong> The export contains Modules 01–09, 11–19, and 21. Modules 10 and 20 were not exported (likely not yet assigned or omitted by instructor).</li>
+      <li><strong>Student IDs not populated.</strong> The "Student ID" column is blank in the export; the User ID column is used as a unique identifier.</li>
+      <li><strong>Class average row</strong> (row 7 of file, Total Points=9149, Score=87.97%) treated as cohort-level aggregate, not a third student.</li>
+      <li><strong>Scores are percentages</strong> (0–100%). Values like "61.54%" are preserved as-is from MindTap (some assignments are scored on non-integer scales).</li>
+      <li><strong>&#58; HTML entity</strong> in "Quiz&#58; Module 12 Installing Windows" decoded to colon during parsing.</li>
+    </ul>
+
+    <div class="interpretation-box">
+      <h4>🔍 Key Findings &amp; Student-Success Recommendations</h4>
+      <p><strong>1. Tartios, Smith Edmond</strong> (93.69%) outperforms <strong>Heine, laurman</strong> (82.25%) by ~11.4 points — both above the class average of 87.97%.</p>
+      <p><strong>2. Completion gap is significant:</strong> Heine has completed 57.8% of assignments (63/109) vs Tartios at 72.5% (79/109). Incomplete assignments are the largest risk factor for Heine's grade trajectory.</p>
+      <p><strong>3. Heine's weakest scores</strong> appear in Advanced Hardware Labs (Module 01: Disassemble — 35%, Lab 1-6: Remove Motherboard — 50%) suggesting hardware manipulation tasks need targeted support.</p>
+      <p><strong>4. Both students have zero scores in all Modules 15–21</strong> assignments that are blank — these are likely upcoming content not yet released or required.</p>
+      <p><strong>Recommendations:</strong> (a) Follow up with Heine on 46 missing assignments — set a resubmission plan. (b) Provide tutoring on Advanced Hardware Labs for Heine. (c) Both students should prioritize upcoming Module 15–21 work before semester end.</p>
+    </div>
+  </div>
+
+</div><!-- /container -->
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// RAW DATA — embedded from MindTap.csv
+// ═══════════════════════════════════════════════════════════════
+const RAW_CSV = "User ID,Student Name,Student ID,Total Points to Date,Overall Score To Date,Check Your Understanding: Advanced Hardware Simulation Pre-Requisite,Knowledge Check: CompTIA A+ Core 1 (220-1101) Pre-Assessment Quiz,Hardware Lab Simulation 1-1: PC Audio and Video Connectors,Hardware Lab Simulation 1-2: PC Connectors and Ports,Hardware Lab Simulation 1-3: Using Motherboard Connectors,Advanced Hardware Lab 1-3: Identify Parts Inside a Laptop and All-in-One Computer,Advanced Hardware Lab 1-4: Use Tools from the Technician's Toolkit,Advanced Hardware Lab 1-5: Diagram and Remove Cables Inside a Computer,\"Advanced Hardware Lab 1-6: Remove Motherboard, Power Supply, and Drives\",Advanced Hardware Lab 1-7: Install Components Inside the Case,Advanced Hardware Lab 1-8: Attach Internal Data and Power Cables,Advanced Hardware Lab 1-9: Disassemble a Laptop,Quiz: Module 01 Taking a Computer Apart and Putting it Back Together,Hardware Lab Simulation 2-1: Matching a Processor to a Motherboard and Socket,Hardware Lab Simulation 2-2: Using Msinfo32 Memory and Components,Advanced Hardware Lab 2-1: Identify Motherboard Components (Part 1),Advanced Hardware Lab 2-2: Identify Motherboard Components (Part 2),Advanced Hardware Lab 2-4: Configure a Motherboard,Advanced Hardware Lab 2-5: Select and Install a Motherboard,Quiz: Module 02 All About Motherboards,Hardware Lab Simulation 3-1: Installing Processor and Connecting Power,Hardware Lab Simulation 3-2: Upgrading Laptop Memory,Advanced Hardware Lab 3-1: Select a Processor,Advanced Hardware Lab 3-2: Install a Processor,Advanced Hardware Lab 3-3: Identify Memory Technologies,Advanced Hardware Lab 3-4: Select and Install Memory,Quiz: Module 03 Supporting Processors and Upgrading Memory,Hardware Lab Simulation 4-1: Troubleshooting Memory,\"Advanced Hardware Lab 4-4: Troubleshoot the Motherboard, Processor, and RAM\",Quiz: Module 04 Power Supplies and Troubleshooting Computer Problems,Hardware Lab Simulation 5-1: Inside the Hard Drive,Hardware Lab Simulation 5-2: Using SD Storage and Portable Media,Advanced Hardware Lab 5-2: Install Hardware RAID,Advanced Hardware Lab 5-3: Install an Optical Drive,Advanced Hardware Lab 5-5: Troubleshoot a Hard Drive,Advanced Hardware Lab 5-6: Replace Parts in a Laptop All-in-One,Quiz: Module 05 Hard Drives and Other Storage Devices,Quiz: Module 06 Supporting I/O Devices,Advanced Hardware Lab 7-1: Work with IP Addresses and Subnets,Advanced Hardware Lab 7-2: Identify TCP IP Protocols and Port Numbers,Advanced Hardware Lab 7-3: Connect a Computer to a Network,Advanced Hardware Lab 7-4: Install and Configure a SOHO Router,Advanced Hardware Lab 7-5: Identify Network Technologies,Live Virtual Machine Lab 7-1: Configuring Networking Settings on a Windows Device,Quiz: Module 07 Networking Fundamentals,Hardware Lab Simulation 8-1: Using Google Cloud,Hardware Lab Simulation 8-2: Cable Tester,Advanced Hardware Lab 8-2: Identify Cabling Standards and Technologies,Advanced Hardware Lab 8-3: Select and Install Network Hardware,Advanced Hardware Lab 8-4: Terminate Twisted-Pair Cables,Advanced Hardware Lab 8-5: Troubleshoot Network Wiring,Quiz: Module 08 Network Infrastructure and Cloud Computing,Hardware Lab Simulation 9-1: Syncing to the Cloud,Hardware Lab Simulation 9-2: Android Smartphone Emulation,Advanced Hardware Lab 9-1: Create Mobile Device Connections,Advanced Hardware Lab 9-2: Troubleshoot Mobile Devices,Quiz: Module 09 Supporting Mobile Devices,Software Lab Simulation 11-1: Customer Service,Software Lab Simulation 11-2: Using the System Information Utility,Live Virtual Machine Lab 11-1: Managing a Windows device using the Graphical User Interface (GUI),Live Virtual Machine Lab 11-2: Identify different Operating Systems and Functionality,Quiz: Module 11 The Complex World of IT Professionals,\"Software Lab Simulation 12-2: Install Hyper-V, Configure, and Create VM\",Live Virtual Machine Lab 12-1: Identifying different Windows Operating System Editions,Live Virtual Machine Lab 12-2: Configuring a Windows Device using the Control Panel,Live Virtual Machine Lab 12-3: Different Operating System Installation Methods,Quiz: Module 12 Installing Windows,Software Lab Simulation 13-1: Using System Restore,Software Lab Simulation 13-2: Verifying TCP IP Settings,Live Virtual Machine Lab 13-1: Managing a Windows Device using the Command Line Interface,Live Virtual Machine Lab 13-2: Install and Configure Applications on a Windows Device,Quiz: Module 13 Maintaining Windows,Software Lab Simulation 14-1: Registry Editor,Software Lab Simulation 14-2: Using Event Viewer,Quiz: Module 14 Troubleshooting Windows After Startup,Software Lab Simulation 15-1: Startup Repair,Software Lab Simulation 15-2: Practicing Using System Recovery Options,Live Virtual Machine Lab 15-1: Backup and Recovery Implementation,Quiz: Module 15 Troubleshooting Windows Startup,Software Lab Simulation 16-1: Downloading and Using Anti-Malware Software,Software Lab Simulation 16-2: Creating and Using an Anti-Malware Software Rescue Disk,Live Virtual Machine Lab 16-1: Implementing Physical Security Measures,Live Virtual Machine Lab 16-2: Authentication and Authorization Methods,Live Virtual Machine Lab 16-4: Secure Data Disposal Methods,Live Virtual Machine Lab 16-5: Malware Removal and Remediating Best Practices,Quiz: Module 16 Security Strategies,Software Lab Simulation 17-1: Using Password Manager,Software Lab Simulation 17-2: Applying Local Security Policies,Live Virtual Machine Lab 17-1: Security Implementation on a Windows Device,Live Virtual Machine Lab 17-2: Password and Account Management on a Windows Device,Live Virtual Machine Lab 17-3: Securing Web Browsers on a Windows Device,Quiz: Module 17 Securing and Sharing Windows Resources,Software Lab Simulation 18-1: Android Studio,Software Lab Simulation 18-2: Locating an Android Device,Live Virtual Machine Lab 18-1: Mobile Security Solutions,Quiz: Module 18 Mobile Device Security,Software Lab Simulation 19-1: Scanning a Network for Connected Devices,Software Lab Simulation 19-2: Setting Up a Persistent Network Drive,Live Virtual Machine Lab 19-1: Implementing Network Security Measures,Live Virtual Machine Lab 19-3: Securing a SOHO Network,Live Virtual Machine Lab 19-4: Remote Access Methods,Quiz: Module 19 Network Security and Troubleshooting,Software Lab Simulation 21-1: Linux File System,Software Lab Simulation 21-2: Linux Commands,Live Virtual Machine Lab 21-1: Tools for Managing and Maintaining Linux Operating Systems,Live Virtual Machine Lab 21-2: Basic Scripting Techniques,Quiz: Module 21 Linux and Scripting,Knowledge Check: CompTIA A+ Core 1 (220-1101) Post-Assessment Quiz,Knowledge Check: CompTIA A+ Core 2 (220-1102) Post-Assessment Quiz\n,,,,,2745566566,2745566568,2745566603,2745566604,2745566605,2745566607,2745566608,2745566609,2745566610,2745566611,2745566612,2745566613,2745566614,2745566626,2745566627,2745566629,2745566630,2745566632,2745566633,2745566634,2745566645,2745566646,2745566648,2745566649,2745566650,2745566651,2745566652,2745566663,2745566669,2745566670,2745566681,2745566682,2745566684,2745566685,2745566686,2745566687,2745566688,2745566706,2745566721,2745566722,2745566723,2745566724,2745566725,2745566727,2745566728,2745566739,2745566740,2745566742,2745566743,2745566744,2745566745,2745566746,2745566757,2745566758,2745566760,2745566761,2745566762,2745566791,2745566792,2745566794,2745566795,2745566798,2745566810,2745566812,2745566813,2745566814,2745566815,2745566827,2745566828,2745566830,2745566831,2745566832,2745566843,2745566844,2745566845,2745566856,2745566857,2745566859,2745566860,2745566871,2745566872,2745566874,2745566875,2745566876,2745566877,2745566878,2745566890,2745566891,2745566893,2745566894,2745566895,2745566896,2745566907,2745566908,2745566910,2745566911,2745566922,2745566923,2745566925,2745566926,2745566927,2745566928,2745566954,2745566955,2745566957,2745566958,2745566959,2745567010,2745567011\n,,,,,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment,Assessment\n,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n,,,,,Live Virtual Machine Lab Preparation,,Hardware Lab Simulations: Module 01,Hardware Lab Simulations: Module 01,Hardware Lab Simulations: Module 01,Advanced Hardware Lab Simulations: Module 01 Core 1 (220-1001),Advanced Hardware Lab Simulations: Module 01 Core 1 (220-1001),Advanced Hardware Lab Simulations: Module 01 Core 1 (220-1001),Advanced Hardware Lab Simulations: Module 01 Core 1 (220-1001),Advanced Hardware Lab Simulations: Module 01 Core 1 (220-1001),Advanced Hardware Lab Simulations: Module 01 Core 1 (220-1001),Advanced Hardware Lab Simulations: Module 01 Core 1 (220-1001),Apply It,Hardware Lab Simulations: Module 02,Hardware Lab Simulations: Module 02,Advanced Hardware Lab Simulations Module 02 Core 1 (220-1001),Advanced Hardware Lab Simulations Module 02 Core 1 (220-1001),Advanced Hardware Lab Simulations Module 02 Core 1 (220-1001),Advanced Hardware Lab Simulations Module 02 Core 1 (220-1001),Apply It,Hardware Lab Simulations: Module 03,Hardware Lab Simulations: Module 03,Advanced Hardware Lab Simulations Module 03 Core 1 (220-1001),Advanced Hardware Lab Simulations Module 03 Core 1 (220-1001),Advanced Hardware Lab Simulations Module 03 Core 1 (220-1001),Advanced Hardware Lab Simulations Module 03 Core 1 (220-1001),Apply It,Hardware Lab Simulations: Module 04,Advanced Hardware Lab Simulations Module 04 Core 1 (220-1001),Apply It,Hardware Lab Simulations: Module 05,Hardware Lab Simulations: Module 05,Advanced Hardware Lab Simulations Module 05 Core 1 (220-1001),Advanced Hardware Lab Simulations Module 05 Core 1 (220-1001),Advanced Hardware Lab Simulations Module 05 Core 1 (220-1001),Advanced Hardware Lab Simulations Module 05 Core 1 (220-1001),Apply It,Apply It,Advanced Hardware Lab Simulations Module 07 Core 1 (220-1001),Advanced Hardware Lab Simulations Module 07 Core 1 (220-1001),Advanced Hardware Lab Simulations Module 07 Core 1 (220-1001),Advanced Hardware Lab Simulations Module 07 Core 1 (220-1001),Advanced Hardware Lab Simulations Module 07 Core 1 (220-1001),Live Virtual Machine Labs: Module 07,Apply It,Hardware Lab Simulations: Module 08,Hardware Lab Simulations: Module 08,Advanced Hardware Lab Simulations Module 08 Core 1 (220-1001),Advanced Hardware Lab Simulations Module 08 Core 1 (220-1001),Advanced Hardware Lab Simulations Module 08 Core 1 (220-1001),Advanced Hardware Lab Simulations Module 08 Core 1 (220-1001),Apply It,Hardware Lab Simulations: Module 09,Hardware Lab Simulations: Module 09,Advanced Hardware Lab Simulations Module 09 Core 1 (220-1001),Advanced Hardware Lab Simulations Module 09 Core 1 (220-1001),Apply It,Software Lab Simulations: Module 11,Software Lab Simulations: Module 11,Live Virtual Machine Labs: Module 11,Live Virtual Machine Labs: Module 11,Apply It,Software Lab Simulations: Module 12,Live Virtual Machine Labs: Module 12,Live Virtual Machine Labs: Module 12,Live Virtual Machine Labs: Module 12,Apply It,Software Lab Simulations: Module 13,Software Lab Simulations: Module 13,Live Virtual Machine Labs: Module 13,Live Virtual Machine Labs: Module 13,Apply It,Software Lab Simulations: Module 14,Software Lab Simulations: Module 14,Apply It,Software Lab Simulations: Module 15,Software Lab Simulations: Module 15,Live Virtual Machine Labs: Module 15,Apply It,Software Lab Simulations: Module 16,Software Lab Simulations: Module 16,Live Virtual Machine Labs: Module 16,Live Virtual Machine Labs: Module 16,Live Virtual Machine Labs: Module 16,Live Virtual Machine Labs: Module 16,Apply It,Software Lab Simulations: Module 17,Software Lab Simulations: Module 17,Live Virtual Machine Labs: Module 17,Live Virtual Machine Labs: Module 17,Live Virtual Machine Labs: Module 17,Apply It,Software Lab Simulations: Module 18,Software Lab Simulations: Module 18,Live Virtual Machine Labs: Module 18,Apply It,Software Lab Simulations: Module 19,Software Lab Simulations: Module 19,Live Virtual Machine Labs: Module 19,Live Virtual Machine Labs: Module 19,Live Virtual Machine Labs: Module 19,Apply It,Software Lab Simulations: Module 21,Software Lab Simulations: Module 21,Live Virtual Machine Labs: Module 21,Live Virtual Machine Labs: Module 21,Apply It,,\n,,,,,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded,Graded\n,,,9149.0,87.97%\n34724914,\"Heine, laurman\",,4389.92,82.25%,80%,100%,100%,90%,81%,81%,52%,50%,91%,87%,75%,35%,100%,90%,89%,90%,89%,88%,79%,61.54%,60%,70%,80%,60%,61%,80%,80%,90%,80%,80%,90%,75%,90%,91%,95%,97%,76.92%,90%,100%,94%,85%,86%,95%,80%,57.14%,70%,80%,88%,91%,95%,68%,70%,75%,80%,96%,94%,61.83%,100%,90%,80%,90%,80%,80%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,\n29426694,\"Tartios, Smith Edmond\",,6261.5,93.69%,80%,100%,100%,90%,70%,94%,97%,96%,95%,94%,89%,98%,100%,100%,100%,84%,97%,98%,91%,69.23%,100%,100%,93%,100%,88%,89%,80%,100%,94%,70%,100%,92%,100%,100%,98%,98%,92.31%,80%,86%,85%,100%,100%,84%,80%,92.86%,90%,100%,89%,91%,100%,79%,100%,75%,100%,94%,81%,95.83%,100%,100%,100%,100%,80%,100%,100%,80%,80%,75%,100%,90%,100%,100%,93.33%,,,,,,,,90%,100%,100%,100%,100%,100%,100%,,,,,,,,,,,,,,,,,,,,,,,\n";
+
+// ═══════════════════════════════════════════════════════════════
+// CSV PARSER
+// ═══════════════════════════════════════════════════════════════
+function parseCSVLine(line) {
+  const result = []; let cur = ''; let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') { inQ = !inQ; }
+    else if (ch === ',' && !inQ) { result.push(cur); cur = ''; }
+    else { cur += ch; }
+  }
+  result.push(cur);
+  return result;
+}
+
+function parseCSV(csv) {
+  const lines = csv.trim().split('\n');
+  return lines.map(parseCSVLine);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DATA PROCESSING
+// ═══════════════════════════════════════════════════════════════
+const rows = parseCSV(RAW_CSV);
+const colNames = rows[0]; // assignment headers
+const colGroup = rows[4]; // module groupings
+
+function parseScore(v) {
+  if (!v || v.trim() === '') return null;
+  return parseFloat(v.replace('%','').trim());
+}
+
+function getAssignmentType(name) {
+  const n = name.toLowerCase();
+  if (n.includes('quiz') || n.includes('knowledge check') || n.includes('check your understanding')) return 'Quiz/Knowledge Check';
+  if (n.includes('advanced hardware lab')) return 'Advanced Hardware Lab';
+  if (n.includes('hardware lab simulation')) return 'Hardware Lab Simulation';
+  if (n.includes('live virtual machine lab')) return 'Live Virtual Machine Lab';
+  if (n.includes('software lab simulation')) return 'Software Lab Simulation';
+  return 'Other';
+}
+
+function getModuleNumber(modStr) {
+  const m = modStr.match(/Module\s+0*(\d+)/i);
+  return m ? parseInt(m[1]) : null;
+}
+
+// Build assignment metadata
+const assignments = [];
+for (let i = 5; i < colNames.length; i++) {
+  const name = colNames[i].replace(/&#58;/g, ':').trim();
+  const mod = (colGroup[i] || '').trim();
+  assignments.push({ index: i-5, colIndex: i, name, module: mod, moduleNum: getModuleNumber(mod), type: getAssignmentType(name) });
+}
+
+// Class average row
+const classAvgRow = rows[6];
+const CLASS_AVG = parseScore(classAvgRow[4]) || 87.97;
+
+// Student rows
+const studentRows = rows.slice(7).filter(r => r[0] || r[1]);
+const students = studentRows.map((row, si) => {
+  const scores = assignments.map(a => parseScore(row[a.colIndex]));
+  const completed = scores.filter(s => s !== null);
+  return {
+    userId: row[0].trim(),
+    name: (row[1] || '').replace(/"/g,'').trim(),
+    studentId: row[2].trim(),
+    totalPoints: parseScore(row[3]) || 0,
+    overallScore: parseScore(row[4]) || 0,
+    scores,
+    completedCount: completed.length,
+    totalAssignments: scores.length,
+    completionRate: Math.round(completed.length / scores.length * 1000) / 10,
+    avgScore: completed.length ? Math.round(completed.reduce((a,b)=>a+b,0)/completed.length*10)/10 : 0,
+    colorIndex: si
+  };
+});
+
+// Unique modules ordered
+const allModules = [];
+assignments.forEach(a => { if (a.module && !allModules.includes(a.module)) allModules.push(a.module); });
+
+// Module-level stats
+function getModuleStats(modName) {
+  const modAssigns = assignments.filter(a => a.module === modName);
+  const studentStats = students.map(s => {
+    const sc = modAssigns.map(a => s.scores[a.index]).filter(v => v !== null);
+    return { avg: sc.length ? Math.round(sc.reduce((a,b)=>a+b,0)/sc.length*10)/10 : null, completed: sc.length, total: modAssigns.length };
+  });
+  return { assigns: modAssigns, studentStats };
+}
+
+// Score band
+function scoreBand(v) {
+  if (v === null) return 'na';
+  if (v >= 90) return '90';
+  if (v >= 80) return '80';
+  if (v >= 70) return '70';
+  if (v >= 60) return '60';
+  return 'fail';
+}
+function scoreClass(v) {
+  const b = scoreBand(v);
+  if (b === 'na') return 'score-na';
+  return 'score-' + b;
+}
+function hmClass(v) {
+  const b = scoreBand(v);
+  if (b === 'na') return 'hm-none';
+  return 'hm-' + b;
+}
+
+const STUDENT_COLORS = ['#38bdf8','#c084fc'];
+const STUDENT_COLORS_ALPHA = ['rgba(56,189,248,0.2)','rgba(192,132,252,0.2)'];
+
+// ═══════════════════════════════════════════════════════════════
+// POPULATE FILTERS
+// ═══════════════════════════════════════════════════════════════
+function populateFilters() {
+  const sel = document.getElementById('filter-student');
+  students.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.userId; opt.textContent = s.name;
+    sel.appendChild(opt);
+  });
+  const msel = document.getElementById('filter-module');
+  allModules.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m; opt.textContent = m;
+    msel.appendChild(opt);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// KPI CARDS
+// ═══════════════════════════════════════════════════════════════
+function updateKPIs() {
+  const threshold = parseInt(document.getElementById('threshold-range').value);
+  const filtStu = document.getElementById('filter-student').value;
+  const dispStudents = filtStu === 'all' ? students : students.filter(s => s.userId === filtStu);
+
+  document.getElementById('kpi-students').textContent = dispStudents.length;
+
+  if (dispStudents.length === 0) return;
+  const avg = Math.round(dispStudents.reduce((a,s)=>a+s.overallScore,0)/dispStudents.length*10)/10;
+  document.getElementById('kpi-avg').textContent = avg + '%';
+
+  const sorted = [...dispStudents].sort((a,b)=>b.overallScore-a.overallScore);
+  document.getElementById('kpi-high').textContent = sorted[0].overallScore + '%';
+  document.getElementById('kpi-high-name').textContent = sorted[0].name;
+  document.getElementById('kpi-low').textContent = sorted[sorted.length-1].overallScore + '%';
+  document.getElementById('kpi-low-name').textContent = sorted[sorted.length-1].name;
+
+  const atRisk = dispStudents.filter(s => s.overallScore < threshold);
+  document.getElementById('kpi-atrisk').textContent = atRisk.length;
+  document.getElementById('kpi-atrisk-sub').textContent = 'Below ' + threshold + '%';
+
+  const avgCompletion = Math.round(dispStudents.reduce((a,s)=>a+s.completionRate,0)/dispStudents.length*10)/10;
+  document.getElementById('kpi-completion').textContent = avgCompletion + '%';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STUDENT CARDS
+// ═══════════════════════════════════════════════════════════════
+function renderStudentCards() {
+  const container = document.getElementById('student-cards-container');
+  container.innerHTML = '';
+  students.forEach((s, si) => {
+    const initials = s.name.split(/[\s,]+/).filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const bc = scoreBand(s.overallScore);
+    const bandLabel = bc==='90'?'A — Excellent':bc==='80'?'B — Above Average':bc==='70'?'C — Average':bc==='60'?'D — Below Average':'F — Failing';
+    const color = STUDENT_COLORS[si];
+
+    // Module mini bars
+    const topModules = allModules.slice(0, 8);
+    let barsHtml = '<div class="student-module-bars"><div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Module Scores (first 8)</div>';
+    topModules.forEach(mod => {
+      const ms = getModuleStats(mod);
+      const stat = ms.studentStats[si];
+      if (!stat || stat.total === 0) return;
+      const pct = stat.avg !== null ? stat.avg : 0;
+      const shortMod = mod.replace(/Advanced Hardware Lab Simulations[:.]?/,'Adv HW').replace(/Hardware Lab Simulations[:.]?/,'HW Sim').replace(/Software Lab Simulations[:.]?/,'SW Sim').replace(/Live Virtual Machine Labs[:.]?/,'VM Lab').replace(/Apply It/,'Quiz').replace(/Module\s+/,'M').replace(/Core.*$/,'').trim();
+      barsHtml += `<div class="progress-item" style="margin-bottom:6px"><div class="progress-header"><span class="progress-label" style="font-size:10px">${shortMod}</span><span style="font-size:10px;font-weight:700;color:${color}">${stat.avg !== null ? stat.avg+'%' : '—'}</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%;background:${color}80"></div></div></div>`;
+    });
+    barsHtml += '</div>';
+
+    container.innerHTML += `
+    <div class="student-card">
+      <div class="student-card-header">
+        <div style="display:flex;align-items:center;gap:12px;flex:1">
+          <div class="student-avatar" style="background:linear-gradient(135deg,${color},${STUDENT_COLORS[(si+1)%2]})">${initials}</div>
+          <div class="student-info">
+            <div class="student-full-name">${s.name}</div>
+            <div class="student-id">User ID: ${s.userId}</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="student-overall" style="color:${color}">${s.overallScore}%</div>
+          <div class="student-band" style="color:${color}">${bandLabel}</div>
+        </div>
+      </div>
+      <div class="student-stats">
+        <div><div class="student-stat-val">${s.totalPoints.toLocaleString()}</div><div class="student-stat-label">Total Points</div></div>
+        <div><div class="student-stat-val">${s.completedCount}</div><div class="student-stat-label">Completed</div></div>
+        <div><div class="student-stat-val">${s.completionRate}%</div><div class="student-stat-label">Completion</div></div>
+      </div>
+      ${barsHtml}
+    </div>`;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════════════════════════════
+let charts = {};
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+const CHART_DEFAULTS = {
+  color: '#94a3b8',
+  font: { family: "'DM Sans', sans-serif" }
+};
+Chart.defaults.color = CHART_DEFAULTS.color;
+Chart.defaults.font = CHART_DEFAULTS.font;
+
+function buildModuleChart() {
+  destroyChart('modules');
+  const displayMods = allModules.filter(m => m !== '' && m !== 'Apply It' && m !== 'Live Virtual Machine Lab Preparation');
+  const labels = displayMods.map(m => m.replace(/Advanced Hardware Lab Simulations[:.]?/,'Adv HW').replace(/Hardware Lab Simulations[:.]?/,'HW Sim').replace(/Software Lab Simulations[:.]?/,'SW Sim').replace(/Live Virtual Machine Labs[:.]?/,'VM Lab').replace(/Module\s+0*/,'M').replace(/Core.*$/,'').trim());
+
+  const datasets = students.map((s, si) => ({
+    label: s.name.split(',')[0],
+    data: displayMods.map(mod => { const ms = getModuleStats(mod); return ms.studentStats[si].avg; }),
+    backgroundColor: STUDENT_COLORS_ALPHA[si],
+    borderColor: STUDENT_COLORS[si],
+    borderWidth: 2, borderRadius: 4, borderSkipped: false,
+  }));
+
+  charts['modules'] = new Chart(document.getElementById('chart-modules'), {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true, aspectRatio: 2.2,
+      plugins: { legend: { display: true, position: 'top', labels: { padding: 12, font: { size: 11 } } }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y !== null ? ctx.parsed.y+'%' : 'N/A'}` } } },
+      scales: {
+        x: { grid: { color: '#1e2d46' }, ticks: { font: { size: 9 }, maxRotation: 45 } },
+        y: { min: 0, max: 105, grid: { color: '#1e2d46' }, ticks: { callback: v => v+'%', font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+function buildBandChart() {
+  destroyChart('bands');
+  const bandLabels = ['90–100 (A)','80–89 (B)','70–79 (C)','60–69 (D)','<60 (F)','Not Done'];
+  const bandColors = ['rgba(74,222,128,0.8)','rgba(56,189,248,0.8)','rgba(251,191,36,0.8)','rgba(251,115,0,0.8)','rgba(248,113,113,0.8)','rgba(100,116,139,0.4)'];
+
+  const datasets = students.map((s, si) => {
+    const counts = [0,0,0,0,0,0];
+    s.scores.forEach(v => { if (v===null){counts[5]++;} else if(v>=90){counts[0]++;} else if(v>=80){counts[1]++;} else if(v>=70){counts[2]++;} else if(v>=60){counts[3]++;} else {counts[4]++;} });
+    return { label: s.name.split(',')[0], data: counts, backgroundColor: bandColors, borderWidth: 0 };
+  });
+
+  charts['bands'] = new Chart(document.getElementById('chart-bands'), {
+    type: 'doughnut',
+    data: { labels: bandLabels, datasets: [datasets[0]] },
+    options: {
+      responsive: true, maintainAspectRatio: true, aspectRatio: 1.6,
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 10, font: { size: 10 }, boxWidth: 12 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} assignments` } },
+        title: { display: true, text: students[0].name.split(',')[0] + ' (click legend to compare)', color: '#64748b', font: { size: 10 } }
+      }
+    }
+  });
+}
+
+function buildTypeChart() {
+  destroyChart('types');
+  const types = ['Quiz/Knowledge Check','Hardware Lab Simulation','Advanced Hardware Lab','Live Virtual Machine Lab','Software Lab Simulation'];
+  const shortTypes = ['Quiz/KC','HW Lab Sim','Adv HW Lab','VM Lab','SW Lab Sim'];
+
+  const datasets = students.map((s, si) => ({
+    label: s.name.split(',')[0],
+    data: types.map(t => {
+      const tAssigns = assignments.filter(a => a.type === t);
+      const sc = tAssigns.map(a => s.scores[a.index]).filter(v => v !== null);
+      return sc.length ? Math.round(sc.reduce((a,b)=>a+b,0)/sc.length*10)/10 : null;
+    }),
+    backgroundColor: STUDENT_COLORS_ALPHA[si], borderColor: STUDENT_COLORS[si],
+    borderWidth: 2, borderRadius: 4,
+  }));
+
+  charts['types'] = new Chart(document.getElementById('chart-types'), {
+    type: 'bar',
+    data: { labels: shortTypes, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true, aspectRatio: 2,
+      indexAxis: 'y',
+      plugins: { legend: { display: true, position: 'top', labels: { font: { size: 11 } } }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.x !== null ? ctx.parsed.x+'%' : 'N/A'}` } } },
+      scales: {
+        x: { min: 0, max: 105, grid: { color: '#1e2d46' }, ticks: { callback: v => v+'%', font: { size: 10 } } },
+        y: { grid: { color: '#1e2d46' }, ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+function buildCompletionChart() {
+  destroyChart('completion');
+  const displayMods = allModules.filter(m => m !== '' && m !== 'Apply It' && m !== 'Live Virtual Machine Lab Preparation');
+  const labels = displayMods.map(m => m.replace(/Advanced Hardware Lab Simulations[:.]?/,'Adv HW').replace(/Hardware Lab Simulations[:.]?/,'HW Sim').replace(/Software Lab Simulations[:.]?/,'SW Sim').replace(/Live Virtual Machine Labs[:.]?/,'VM Lab').replace(/Module\s+0*/,'M').replace(/Core.*$/,'').trim());
+
+  const datasets = students.map((s, si) => ({
+    label: s.name.split(',')[0],
+    data: displayMods.map(mod => { const ms = getModuleStats(mod); const st = ms.studentStats[si]; return st.total > 0 ? Math.round(st.completed/st.total*100) : 0; }),
+    backgroundColor: STUDENT_COLORS_ALPHA[si], borderColor: STUDENT_COLORS[si],
+    borderWidth: 2, fill: true, tension: 0.35, pointRadius: 3,
+  }));
+
+  charts['completion'] = new Chart(document.getElementById('chart-completion'), {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true, aspectRatio: 2,
+      plugins: { legend: { display: true, position: 'top', labels: { font: { size: 11 } } }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y}%` } } },
+      scales: {
+        x: { grid: { color: '#1e2d46' }, ticks: { font: { size: 9 }, maxRotation: 45 } },
+        y: { min: 0, max: 105, grid: { color: '#1e2d46' }, ticks: { callback: v => v+'%', font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RANKING TABLE
+// ═══════════════════════════════════════════════════════════════
+function renderRankingTable() {
+  const tbody = document.getElementById('ranking-tbody');
+  const sorted = [...students].sort((a,b)=>b.overallScore-a.overallScore);
+  tbody.innerHTML = sorted.map((s, rank) => {
+    const diff = (s.overallScore - CLASS_AVG).toFixed(1);
+    const diffStr = diff > 0 ? `<span style="color:var(--green)">+${diff}%</span>` : `<span style="color:var(--red)">${diff}%</span>`;
+    const bc = scoreBand(s.overallScore);
+    const bandText = bc==='90'?'A':bc==='80'?'B':bc==='70'?'C':bc==='60'?'D':'F';
+    return `<tr>
+      <td class="bold">#${rank+1}</td>
+      <td class="bold">${s.name}</td>
+      <td style="color:var(--text3)">${s.userId}</td>
+      <td><span class="score-pill ${scoreClass(s.overallScore)}">${s.overallScore}%</span></td>
+      <td><span class="score-pill ${scoreClass(s.overallScore)}">${bandText}</span></td>
+      <td>${s.totalPoints.toLocaleString()}</td>
+      <td>${s.completedCount}/${s.totalAssignments}</td>
+      <td><span class="score-pill ${s.completionRate>=70?'score-80':s.completionRate>=50?'score-70':'score-fail'}">${s.completionRate}%</span></td>
+      <td>${diffStr}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AT-RISK
+// ═══════════════════════════════════════════════════════════════
+function renderAtRisk() {
+  const threshold = parseInt(document.getElementById('threshold-range').value);
+  const atRisk = students.filter(s => s.overallScore < threshold);
+  const container = document.getElementById('at-risk-container');
+  if (atRisk.length === 0) {
+    container.innerHTML = `<div class="all-clear"><div class="icon">✅</div>No at-risk students below ${threshold}%.<br><span style="font-size:11px;color:var(--text3);margin-top:4px;display:block">All students are performing above threshold.</span></div>`;
+  } else {
+    container.innerHTML = '<div class="at-risk-list">' + atRisk.map(s => {
+      const missing = s.scores.filter(v=>v===null).length;
+      return `<div class="at-risk-item">
+        <div><div class="at-risk-name">${s.name}</div><div class="at-risk-detail">User ID: ${s.userId} · ${missing} missing assignments · ${s.completionRate}% completion</div></div>
+        <div style="text-align:right"><div class="at-risk-score">${s.overallScore}%</div><div style="font-size:10px;color:var(--text3)">Threshold: ${threshold}%</div></div>
+      </div>`;
+    }).join('') + '</div>';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MISSING ASSIGNMENTS
+// ═══════════════════════════════════════════════════════════════
+function renderMissing() {
+  function renderForStudents(targetStudents, containerId) {
+    const missing = [];
+    assignments.forEach(a => {
+      const missingStudents = targetStudents.filter(s => s.scores[a.index] === null);
+      if (missingStudents.length > 0) {
+        missing.push({ assign: a, missingStudents });
+      }
+    });
+    const el = document.getElementById(containerId);
+    if (missing.length === 0) {
+      el.innerHTML = '<div class="all-clear"><div class="icon">✅</div>No missing assignments!</div>';
+      return;
+    }
+    const MAX = 30;
+    el.innerHTML = `<div style="font-size:11px;color:var(--text3);margin-bottom:8px">${missing.length} missing assignment${missing.length>1?'s':''} found</div>` +
+      '<div class="missing-list">' +
+      missing.slice(0, MAX).map(m => `<div class="missing-item">
+        <div class="missing-name">${m.assign.name}</div>
+        <div class="missing-students">⚠️ ${m.missingStudents.map(s=>s.name.split(',')[0]).join(', ')}</div>
+        <div class="missing-module">${m.assign.module || 'No module'}</div>
+      </div>`).join('') +
+      (missing.length > MAX ? `<div style="font-size:11px;color:var(--text3);padding:8px 0">...and ${missing.length-MAX} more. Export for full list.</div>` : '') +
+      '</div>';
+  }
+
+  renderForStudents(students, 'missing-all');
+  renderForStudents([students[0]], 'missing-s0');
+  renderForStudents([students[1]], 'missing-s1');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HEATMAP
+// ═══════════════════════════════════════════════════════════════
+function renderHeatmap() {
+  const table = document.getElementById('heatmap-table');
+  const filtMod = document.getElementById('filter-module').value;
+  const filtType = document.getElementById('filter-type').value;
+  const filtComp = document.getElementById('filter-completion').value;
+  const filtStu = document.getElementById('filter-student').value;
+
+  let visAssigns = assignments.filter(a => {
+    if (filtMod !== 'all' && a.module !== filtMod) return false;
+    if (filtType !== 'all' && a.type !== filtType) return false;
+    return true;
+  });
+  const visStudents = filtStu === 'all' ? students : students.filter(s => s.userId === filtStu);
+
+  if (filtComp === 'completed') {
+    visAssigns = visAssigns.filter(a => visStudents.some(s => s.scores[a.index] !== null));
+  } else if (filtComp === 'missing') {
+    visAssigns = visAssigns.filter(a => visStudents.some(s => s.scores[a.index] === null));
+  }
+
+  // Build header
+  let html = '<thead><tr><th style="position:sticky;left:0;background:var(--surface);z-index:3;min-width:160px">Student</th>';
+  visAssigns.forEach(a => {
+    const shortName = a.name.replace(/^(Advanced |Hardware Lab Simulation|Software Lab Simulation|Live Virtual Machine Lab|Quiz: |Knowledge Check: )/,'').substring(0,30);
+    html += `<th class="assign-head" title="${a.name}">${shortName}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  visStudents.forEach((s, si) => {
+    html += `<tr><td class="student-name" style="border-left:3px solid ${STUDENT_COLORS[students.indexOf(s)]}">${s.name}</td>`;
+    visAssigns.forEach(a => {
+      const v = s.scores[a.index];
+      const cls = hmClass(v);
+      html += `<td><span class="heatmap-cell ${cls}" title="${a.name}: ${v !== null ? v+'%' : 'Missing'}">${v !== null ? v+'%' : '—'}</span></td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  table.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MODULE DETAIL TABLE
+// ═══════════════════════════════════════════════════════════════
+function renderModuleDetail() {
+  const tbody = document.getElementById('module-detail-tbody');
+  tbody.innerHTML = allModules.map(mod => {
+    const ms = getModuleStats(mod);
+    const [s0stat, s1stat] = ms.studentStats;
+    const allScores = ms.assigns.flatMap(a => students.flatMap(s => s.scores[a.index] !== null ? [s.scores[a.index]] : []));
+    const classAvgMod = allScores.length ? Math.round(allScores.reduce((a,b)=>a+b,0)/allScores.length*10)/10 : null;
+
+    return `<tr>
+      <td class="bold" style="max-width:260px;white-space:normal">${mod || 'Uncategorized'}</td>
+      <td>${ms.assigns.length}</td>
+      <td><span class="score-pill ${scoreClass(s0stat.avg)}">${s0stat.avg !== null ? s0stat.avg+'%' : '—'}</span></td>
+      <td><span class="score-pill ${scoreClass(s1stat.avg)}">${s1stat.avg !== null ? s1stat.avg+'%' : '—'}</span></td>
+      <td><span class="score-pill ${scoreClass(classAvgMod)}">${classAvgMod !== null ? classAvgMod+'%' : '—'}</span></td>
+      <td>${s0stat.completed}/${s0stat.total} (${s0stat.total>0?Math.round(s0stat.completed/s0stat.total*100)+'%':'—'})</td>
+      <td>${s1stat.completed}/${s1stat.total} (${s1stat.total>0?Math.round(s1stat.completed/s1stat.total*100)+'%':'—'})</td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════════════════════
+function exportTable(tableId, filename) {
+  const table = document.getElementById(tableId);
+  const rows = Array.from(table.querySelectorAll('tr'));
+  const csv = rows.map(r => Array.from(r.querySelectorAll('th,td')).map(c => '"' + c.innerText.replace(/"/g,'""') + '"').join(',')).join('\n');
+  downloadCSV(csv, filename);
+}
+
+function exportHeatmap() {
+  const table = document.getElementById('heatmap-table');
+  const rows = Array.from(table.querySelectorAll('tr'));
+  const csv = rows.map(r => Array.from(r.querySelectorAll('th,td')).map(c => '"' + c.innerText.replace(/"/g,'""').replace(/\n/g,' ') + '"').join(',')).join('\n');
+  downloadCSV(csv, 'assignment_heatmap.csv');
+}
+
+function downloadCSV(csv, filename) {
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SORT TABLE
+// ═══════════════════════════════════════════════════════════════
+const sortState = {};
+function sortTable(tableId, colIdx) {
+  const table = document.getElementById(tableId);
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  const key = tableId + '_' + colIdx;
+  const asc = !sortState[key]; sortState[key] = asc;
+
+  rows.sort((a, b) => {
+    const av = a.cells[colIdx].innerText.replace(/[%,#]/g,'').trim();
+    const bv = b.cells[colIdx].innerText.replace(/[%,#]/g,'').trim();
+    const an = parseFloat(av); const bn = parseFloat(bv);
+    if (!isNaN(an) && !isNaN(bn)) return asc ? an - bn : bn - an;
+    return asc ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+  rows.forEach(r => tbody.appendChild(r));
+  table.querySelectorAll('th').forEach((th, i) => { th.classList.toggle('sorted', i===colIdx); });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════════
+function switchTab(tabId) {
+  const all = document.querySelectorAll('.tab-content');
+  const btns = document.querySelectorAll('.tab-btn');
+  all.forEach(el => el.classList.remove('active'));
+  btns.forEach(b => b.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  const idx = ['missing-all','missing-s0','missing-s1'].indexOf(tabId);
+  if (idx >= 0) btns[idx].classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FILTER EVENTS
+// ═══════════════════════════════════════════════════════════════
+function applyFilters() {
+  updateKPIs();
+  renderHeatmap();
+  renderAtRisk();
+}
+
+function resetFilters() {
+  document.getElementById('filter-student').value = 'all';
+  document.getElementById('filter-module').value = 'all';
+  document.getElementById('filter-type').value = 'all';
+  document.getElementById('filter-completion').value = 'all';
+  document.getElementById('threshold-range').value = 75;
+  document.getElementById('threshold-display').textContent = '75%';
+  applyFilters();
+}
+
+document.getElementById('filter-student').addEventListener('change', applyFilters);
+document.getElementById('filter-module').addEventListener('change', applyFilters);
+document.getElementById('filter-type').addEventListener('change', applyFilters);
+document.getElementById('filter-completion').addEventListener('change', applyFilters);
+document.getElementById('threshold-range').addEventListener('input', function() {
+  document.getElementById('threshold-display').textContent = this.value + '%';
+  applyFilters();
+});
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  populateFilters();
+  updateKPIs();
+  renderStudentCards();
+  buildModuleChart();
+  buildBandChart();
+  buildTypeChart();
+  buildCompletionChart();
+  renderRankingTable();
+  renderAtRisk();
+  renderMissing();
+  renderHeatmap();
+  renderModuleDetail();
+});
+</script>
+</body>
+</html>
