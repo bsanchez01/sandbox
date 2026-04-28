@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Completion Dashboard — AY 2024–25</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0d1117;--surface:#161b22;--surface2:#1c2330;--border:#30363d;
+  --text:#e6edf3;--muted:#7d8590;
+  --accent:#58a6ff;--pass:#3fb950;--fail:#f85149;--warn:#e3b341;--inc:#a371f7;
+  --pass-bg:rgba(63,185,80,0.12);--fail-bg:rgba(248,81,73,0.12);--warn-bg:rgba(227,179,65,0.12);--accent-bg:rgba(88,166,255,0.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6;}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#0d1117 0%,#161b22 50%,#1a2235 100%);color:var(--text);padding:28px 48px 24px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+.header::before{content:'';position:absolute;top:-60px;right:-80px;width:320px;height:320px;background:radial-gradient(circle,rgba(88,166,255,0.07) 0%,transparent 70%);pointer-events:none;}
+.header-eyebrow{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
+.header-left h1{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(22px,3vw,32px);font-weight:400;color:var(--text);line-height:1.2;}
+.header-left h1 em{color:var(--accent);font-style:italic;}
+.header-left .subtitle{font-size:12px;color:var(--muted);margin-top:8px;display:flex;gap:20px;flex-wrap:wrap;}
+.header-left .subtitle strong{color:var(--text);}
+.header-right{text-align:right;font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;}
+.header-right .badge{display:inline-block;background:var(--accent-bg);border:1px solid rgba(88,166,255,0.3);color:var(--accent);padding:4px 14px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:.04em;margin-bottom:6px;}
+
+/* NAV */
+.nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 48px;display:flex;gap:0;overflow-x:auto;position:sticky;top:0;z-index:100;}
+.nav a{display:block;padding:14px 20px;font-size:13px;font-weight:500;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap;transition:all 0.2s;}
+.nav a:hover{color:var(--text);}
+.nav a.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* MAIN */
+.main{padding:36px 48px;max-width:1400px;margin:0 auto;}
+.section{margin-bottom:48px;}
+.section-title{font-family:'DM Serif Display',Georgia,serif;font-size:20px;font-weight:400;color:var(--text);margin-bottom:4px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.section-desc{font-size:12px;color:var(--muted);margin-bottom:20px;margin-top:6px;}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;margin-bottom:4px;}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 18px;display:flex;flex-direction:column;position:relative;overflow:hidden;transition:border-color 0.2s,transform 0.2s;}
+.kpi-card:hover{transform:translateY(-2px);}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:10px 10px 0 0;}
+.kpi-card.blue::before{background:var(--accent);}.kpi-card.blue:hover{border-color:var(--accent);}
+.kpi-card.green::before{background:var(--pass);}.kpi-card.green:hover{border-color:var(--pass);}
+.kpi-card.red::before{background:var(--fail);}.kpi-card.red:hover{border-color:var(--fail);}
+.kpi-card.gold::before{background:var(--warn);}.kpi-card.gold:hover{border-color:var(--warn);}
+.kpi-card.sage::before{background:var(--pass);}.kpi-card.sage:hover{border-color:var(--pass);}
+.kpi-card.accent::before{background:var(--inc);}.kpi-card.accent:hover{border-color:var(--inc);}
+.kpi-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:10px;}
+.kpi-value{font-family:'DM Serif Display',Georgia,serif;font-size:32px;line-height:1;color:var(--text);margin-bottom:4px;}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.kpi-delta{font-size:11px;font-weight:600;margin-top:6px;display:inline-block;padding:2px 8px;border-radius:20px;}
+.delta-up{background:var(--pass-bg);color:var(--pass);}
+.delta-down{background:var(--fail-bg);color:var(--fail);}
+.delta-warn{background:var(--warn-bg);color:var(--warn);}
+.delta-blue{background:var(--accent-bg);color:var(--accent);}
+
+/* SEM CARDS */
+.sem-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:20px;}
+.sem-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center;transition:border-color 0.2s;}
+.sem-card:hover{border-color:rgba(88,166,255,0.25);}
+.sem-name{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;}
+.sem-rate{font-family:'DM Serif Display',Georgia,serif;font-size:38px;line-height:1;}
+.sem-rate.good{color:var(--pass);}.sem-rate.mid{color:var(--warn);}.sem-rate.low{color:var(--fail);}
+.sem-detail{font-size:11px;color:var(--muted);margin-top:6px;font-family:'DM Mono',monospace;}
+
+/* CHARTS */
+.charts-row{display:grid;gap:20px;}
+.charts-2col{grid-template-columns:1fr 1fr;}
+.charts-3col{grid-template-columns:2fr 1fr 1fr;}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:22px;transition:border-color 0.2s;}
+.chart-card:hover{border-color:rgba(88,166,255,0.25);}
+.chart-title{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.chart-title .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+/* SEM TABS */
+.sem-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px;}
+.sem-tab{padding:10px 20px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;user-select:none;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Sans',sans-serif;}
+.sem-tab:hover{color:var(--text);}
+.sem-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.sem-panel{display:none;}.sem-panel.active{display:block;}
+
+/* TABLE */
+.scroll-table-wrap{max-height:420px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;margin-top:16px;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead th{background:var(--surface2);color:var(--muted);padding:10px 14px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;position:sticky;top:0;z-index:2;border-bottom:1px solid var(--border);}
+thead th.right{text-align:right;}
+tbody tr{border-bottom:1px solid rgba(48,54,61,0.5);transition:background 0.15s;}
+tbody tr:hover{background:rgba(88,166,255,0.04);}
+tbody td{padding:10px 14px;color:var(--text);vertical-align:middle;}
+tbody td.right{text-align:right;font-family:'DM Mono',monospace;font-size:11px;}
+tbody td.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);font-weight:600;}
+
+/* PILLS */
+.pill{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;}
+.pill-pass{background:var(--pass-bg);color:var(--pass);}
+.pill-warn{background:var(--warn-bg);color:var(--warn);}
+.pill-fail{background:var(--fail-bg);color:var(--fail);}
+
+/* BARS */
+.bar-wrap{display:flex;align-items:center;gap:8px;}
+.bar-track{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;min-width:60px;}
+.bar-fill{height:100%;border-radius:3px;}
+.bar-num{font-family:'DM Mono',monospace;font-size:11px;min-width:38px;text-align:right;color:var(--muted);}
+
+/* ALERTS */
+.alerts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.alert-card{border-left:4px solid;border-radius:8px;padding:16px 20px;display:flex;gap:14px;align-items:flex-start;}
+.alert-card.critical{background:rgba(248,81,73,0.08);border-color:var(--fail);}
+.alert-card.warning{background:rgba(227,179,65,0.08);border-color:var(--warn);}
+.alert-card.info{background:rgba(63,185,80,0.08);border-color:var(--pass);}
+.alert-icon{font-size:20px;line-height:1;flex-shrink:0;}
+.alert-title{font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;}
+.alert-card.critical .alert-title{color:var(--fail);}
+.alert-card.warning .alert-title{color:var(--warn);}
+.alert-card.info .alert-title{color:var(--pass);}
+.alert-body{font-size:12px;color:var(--muted);line-height:1.6;}
+.alert-body strong{color:var(--text);}
+
+/* INSIGHTS */
+.insights-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.insight-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;}
+.insight-num{font-family:'DM Serif Display',Georgia,serif;font-size:36px;color:var(--accent);line-height:1;margin-bottom:6px;}
+.insight-title{font-weight:600;font-size:13px;margin-bottom:6px;color:var(--text);}
+.insight-body{font-size:12px;color:var(--muted);line-height:1.6;}
+
+/* RECS */
+.rec-list{display:flex;flex-direction:column;gap:12px;}
+.rec-item{background:var(--surface);border:1px solid var(--border);border-left:4px solid;border-radius:0 10px 10px 0;padding:16px 20px;display:flex;gap:14px;align-items:flex-start;}
+.rec-item:nth-child(1){border-left-color:var(--fail);}
+.rec-item:nth-child(2){border-left-color:var(--warn);}
+.rec-item:nth-child(3){border-left-color:var(--accent);}
+.rec-item:nth-child(4){border-left-color:var(--pass);}
+.rec-item:nth-child(5){border-left-color:var(--inc);}
+.rec-num{font-family:'DM Serif Display',Georgia,serif;font-size:28px;color:rgba(88,166,255,0.15);line-height:1;flex-shrink:0;width:28px;}
+.rec-title{font-weight:600;font-size:13px;margin-bottom:4px;color:var(--text);}
+.rec-body{font-size:12px;color:var(--muted);line-height:1.6;}
+.rec-tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.rec-tag-red{background:var(--fail-bg);color:var(--fail);}
+.rec-tag-amber{background:var(--warn-bg);color:var(--warn);}
+.rec-tag-blue{background:var(--accent-bg);color:var(--accent);}
+.rec-tag-green{background:var(--pass-bg);color:var(--pass);}
+.rec-tag-purple{background:rgba(163,113,247,0.15);color:var(--inc);}
+
+/* HEATMAP */
+.heatmap-table{border-collapse:collapse;font-size:11px;width:100%;}
+.heatmap-table th{padding:8px 10px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:left;background:var(--surface2);position:sticky;top:0;border-bottom:1px solid var(--border);}
+.heatmap-table td{padding:7px 10px;}
+.hm-cell{display:inline-block;padding:4px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;min-width:52px;text-align:center;}
+
+/* FOOTER */
+.footer{background:var(--surface);border-top:1px solid var(--border);color:var(--muted);padding:20px 48px;font-size:11px;display:flex;justify-content:space-between;font-family:'DM Mono',monospace;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.section{animation:fadeUp 0.35s ease both;}
+
+@media(max-width:1100px){
+  .kpi-grid{grid-template-columns:repeat(3,1fr)}
+  .charts-2col,.charts-3col{grid-template-columns:1fr}
+  .insights-grid{grid-template-columns:1fr 1fr}
+  .alerts-grid{grid-template-columns:1fr}
+  .sem-row{grid-template-columns:1fr}
+  .main{padding:24px 20px}
+  .header{padding:20px;flex-direction:column;align-items:flex-start;gap:10px}
+  .nav{padding:0 20px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-eyebrow">College of the Marshall Islands &nbsp;·&nbsp; Academic Affairs</div>
+    <h1>Student Completion <em>Report</em> — AY 2024–25</h1>
+    <div class="subtitle">
+      <span><strong>Academic Year:</strong> 2024–25</span>
+      <span><strong>Terms:</strong> Fall 2024 &nbsp;·&nbsp; Spring 2025 &nbsp;·&nbsp; Summer 2025</span>
+      <span><strong>Sources:</strong> 3 grade-input files</span>
+      <span><strong>Run Date:</strong> April 21, 2026</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="badge">Executive Dashboard</div>
+    <div>8,365 student–course records</div>
+  </div>
+</div>
+
+<nav class="nav">
+  <a href="#kpis" class="active">KPIs</a>
+  <a href="#trends">Trends</a>
+  <a href="#courses">Courses</a>
+  <a href="#faculty">Faculty</a>
+  <a href="#heatmap">Heatmap</a>
+  <a href="#insights">Insights</a>
+  <a href="#alerts">Alerts</a>
+  <a href="#recommendations">Recommendations</a>
+</nav>
+
+<div class="main">
+
+<!-- KPIs -->
+<section class="section" id="kpis">
+  <div class="section-title">Key Performance Indicators</div>
+  <div class="section-desc">Aggregate metrics across all three semesters — Fall 2024, Spring 2025, Summer 2025. Pass grades: A, B, B+, C, C+, P. Fail grades: D, D+, F, NP.</div>
+  <div class="kpi-grid">
+    <div class="kpi-card blue">
+      <div class="kpi-label">Total Enrolled</div>
+      <div class="kpi-value">8,365</div>
+      <div class="kpi-sub">Student–course records</div>
+      <div class="kpi-sub">1,806 distinct students</div>
+    </div>
+    <div class="kpi-card sage">
+      <div class="kpi-label">Completed</div>
+      <div class="kpi-value">8,226</div>
+      <div class="kpi-sub">Completion rate: 98.3%</div>
+      <div class="kpi-delta delta-up">Strong</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Pass Rate</div>
+      <div class="kpi-value">67.7%</div>
+      <div class="kpi-sub">Of completed records</div>
+      <div class="kpi-delta delta-up">Passed / Completed</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-label">Fail Rate</div>
+      <div class="kpi-value">32.3%</div>
+      <div class="kpi-sub">Of completed records</div>
+      <div class="kpi-delta delta-down">Needs Attention</div>
+    </div>
+    <div class="kpi-card gold">
+      <div class="kpi-label">Incomplete / W</div>
+      <div class="kpi-value">135</div>
+      <div class="kpi-sub">1.6% of records</div>
+      <div class="kpi-delta delta-warn">Monitor</div>
+    </div>
+    <div class="kpi-card accent">
+      <div class="kpi-label">Courses Offered</div>
+      <div class="kpi-value">141</div>
+      <div class="kpi-sub">Active course codes</div>
+      <div class="kpi-delta delta-blue">AY 2024–25</div>
+    </div>
+  </div>
+  <div class="sem-row">
+    <div class="sem-card">
+      <div class="sem-name">Fall 2024</div>
+      <div class="sem-rate low">64.5%</div>
+      <div class="sem-detail">Pass rate &nbsp;·&nbsp; 3,538 enrollments</div>
+      <div class="sem-detail" style="margin-top:4px;">2,283 passed &nbsp;·&nbsp; 1,170 failed &nbsp;·&nbsp; 85 incomplete</div>
+    </div>
+    <div class="sem-card">
+      <div class="sem-name">Spring 2025</div>
+      <div class="sem-rate low">64.9%</div>
+      <div class="sem-detail">Pass rate &nbsp;·&nbsp; 3,421 enrollments</div>
+      <div class="sem-detail" style="margin-top:4px;">2,190 passed &nbsp;·&nbsp; 1,187 failed &nbsp;·&nbsp; 40 incomplete</div>
+    </div>
+    <div class="sem-card">
+      <div class="sem-name">Summer 2025</div>
+      <div class="sem-rate good">78.5%</div>
+      <div class="sem-detail">Pass rate &nbsp;·&nbsp; 1,406 enrollments</div>
+      <div class="sem-detail" style="margin-top:4px;">1,096 passed &nbsp;·&nbsp; 300 failed &nbsp;·&nbsp; 10 incomplete</div>
+    </div>
+  </div>
+</section>
+
+<!-- TRENDS -->
+<section class="section" id="trends">
+  <div class="section-title">Trend Analysis</div>
+  <div class="section-desc">Pass/fail distribution and completion trends across all semesters and grade categories</div>
+  <div class="charts-row charts-3col" style="margin-bottom:20px;">
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot" style="background:var(--accent)"></span> Pass Rate by Semester</div>
+      <div style="position:relative;height:240px;"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot" style="background:var(--pass)"></span> Pass vs Fail Distribution</div>
+      <div style="position:relative;height:240px;"><canvas id="donutChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot" style="background:var(--warn)"></span> Grade Distribution</div>
+      <div style="position:relative;height:240px;"><canvas id="gradeChart"></canvas></div>
+    </div>
+  </div>
+  <div class="charts-row charts-2col">
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot" style="background:var(--pass)"></span> Enrollment vs Pass Count by Semester</div>
+      <div style="position:relative;height:220px;"><canvas id="enrollPassChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot" style="background:var(--accent)"></span> Completion Rate by Semester</div>
+      <div style="position:relative;height:220px;"><canvas id="completionChart"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- COURSES -->
+<section class="section" id="courses">
+  <div class="section-title">Course Performance</div>
+  <div class="section-desc">118 courses with ≥10 completions. Risk thresholds: Critical &lt;60% · Watch 60–70% · Good ≥70%. Use tabs to view per-semester breakdowns.</div>
+
+  <!-- Overall top/bottom charts -->
+  <div class="charts-row charts-2col" style="margin-bottom:20px;">
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot" style="background:var(--pass)"></span> Top 15 Courses — Highest Pass Rate (All Year)</div>
+      <div style="position:relative;height:360px;"><canvas id="topCoursesChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot" style="background:var(--fail)"></span> Bottom 15 Courses — Lowest Pass Rate (All Year)</div>
+      <div style="position:relative;height:360px;"><canvas id="bottomCoursesChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Full table with semester tabs -->
+  <div class="chart-card">
+    <div class="chart-title"><span class="dot" style="background:var(--muted)"></span> Full Course Breakdown</div>
+    <div class="sem-tabs">
+      <button class="sem-tab active" onclick="switchTab('course','all',this)">All Year</button>
+      <button class="sem-tab" onclick="switchTab('course','fall',this)">Fall 2024</button>
+      <button class="sem-tab" onclick="switchTab('course','spring',this)">Spring 2025</button>
+      <button class="sem-tab" onclick="switchTab('course','summer',this)">Summer 2025</button>
+    </div>
+    <div id="course-all" class="sem-panel active">
+      <div class="scroll-table-wrap" style="margin-top:0;">
+        <table><thead><tr>
+          <th>Course</th><th>Description</th>
+          <th class="right">Enrolled</th><th class="right">Passed</th><th class="right">Failed</th>
+          <th class="right">Pass Rate</th><th class="right">Fail Rate</th><th>Risk</th><th>Pass Bar</th>
+        </tr></thead><tbody id="courseTableAll"></tbody></table>
+      </div>
+    </div>
+    <div id="course-fall" class="sem-panel">
+      <div class="scroll-table-wrap" style="margin-top:0;">
+        <table><thead><tr>
+          <th>Course</th><th>Description</th>
+          <th class="right">Enrolled</th><th class="right">Passed</th><th class="right">Failed</th>
+          <th class="right">Pass Rate</th><th class="right">Fail Rate</th><th>Risk</th><th>Pass Bar</th>
+        </tr></thead><tbody id="courseTableFall"></tbody></table>
+      </div>
+    </div>
+    <div id="course-spring" class="sem-panel">
+      <div class="scroll-table-wrap" style="margin-top:0;">
+        <table><thead><tr>
+          <th>Course</th><th>Description</th>
+          <th class="right">Enrolled</th><th class="right">Passed</th><th class="right">Failed</th>
+          <th class="right">Pass Rate</th><th class="right">Fail Rate</th><th>Risk</th><th>Pass Bar</th>
+        </tr></thead><tbody id="courseTableSpring"></tbody></table>
+      </div>
+    </div>
+    <div id="course-summer" class="sem-panel">
+      <div class="scroll-table-wrap" style="margin-top:0;">
+        <table><thead><tr>
+          <th>Course</th><th>Description</th>
+          <th class="right">Enrolled</th><th class="right">Passed</th><th class="right">Failed</th>
+          <th class="right">Pass Rate</th><th class="right">Fail Rate</th><th>Risk</th><th>Pass Bar</th>
+        </tr></thead><tbody id="courseTableSummer"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Per-semester top/bottom charts -->
+  <div style="margin-top:20px;">
+    <div class="sem-tabs">
+      <button class="sem-tab active" onclick="switchChartTab('course','fall',this)">Fall 2024</button>
+      <button class="sem-tab" onclick="switchChartTab('course','spring',this)">Spring 2025</button>
+      <button class="sem-tab" onclick="switchChartTab('course','summer',this)">Summer 2025</button>
+    </div>
+    <div id="cchart-fall" class="sem-panel active">
+      <div class="charts-row charts-2col">
+        <div class="chart-card">
+          <div class="chart-title"><span class="dot" style="background:var(--pass)"></span> Top 10 — Highest Pass Rate · Fall 2024</div>
+          <div style="position:relative;height:300px;"><canvas id="topCoursesFall"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title"><span class="dot" style="background:var(--fail)"></span> Bottom 10 — Lowest Pass Rate · Fall 2024</div>
+          <div style="position:relative;height:300px;"><canvas id="botCoursesFall"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div id="cchart-spring" class="sem-panel">
+      <div class="charts-row charts-2col">
+        <div class="chart-card">
+          <div class="chart-title"><span class="dot" style="background:var(--pass)"></span> Top 10 — Highest Pass Rate · Spring 2025</div>
+          <div style="position:relative;height:300px;"><canvas id="topCoursesSpring"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title"><span class="dot" style="background:var(--fail)"></span> Bottom 10 — Lowest Pass Rate · Spring 2025</div>
+          <div style="position:relative;height:300px;"><canvas id="botCoursesSpring"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div id="cchart-summer" class="sem-panel">
+      <div class="charts-row charts-2col">
+        <div class="chart-card">
+          <div class="chart-title"><span class="dot" style="background:var(--pass)"></span> Top 10 — Highest Pass Rate · Summer 2025</div>
+          <div style="position:relative;height:300px;"><canvas id="topCoursesSummer"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title"><span class="dot" style="background:var(--fail)"></span> Bottom 10 — Lowest Pass Rate · Summer 2025</div>
+          <div style="position:relative;height:300px;"><canvas id="botCoursesSummer"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FACULTY -->
+<section class="section" id="faculty">
+  <div class="section-title">Faculty Performance</div>
+  <div class="section-desc">Pass rate by faculty member (Lastname, Firstname). 75 faculty with ≥10 completed student records. Use tabs to view per-semester breakdowns.</div>
+
+  <!-- Overall top/bottom charts -->
+  <div class="charts-row charts-2col" style="margin-bottom:20px;">
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot" style="background:var(--pass)"></span> Top 15 Faculty — Highest Pass Rate (All Year)</div>
+      <div style="position:relative;height:380px;"><canvas id="topFacultyChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot" style="background:var(--fail)"></span> Bottom 15 Faculty — Lowest Pass Rate (All Year)</div>
+      <div style="position:relative;height:380px;"><canvas id="bottomFacultyChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Full table with semester tabs -->
+  <div class="chart-card">
+    <div class="chart-title"><span class="dot" style="background:var(--muted)"></span> Full Faculty Summary</div>
+    <div class="sem-tabs">
+      <button class="sem-tab active" onclick="switchTab('faculty','all',this)">All Year</button>
+      <button class="sem-tab" onclick="switchTab('faculty','fall',this)">Fall 2024</button>
+      <button class="sem-tab" onclick="switchTab('faculty','spring',this)">Spring 2025</button>
+      <button class="sem-tab" onclick="switchTab('faculty','summer',this)">Summer 2025</button>
+    </div>
+    <div id="faculty-all" class="sem-panel active">
+      <div class="scroll-table-wrap" style="margin-top:0;">
+        <table><thead><tr>
+          <th>Faculty (Lastname, Firstname)</th>
+          <th class="right">Students</th><th class="right">Passed</th><th class="right">Failed</th>
+          <th class="right">Incomplete</th><th class="right">Completion</th>
+          <th class="right">Pass Rate</th><th class="right">Fail Rate</th><th>Status</th>
+        </tr></thead><tbody id="facultyTableAll"></tbody></table>
+      </div>
+    </div>
+    <div id="faculty-fall" class="sem-panel">
+      <div class="scroll-table-wrap" style="margin-top:0;">
+        <table><thead><tr>
+          <th>Faculty (Lastname, Firstname)</th>
+          <th class="right">Students</th><th class="right">Passed</th><th class="right">Failed</th>
+          <th class="right">Incomplete</th><th class="right">Completion</th>
+          <th class="right">Pass Rate</th><th class="right">Fail Rate</th><th>Status</th>
+        </tr></thead><tbody id="facultyTableFall"></tbody></table>
+      </div>
+    </div>
+    <div id="faculty-spring" class="sem-panel">
+      <div class="scroll-table-wrap" style="margin-top:0;">
+        <table><thead><tr>
+          <th>Faculty (Lastname, Firstname)</th>
+          <th class="right">Students</th><th class="right">Passed</th><th class="right">Failed</th>
+          <th class="right">Incomplete</th><th class="right">Completion</th>
+          <th class="right">Pass Rate</th><th class="right">Fail Rate</th><th>Status</th>
+        </tr></thead><tbody id="facultyTableSpring"></tbody></table>
+      </div>
+    </div>
+    <div id="faculty-summer" class="sem-panel">
+      <div class="scroll-table-wrap" style="margin-top:0;">
+        <table><thead><tr>
+          <th>Faculty (Lastname, Firstname)</th>
+          <th class="right">Students</th><th class="right">Passed</th><th class="right">Failed</th>
+          <th class="right">Incomplete</th><th class="right">Completion</th>
+          <th class="right">Pass Rate</th><th class="right">Fail Rate</th><th>Status</th>
+        </tr></thead><tbody id="facultyTableSummer"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Per-semester top/bottom charts -->
+  <div style="margin-top:20px;">
+    <div class="sem-tabs">
+      <button class="sem-tab active" onclick="switchChartTab('faculty','fall',this)">Fall 2024</button>
+      <button class="sem-tab" onclick="switchChartTab('faculty','spring',this)">Spring 2025</button>
+      <button class="sem-tab" onclick="switchChartTab('faculty','summer',this)">Summer 2025</button>
+    </div>
+    <div id="fchart-fall" class="sem-panel active">
+      <div class="charts-row charts-2col">
+        <div class="chart-card">
+          <div class="chart-title"><span class="dot" style="background:var(--pass)"></span> Top 10 Faculty — Pass Rate · Fall 2024</div>
+          <div style="position:relative;height:300px;"><canvas id="topFacultyFall"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title"><span class="dot" style="background:var(--fail)"></span> Bottom 10 Faculty — Pass Rate · Fall 2024</div>
+          <div style="position:relative;height:300px;"><canvas id="botFacultyFall"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div id="fchart-spring" class="sem-panel">
+      <div class="charts-row charts-2col">
+        <div class="chart-card">
+          <div class="chart-title"><span class="dot" style="background:var(--pass)"></span> Top 10 Faculty — Pass Rate · Spring 2025</div>
+          <div style="position:relative;height:300px;"><canvas id="topFacultySpring"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title"><span class="dot" style="background:var(--fail)"></span> Bottom 10 Faculty — Pass Rate · Spring 2025</div>
+          <div style="position:relative;height:300px;"><canvas id="botFacultySpring"></canvas></div>
+        </div>
+      </div>
+    </div>
+    <div id="fchart-summer" class="sem-panel">
+      <div class="charts-row charts-2col">
+        <div class="chart-card">
+          <div class="chart-title"><span class="dot" style="background:var(--pass)"></span> Top 10 Faculty — Pass Rate · Summer 2025</div>
+          <div style="position:relative;height:300px;"><canvas id="topFacultySummer"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title"><span class="dot" style="background:var(--fail)"></span> Bottom 10 Faculty — Pass Rate · Summer 2025</div>
+          <div style="position:relative;height:300px;"><canvas id="botFacultySummer"></canvas></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HEATMAP -->
+<section class="section" id="heatmap">
+  <div class="section-title">Course Heatmap — Risk Classification</div>
+  <div class="section-desc">Color-coded pass rate intensity per semester. Dark green ≥85% · Light green 70–84% · Yellow 60–69% · Orange 50–59% · Red &lt;50%</div>
+  <div class="sem-tabs">
+    <button class="sem-tab active" onclick="switchTab('heatmap','all',this)">All Year</button>
+    <button class="sem-tab" onclick="switchTab('heatmap','fall',this)">Fall 2024</button>
+    <button class="sem-tab" onclick="switchTab('heatmap','spring',this)">Spring 2025</button>
+    <button class="sem-tab" onclick="switchTab('heatmap','summer',this)">Summer 2025</button>
+  </div>
+  <div id="heatmap-all" class="sem-panel active">
+    <div class="chart-card"><div class="scroll-table-wrap" style="margin-top:0;">
+      <table class="heatmap-table"><thead><tr>
+        <th style="min-width:90px;">Code</th><th style="min-width:260px;">Course Name</th>
+        <th style="text-align:center;min-width:80px;">Enrolled</th>
+        <th style="text-align:center;min-width:100px;">Pass Rate</th>
+        <th style="text-align:center;min-width:100px;">Fail Rate</th>
+        <th style="text-align:center;min-width:90px;">Risk</th>
+        <th style="min-width:160px;">Visual</th>
+      </tr></thead><tbody id="heatmapAll"></tbody></table>
+    </div></div>
+  </div>
+  <div id="heatmap-fall" class="sem-panel">
+    <div class="chart-card"><div class="scroll-table-wrap" style="margin-top:0;">
+      <table class="heatmap-table"><thead><tr>
+        <th style="min-width:90px;">Code</th><th style="min-width:260px;">Course Name</th>
+        <th style="text-align:center;min-width:80px;">Enrolled</th>
+        <th style="text-align:center;min-width:100px;">Pass Rate</th>
+        <th style="text-align:center;min-width:100px;">Fail Rate</th>
+        <th style="text-align:center;min-width:90px;">Risk</th>
+        <th style="min-width:160px;">Visual</th>
+      </tr></thead><tbody id="heatmapFall"></tbody></table>
+    </div></div>
+  </div>
+  <div id="heatmap-spring" class="sem-panel">
+    <div class="chart-card"><div class="scroll-table-wrap" style="margin-top:0;">
+      <table class="heatmap-table"><thead><tr>
+        <th style="min-width:90px;">Code</th><th style="min-width:260px;">Course Name</th>
+        <th style="text-align:center;min-width:80px;">Enrolled</th>
+        <th style="text-align:center;min-width:100px;">Pass Rate</th>
+        <th style="text-align:center;min-width:100px;">Fail Rate</th>
+        <th style="text-align:center;min-width:90px;">Risk</th>
+        <th style="min-width:160px;">Visual</th>
+      </tr></thead><tbody id="heatmapSpring"></tbody></table>
+    </div></div>
+  </div>
+  <div id="heatmap-summer" class="sem-panel">
+    <div class="chart-card"><div class="scroll-table-wrap" style="margin-top:0;">
+      <table class="heatmap-table"><thead><tr>
+        <th style="min-width:90px;">Code</th><th style="min-width:260px;">Course Name</th>
+        <th style="text-align:center;min-width:80px;">Enrolled</th>
+        <th style="text-align:center;min-width:100px;">Pass Rate</th>
+        <th style="text-align:center;min-width:100px;">Fail Rate</th>
+        <th style="text-align:center;min-width:90px;">Risk</th>
+        <th style="min-width:160px;">Visual</th>
+      </tr></thead><tbody id="heatmapSummer"></tbody></table>
+    </div></div>
+  </div>
+</section>
+
+<!-- INSIGHTS -->
+<section class="section" id="insights">
+  <div class="section-title">Key Insights &amp; Analysis</div>
+  <div class="section-desc">Data-driven observations for academic leadership decision-making</div>
+  <div class="insights-grid">
+    <div class="insight-card">
+      <div class="insight-num">32.3%</div>
+      <div class="insight-title">High System-Wide Failure Rate</div>
+      <div class="insight-body">Nearly 1-in-3 completed student records result in a failing grade. With 2,657 failures across 8,226 completions, this represents a systemic concern requiring structured intervention at both course and program levels.</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-num">+13.6pp</div>
+      <div class="insight-title">Summer Performance Surge</div>
+      <div class="insight-body">Summer 2025 posted a 78.5% pass rate — over 13 percentage points above Fall and Spring (~64.5%). Summer cohorts tend to be self-selected and motivated, but structural factors in delivery likely also contribute.</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-num">ENG 097</div>
+      <div class="insight-title">Highest-Risk High-Volume Course</div>
+      <div class="insight-body">ENG 097 had 487 enrollments — the largest of any course — with only a 35.8% pass rate. This single course accounts for 309 failures, a disproportionate share of the institution's total fail count.</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-num">7 courses</div>
+      <div class="insight-title">Critical Failure Zone (&lt;40% Pass)</div>
+      <div class="insight-body">Seven significant courses (10+ enrolled) fell below 40% pass rate, including SCI 281 (25%), ASL 101 (33.3%), and ENG 097 (35.8%). These represent acute risk areas requiring curriculum and pedagogical review this coming year.</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-num">10× gap</div>
+      <div class="insight-title">Wide Faculty Performance Spread</div>
+      <div class="insight-body">Faculty pass rates span 25% (Sinkey, David) to 100% (Savu, Waisake; Rainibogi, Marica; Hugo, Bugoro). This 75-point spread signals highly variable instructional effectiveness and warrants structured peer-support programs.</div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-num">98.3%</div>
+      <div class="insight-title">Students Stay — But Don't Always Succeed</div>
+      <div class="insight-body">Despite high failure rates, 98.3% of enrolled students complete through the term. The failure problem is academic performance, not dropout — students are present but not passing, which is a focused and actionable challenge.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ALERTS -->
+<section class="section" id="alerts">
+  <div class="section-title">Alerts &amp; Risk Flags</div>
+  <div class="section-desc">Automated flags based on defined thresholds — Critical: &lt;60% pass rate · Watch: 60–70%</div>
+  <div class="alerts-grid">
+    <div class="alert-card critical">
+      <div class="alert-icon">🚨</div>
+      <div>
+        <div class="alert-title">Critical: ENG 097 — 35.8% Pass Rate (487 Enrolled)</div>
+        <div class="alert-body">Highest-enrollment course with the worst pass rate among significant courses. <strong>309 students failed</strong> this course alone. Immediate curriculum and academic support intervention is essential.</div>
+      </div>
+    </div>
+    <div class="alert-card critical">
+      <div class="alert-icon">🚨</div>
+      <div>
+        <div class="alert-title">Critical: Developmental English Sequence All Below 50%</div>
+        <div class="alert-body">ENG 086 (45.4%), ENG 087 (49.8%), ENG 096 (47.3%) — the entire ESL pipeline has pass rates below 50% with <strong>over 1,000 combined enrollments</strong>. A system-level redesign is required.</div>
+      </div>
+    </div>
+    <div class="alert-card critical">
+      <div class="alert-icon">🚨</div>
+      <div>
+        <div class="alert-title">Critical: Four Faculty Below 40% Pass Rate</div>
+        <div class="alert-body"><strong>Sinkey, David (25%); Bujen, Jelina (33.3%); Bojos, Rosalie (37.9%); Osborne, Karalaini (39.2%)</strong> — collectively taught 660+ students. These cases require immediate academic support engagement.</div>
+      </div>
+    </div>
+    <div class="alert-card warning">
+      <div class="alert-icon">⚠️</div>
+      <div>
+        <div class="alert-title">Watch: CMI 101 First Year Seminar — 59.2% Pass (526 Enrolled)</div>
+        <div class="alert-body">The gateway First Year Seminar is just below the 60% threshold. At <strong>526 enrollments</strong>, this is the institution's largest single course section — its performance shapes every entering student's first academic experience.</div>
+      </div>
+    </div>
+    <div class="alert-card warning">
+      <div class="alert-icon">⚠️</div>
+      <div>
+        <div class="alert-title">Watch: Fall &amp; Spring Pass Rates Flat at ~64%</div>
+        <div class="alert-body">No meaningful improvement between Fall 2024 (64.5%) and Spring 2025 (64.9%). Without structural intervention, this plateau will persist into AY 2025–26.</div>
+      </div>
+    </div>
+    <div class="alert-card info">
+      <div class="alert-icon">✅</div>
+      <div>
+        <div class="alert-title">Positive Signal: Summer 2025 — 78.5% Pass Rate</div>
+        <div class="alert-body">Summer 2025 demonstrated a <strong>+13.6pp uplift</strong> over Fall and Spring. Analyzing what drove this improvement — course mix, faculty, enrollment caps, student type — could unlock replicable gains in the core semesters.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RECOMMENDATIONS -->
+<section class="section" id="recommendations">
+  <div class="section-title">Actionable Recommendations</div>
+  <div class="section-desc">Five priority actions for academic leadership — ordered by estimated institutional impact</div>
+  <div class="rec-list">
+    <div class="rec-item">
+      <div class="rec-num">01</div>
+      <div>
+        <div class="rec-tag rec-tag-red">Curriculum &amp; Instruction</div>
+        <div class="rec-title">Redesign the Developmental English Pipeline (ENG 086, 087, 096, 097)</div>
+        <div class="rec-body">With 1,400+ combined enrollments and pass rates averaging below 47%, the entire developmental English sequence is failing students at scale. Recommend a task force to conduct a full curriculum audit, introduce co-requisite support models, reduce class sizes, and pilot contextualized literacy instruction tied to students' fields of study. This single intervention could improve the institutional pass rate by multiple percentage points.</div>
+      </div>
+    </div>
+    <div class="rec-item">
+      <div class="rec-num">02</div>
+      <div>
+        <div class="rec-tag rec-tag-amber">Faculty Development</div>
+        <div class="rec-title">Structured Peer-Mentorship for Faculty Below 50% Pass Rate</div>
+        <div class="rec-body">Eight faculty members post pass rates below 50%. Implement a structured coaching program pairing these instructors with high performers (above 85%). Share best practices in assessment design, early-warning identification, and student engagement. Add confidential mid-semester student feedback surveys in these sections to provide timely, actionable course-correction data.</div>
+      </div>
+    </div>
+    <div class="rec-item">
+      <div class="rec-num">03</div>
+      <div>
+        <div class="rec-tag rec-tag-blue">Student Support</div>
+        <div class="rec-title">Deploy Early-Alert Intervention for the Top 15 Highest-Risk Course Sections</div>
+        <div class="rec-body">Assign dedicated academic support coaches to the highest-risk sections at week 3. Mandate progress check-ins at weeks 5 and 8. Students in courses with historical pass rates below 60% should be proactively flagged for tutoring, counseling, and structured study group access. Early-stage interventions consistently outperform end-of-semester rescue strategies in reducing final failure counts.</div>
+      </div>
+    </div>
+    <div class="rec-item">
+      <div class="rec-num">04</div>
+      <div>
+        <div class="rec-tag rec-tag-green">Policy &amp; Scheduling</div>
+        <div class="rec-title">Investigate and Replicate the Summer 2025 Success Model</div>
+        <div class="rec-body">Summer 2025's 78.5% pass rate significantly outperformed Fall and Spring. A targeted analysis of Summer's course offerings, faculty assignments, enrollment caps, and student demographics should pinpoint the structural drivers. If smaller class sizes, specific faculty, or a focused course catalog are responsible, these elements should inform Fall and Spring scheduling decisions for AY 2025–26.</div>
+      </div>
+    </div>
+    <div class="rec-item">
+      <div class="rec-num">05</div>
+      <div>
+        <div class="rec-tag rec-tag-purple">Institutional Governance</div>
+        <div class="rec-title">Establish Formal Pass Rate Targets and Embed This Dashboard in Governance Cycles</div>
+        <div class="rec-body">Set formal minimum course-level pass rate thresholds (e.g., 65% institutional floor, 70% aspirational target) and require Deans to present course-level performance data in end-of-term governance meetings. Courses below threshold for two or more consecutive semesters should trigger a formal academic review. Transparency and structured accountability are essential to converting insight into sustained improvement.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<div class="footer">
+  <span>Student Completion Dashboard &nbsp;·&nbsp; AY 2024–25 &nbsp;·&nbsp; Generated 21 April 2026</span>
+  <span>Source: Grade_Input_fall24.xls &nbsp;·&nbsp; Grade_Input_sp25.xls &nbsp;·&nbsp; Grade_Input_su25.xls</span>
+</div>
+
+<script>
+
+const semData={labels:['Fall 2024','Spring 2025','Summer 2025'],enrolled:[3538,3421,1406],passed:[2283,2190,1096],failed:[1170,1187,300],incomplete:[85,40,10],passRate:[64.5,64.9,78.5],completionRate:[97.6,98.7,99.3]};
+const gradeData={labels:['A','C','F','NP','B','B+','C+','D+','D','W','I','RPL'],counts:[1676,1384,1197,1116,1029,807,673,119,225,123,12,4]};
+const courseData=[{"code":"SCI 281","name":"INTERNSHIPS IN MARINE SCIENCE","enrolled":20,"passed":5,"failed":15,"completed":20,"passRate":0.25,"failRate":0.75},{"code":"ASL 101","name":"AMERICAN SIGN LANGUAGE I","enrolled":18,"passed":6,"failed":12,"completed":18,"passRate":0.333333,"failRate":0.666667},{"code":"ENG 097","name":"INTRODUCTION TO ACADEMIC READING AND WRITING","enrolled":487,"passed":172,"failed":309,"completed":481,"passRate":0.357588,"failRate":0.642412},{"code":"SOC 130","name":"INTRODUCTION TO SOCIOLOGY","enrolled":40,"passed":17,"failed":23,"completed":40,"passRate":0.425,"failRate":0.575},{"code":"ENG 201","name":"CREATIVE WRITING","enrolled":14,"passed":6,"failed":8,"completed":14,"passRate":0.428571,"failRate":0.571429},{"code":"ENG 086","name":"INTERMEDIATE ACADEMIC LISTENING AND SPEAKING","enrolled":295,"passed":134,"failed":161,"completed":295,"passRate":0.454237,"failRate":0.545763},{"code":"ENG 096","name":"ADVANCED ACADEMIC LISTENING AND SPEAKING","enrolled":429,"passed":200,"failed":223,"completed":423,"passRate":0.472813,"failRate":0.527187},{"code":"ENG 087","name":"INTERMEDIATE ACADEMIC READING AND WRITING","enrolled":281,"passed":140,"failed":141,"completed":281,"passRate":0.498221,"failRate":0.501779},{"code":"MATH 068","name":"PRE-ALGEBRA","enrolled":151,"passed":75,"failed":73,"completed":148,"passRate":0.506757,"failRate":0.493243},{"code":"SCI 112","name":"CLIMATE CHANGE","enrolled":30,"passed":16,"failed":14,"completed":30,"passRate":0.533333,"failRate":0.466667},{"code":"AGF 108","name":"FOOD SOVEREIGNTY: TRADITIONAL CROPS FOR HEALTHY LIFE STYLES","enrolled":11,"passed":6,"failed":5,"completed":11,"passRate":0.545455,"failRate":0.454545},{"code":"ICS 101","name":"INTRODUCTION TO MICROSOFT OFFICE","enrolled":319,"passed":172,"failed":141,"completed":313,"passRate":0.549521,"failRate":0.450479},{"code":"ENG 111","name":"ENGLISH COMPOSITION I","enrolled":352,"passed":198,"failed":144,"completed":342,"passRate":0.578947,"failRate":0.421053},{"code":"SCI 220","name":"MARINE FIELD RESEARCH METHODS","enrolled":12,"passed":7,"failed":5,"completed":12,"passRate":0.583333,"failRate":0.416667},{"code":"CMI 101","name":"FIRST YEAR SEMINAR","enrolled":526,"passed":307,"failed":212,"completed":519,"passRate":0.591522,"failRate":0.408478},{"code":"MATH 111","name":"COLLEGE ALGEBRA","enrolled":125,"passed":74,"failed":50,"completed":124,"passRate":0.596774,"failRate":0.403226},{"code":"ENG 105","name":"FUNDAMENTALS OF SPEECH","enrolled":284,"passed":166,"failed":110,"completed":276,"passRate":0.601449,"failRate":0.398551},{"code":"MATH 088","name":"INTRODUCTION TO ALGEBRA","enrolled":138,"passed":83,"failed":55,"completed":138,"passRate":0.601449,"failRate":0.398551},{"code":"ICS 104","name":"SPREADSHEETS","enrolled":71,"passed":43,"failed":28,"completed":71,"passRate":0.605634,"failRate":0.394366},{"code":"MATH 099","name":"FUNDAMENTALS OF MATHEMATICS","enrolled":223,"passed":136,"failed":83,"completed":219,"passRate":0.621005,"failRate":0.378995},{"code":"ENG 112","name":"ENGLISH COMPOSITION II","enrolled":192,"passed":118,"failed":70,"completed":188,"passRate":0.62766,"failRate":0.37234},{"code":"ENG 220","name":"WRITING RESEARCH PAPERS","enrolled":144,"passed":88,"failed":50,"completed":138,"passRate":0.637681,"failRate":0.362319},{"code":"MATH 098","name":"INTERMEDIATE ALGEBRA","enrolled":108,"passed":67,"failed":38,"completed":105,"passRate":0.638095,"failRate":0.361905},{"code":"ETH 101","name":"ETHICS","enrolled":74,"passed":47,"failed":26,"completed":73,"passRate":0.643836,"failRate":0.356164},{"code":"MATH 102","name":"SURVEY OF MATHEMATICS","enrolled":143,"passed":91,"failed":48,"completed":139,"passRate":0.654676,"failRate":0.345324},{"code":"HIS 202","name":"WORLD HISTORY II","enrolled":30,"passed":19,"failed":9,"completed":28,"passRate":0.678571,"failRate":0.321429},{"code":"HIS 201","name":"WORLD HISTORY I","enrolled":26,"passed":17,"failed":8,"completed":25,"passRate":0.68,"failRate":0.32},{"code":"MATH 160","name":"ELEMENTARY STATISTICS","enrolled":184,"passed":122,"failed":57,"completed":179,"passRate":0.681564,"failRate":0.318436},{"code":"PHIL 101","name":"INTRODUCTION TO PHILOSOPHY","enrolled":51,"passed":31,"failed":14,"completed":45,"passRate":0.688889,"failRate":0.311111},{"code":"SOC 140","name":"CONTEMPORARY SOCIAL ISSUES IN MICRONESIA","enrolled":114,"passed":79,"failed":34,"completed":113,"passRate":0.699115,"failRate":0.300885},{"code":"MAR 130","name":"MARSHALLESE CULTURE","enrolled":344,"passed":238,"failed":101,"completed":339,"passRate":0.702065,"failRate":0.297935},{"code":"MAR 160","name":"MARSHALLESE PUBLIC SPEAKING","enrolled":27,"passed":19,"failed":8,"completed":27,"passRate":0.703704,"failRate":0.296296},{"code":"CHEM 101","name":"INTRODUCTION TO CHEMISTRY","enrolled":64,"passed":43,"failed":17,"completed":60,"passRate":0.716667,"failRate":0.283333},{"code":"EDU 150","name":"MATHEMATICS FOR ELEMENTARY TEACHERS","enrolled":26,"passed":18,"failed":7,"completed":25,"passRate":0.72,"failRate":0.28},{"code":"ENG 151","name":"PACIFIC LITERATURE","enrolled":18,"passed":13,"failed":5,"completed":18,"passRate":0.722222,"failRate":0.277778},{"code":"BUS 101","name":"INTRODUCTION TO BUSINESS","enrolled":72,"passed":50,"failed":19,"completed":69,"passRate":0.724638,"failRate":0.275362},{"code":"AGR 101","name":"INTRODUCTION TO AGRICULTURE","enrolled":115,"passed":83,"failed":31,"completed":114,"passRate":0.72807,"failRate":0.27193},{"code":"MATH 089","name":"BASIC MATHEMATICS","enrolled":162,"passed":118,"failed":44,"completed":162,"passRate":0.728395,"failRate":0.271605},{"code":"MATH 121","name":"COLLEGE TRIGONOMETRY","enrolled":20,"passed":14,"failed":5,"completed":19,"passRate":0.736842,"failRate":0.263158},{"code":"SCI 111","name":"ENVIRONMENTAL SCIENCE","enrolled":32,"passed":23,"failed":8,"completed":31,"passRate":0.741935,"failRate":0.258065},{"code":"SCI 235","name":"TROPICAL MARINE ECOSYSTEMS OF THE PACIFIC","enrolled":12,"passed":9,"failed":3,"completed":12,"passRate":0.75,"failRate":0.25},{"code":"PI 122","name":"ISSUES IN THE PACIFIC STUDIES","enrolled":46,"passed":37,"failed":9,"completed":46,"passRate":0.804348,"failRate":0.195652},{"code":"MART 110","name":"STCW BASIC SAFETY TRAINING","enrolled":32,"passed":26,"failed":6,"completed":32,"passRate":0.8125,"failRate":0.1875},{"code":"HIS 132","name":"HISTORY OF MARSHALL ISLANDS","enrolled":44,"passed":36,"failed":8,"completed":44,"passRate":0.818182,"failRate":0.181818},{"code":"EDU 101","name":"FOUNDATION LITERACY FOR ELEMENTARY CLASSROOM TEACHERS","enrolled":48,"passed":37,"failed":8,"completed":45,"passRate":0.822222,"failRate":0.177778},{"code":"EDU 313","name":"LITERATURE AND LITERACY I","enrolled":17,"passed":14,"failed":3,"completed":17,"passRate":0.823529,"failRate":0.176471},{"code":"AH 114","name":"NUTRITION","enrolled":24,"passed":20,"failed":4,"completed":24,"passRate":0.833333,"failRate":0.166667},{"code":"MAR 140","name":"MARSHALLESE GOVERNMENT","enrolled":183,"passed":151,"failed":30,"completed":181,"passRate":0.834254,"failRate":0.165746},{"code":"BUS 106","name":"BUSINESS MATHEMATICS","enrolled":63,"passed":52,"failed":10,"completed":62,"passRate":0.83871,"failRate":0.16129},{"code":"EDU 250","name":"MATHEMATICS FOR ELEMENTARY TEACHERS II","enrolled":38,"passed":32,"failed":6,"completed":38,"passRate":0.842105,"failRate":0.157895},{"code":"EDU 109","name":"PHILOSOPHICAL FOUNDATIONS OF EDUCATION","enrolled":32,"passed":27,"failed":5,"completed":32,"passRate":0.84375,"failRate":0.15625},{"code":"ENG 211","name":"CHILDREN'S LITERATURE","enrolled":106,"passed":87,"failed":16,"completed":103,"passRate":0.84466,"failRate":0.15534},{"code":"MAR 120","name":"MARSHALLESE ORTHOGRAPHY","enrolled":128,"passed":108,"failed":18,"completed":126,"passRate":0.857143,"failRate":0.142857},{"code":"EDU 312","name":"FOUNDATIONS IN CURRICULUM AND INSTRUCTION","enrolled":14,"passed":12,"failed":2,"completed":14,"passRate":0.857143,"failRate":0.142857},{"code":"ENG 230","name":"CRITICAL THINKING IN FILM","enrolled":15,"passed":12,"failed":2,"completed":14,"passRate":0.857143,"failRate":0.142857},{"code":"BIO 101","name":"INTRODUCTION TO BIOLOGY","enrolled":61,"passed":52,"failed":8,"completed":60,"passRate":0.866667,"failRate":0.133333},{"code":"EDU 211","name":"CLASSROOM METHODS AND STRATEGIES","enrolled":52,"passed":45,"failed":6,"completed":51,"passRate":0.882353,"failRate":0.117647},{"code":"EDU 325","name":"ELEMENTARY MATHEMATICS II","enrolled":52,"passed":45,"failed":6,"completed":51,"passRate":0.882353,"failRate":0.117647},{"code":"PSY 101","name":"INTRODUCTION TO PSYCHOLOGY","enrolled":81,"passed":69,"failed":9,"completed":78,"passRate":0.884615,"failRate":0.115385},{"code":"EDU 324","name":"ELEMENTARY MATHEMATICS I","enrolled":36,"passed":32,"failed":4,"completed":36,"passRate":0.888889,"failRate":0.111111},{"code":"EDU 314","name":"LITERACY AND LITERATURE II","enrolled":19,"passed":16,"failed":2,"completed":18,"passRate":0.888889,"failRate":0.111111},{"code":"BUS 200","name":"ACCOUNTING CLERKSHIP INTERNSHIP","enrolled":19,"passed":17,"failed":2,"completed":19,"passRate":0.894737,"failRate":0.105263},{"code":"MART 101","name":"TRADITIONAL NAVIGATION AND SEAFARING","enrolled":39,"passed":35,"failed":4,"completed":39,"passRate":0.897436,"failRate":0.102564},{"code":"MART 103","name":"ENGLISH FOR MARINERS","enrolled":39,"passed":35,"failed":4,"completed":39,"passRate":0.897436,"failRate":0.102564},{"code":"SCI 225","name":"PRINCIPLES OF AQUACULTURE","enrolled":10,"passed":9,"failed":1,"completed":10,"passRate":0.9,"failRate":0.1},{"code":"ACC 250","name":"FINANCIAL ACCOUNTING","enrolled":21,"passed":19,"failed":2,"completed":21,"passRate":0.904762,"failRate":0.095238},{"code":"EDU 210","name":"INTRODUCTION TO TEACHING","enrolled":32,"passed":29,"failed":3,"completed":32,"passRate":0.90625,"failRate":0.09375},{"code":"ACC 133","name":"BASIC ACCOUNTING","enrolled":79,"passed":70,"failed":7,"completed":77,"passRate":0.909091,"failRate":0.090909},{"code":"EDU 416","name":"TEACHING WITH CURRICULUM MATERIALS","enrolled":22,"passed":20,"failed":2,"completed":22,"passRate":0.909091,"failRate":0.090909},{"code":"AH 230","name":"PUBLIC HEALTH INTERNSHIP","enrolled":11,"passed":10,"failed":1,"completed":11,"passRate":0.909091,"failRate":0.090909},{"code":"EDU 444","name":"EVALUATION AND ASSESSMENT","enrolled":23,"passed":21,"failed":2,"completed":23,"passRate":0.913043,"failRate":0.086957},{"code":"MKT 241","name":"PRINCIPLES OF MARKETING","enrolled":48,"passed":43,"failed":4,"completed":47,"passRate":0.914894,"failRate":0.085106},{"code":"AGF 106","name":"CONCEPTS IN AGROFORESTRY AND TERRESTRIAL ECOSYSTEMS","enrolled":12,"passed":11,"failed":1,"completed":12,"passRate":0.916667,"failRate":0.083333},{"code":"AH 101","name":"ESSENTIAL PUBLIC HEALTH FUNCTIONS AND PRIMARY HEALTH CARE","enrolled":27,"passed":25,"failed":2,"completed":27,"passRate":0.925926,"failRate":0.074074},{"code":"EDU 241","name":"CLASSROOM MANAGEMENT","enrolled":27,"passed":25,"failed":2,"completed":27,"passRate":0.925926,"failRate":0.074074},{"code":"BUS 251","name":"ENTREPRENEURSHIP","enrolled":41,"passed":38,"failed":3,"completed":41,"passRate":0.926829,"failRate":0.073171},{"code":"SCI 245","name":"INTEGRATED COASTAL MANAGEMENT","enrolled":14,"passed":13,"failed":1,"completed":14,"passRate":0.928571,"failRate":0.071429},{"code":"MICR 101","name":"INTRODUCTION TO MICROBIOLOGY","enrolled":15,"passed":14,"failed":1,"completed":15,"passRate":0.933333,"failRate":0.066667},{"code":"MGT 261","name":"PRINCIPLES OF MANAGEMENT","enrolled":32,"passed":29,"failed":2,"completed":31,"passRate":0.935484,"failRate":0.064516},{"code":"NURS 122","name":"NURSING OF ADULTS I","enrolled":16,"passed":15,"failed":1,"completed":16,"passRate":0.9375,"failRate":0.0625},{"code":"MAR 150","name":"MARSHALLESE COMPOSITION","enrolled":34,"passed":31,"failed":2,"completed":33,"passRate":0.939394,"failRate":0.060606},{"code":"NURS 235","name":"FAMILY HEALTH","enrolled":17,"passed":16,"failed":1,"completed":17,"passRate":0.941176,"failRate":0.058824},{"code":"ACC 251","name":"MANAGERIAL ACCOUNTING","enrolled":18,"passed":17,"failed":1,"completed":18,"passRate":0.944444,"failRate":0.055556},{"code":"ANAT 210","name":"ANATOMY AND PHYSIOLOGY II","enrolled":19,"passed":17,"failed":1,"completed":18,"passRate":0.944444,"failRate":0.055556},{"code":"JPN 101","name":"JAPANESE I","enrolled":18,"passed":17,"failed":1,"completed":18,"passRate":0.944444,"failRate":0.055556},{"code":"PSY 201","name":"HUMAN GROWTH AND DEVELOPMENT","enrolled":39,"passed":35,"failed":2,"completed":37,"passRate":0.945946,"failRate":0.054054},{"code":"ART 329","name":"PERFORMING ARTS","enrolled":21,"passed":20,"failed":1,"completed":21,"passRate":0.952381,"failRate":0.047619},{"code":"IDS 428","name":"PERSONAL AND SOCIAL HEALTH SKILLS","enrolled":21,"passed":20,"failed":1,"completed":21,"passRate":0.952381,"failRate":0.047619},{"code":"MAR 230","name":"MARSHALLESE GRAMMAR","enrolled":21,"passed":20,"failed":1,"completed":21,"passRate":0.952381,"failRate":0.047619},{"code":"PI 260","name":"NUCLEAR TEST IN THE PACIFIC","enrolled":25,"passed":24,"failed":1,"completed":25,"passRate":0.96,"failRate":0.04},{"code":"ETH 300","name":"ETHICS AND ORGANIZATIONAL GOVERNANCE","enrolled":78,"passed":74,"failed":3,"completed":77,"passRate":0.961039,"failRate":0.038961},{"code":"EDU 341","name":"CLASSROOM MANAGEMENT II","enrolled":26,"passed":25,"failed":1,"completed":26,"passRate":0.961538,"failRate":0.038462},{"code":"EDU 251","name":"SCIENCE FOR TEACHERS","enrolled":28,"passed":26,"failed":1,"completed":27,"passRate":0.962963,"failRate":0.037037},{"code":"EDU 323","name":"ELEMENTARY SCIENCE","enrolled":53,"passed":52,"failed":1,"completed":53,"passRate":0.981132,"failRate":0.018868},{"code":"EDU 427","name":"PHYSICAL EDUCATION AND ELEMENTARY SCHOOL ART","enrolled":39,"passed":39,"failed":0,"completed":39,"passRate":1.0,"failRate":0.0},{"code":"MART 102","name":"MATHEMATICS FOR MARINERS","enrolled":39,"passed":37,"failed":0,"completed":37,"passRate":1.0,"failRate":0.0},{"code":"EDU 496","name":"ELEMENTARY STUDENT TEACHING","enrolled":32,"passed":31,"failed":0,"completed":31,"passRate":1.0,"failRate":0.0},{"code":"EDU 497","name":"ELEMENTARY SEMINAR FOR STUDENT TEACHING","enrolled":32,"passed":31,"failed":0,"completed":31,"passRate":1.0,"failRate":0.0},{"code":"MART 120","name":"INTRODUCTION TO SEAMANSHIP","enrolled":22,"passed":22,"failed":0,"completed":22,"passRate":1.0,"failRate":0.0},{"code":"ANAT 110","name":"ANATOMY AND PHYSIOLOGY I","enrolled":18,"passed":17,"failed":0,"completed":17,"passRate":1.0,"failRate":0.0},{"code":"EDU 296","name":"TEACHING PRACTICUM","enrolled":17,"passed":16,"failed":0,"completed":16,"passRate":1.0,"failRate":0.0},{"code":"NURS 110","name":"FUNDAMENTALS OF NURSING","enrolled":16,"passed":16,"failed":0,"completed":16,"passRate":1.0,"failRate":0.0},{"code":"AH 107","name":"COMMUNITY HEALTH EDUCATION","enrolled":14,"passed":14,"failed":0,"completed":14,"passRate":1.0,"failRate":0.0},{"code":"ENG 210","name":"INTRODUCTION TO LITERATURE","enrolled":14,"passed":14,"failed":0,"completed":14,"passRate":1.0,"failRate":0.0},{"code":"EDU 322","name":"ELEMENTARY SOCIAL STUDIES","enrolled":13,"passed":13,"failed":0,"completed":13,"passRate":1.0,"failRate":0.0},{"code":"AH 103","name":"INTRODUCTION TO INFORMATION SYSTEMS FOR HEALTH MANAGERS","enrolled":12,"passed":12,"failed":0,"completed":12,"passRate":1.0,"failRate":0.0},{"code":"AH 104","name":"HEALTH PROMOTION AND DISEASE PREVENTION","enrolled":12,"passed":12,"failed":0,"completed":12,"passRate":1.0,"failRate":0.0},{"code":"NURS 222","name":"NURSING OF ADULTS II","enrolled":12,"passed":12,"failed":0,"completed":12,"passRate":1.0,"failRate":0.0},{"code":"NURS 245","name":"FAMILY HEALTH NURSING II","enrolled":12,"passed":12,"failed":0,"completed":12,"passRate":1.0,"failRate":0.0},{"code":"NURS 256","name":"COMMUNITY AND MENTAL HEALTH NURSING","enrolled":12,"passed":12,"failed":0,"completed":12,"passRate":1.0,"failRate":0.0},{"code":"NURS 260","name":"SENIOR NURSING SEMINAR","enrolled":12,"passed":12,"failed":0,"completed":12,"passRate":1.0,"failRate":0.0},{"code":"SCI 135","name":"INTRODUCTION TO MARINE BIOLOGY","enrolled":11,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0},{"code":"VCARP 050","name":"VOCATIONAL ENGLISH I","enrolled":10,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0},{"code":"VCARP 060","name":"MATH FOR CONTRUCTION","enrolled":10,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0},{"code":"VCARP 101","name":"INTRODUCTION TO CONSTRUCTION","enrolled":10,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0},{"code":"VCARP 102","name":"CONTRUCTION SAFETY-TOOL AND EQUIPMENT","enrolled":10,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0},{"code":"VCARP 103","name":"BLUEPRINT READING","enrolled":10,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0},{"code":"VCARP 104","name":"FOOTING AND FOUNDATION","enrolled":10,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0}];
+const facultyData=[{"name":"Sinkey, David","students":199,"passed":49,"failed":147,"incomplete":3,"completed":196,"completionRate":0.984925,"passRate":0.25,"failRate":0.75},{"name":"Bujen, Jelina","students":18,"passed":6,"failed":12,"incomplete":0,"completed":18,"completionRate":1.0,"passRate":0.333333,"failRate":0.666667},{"name":"Bojos, Rosalie","students":206,"passed":77,"failed":126,"incomplete":3,"completed":203,"completionRate":0.985437,"passRate":0.37931,"failRate":0.62069},{"name":"Osborne, Karalaini","students":237,"passed":93,"failed":144,"incomplete":0,"completed":237,"completionRate":1.0,"passRate":0.392405,"failRate":0.607595},{"name":"Layton, Kirk","students":90,"passed":35,"failed":52,"incomplete":3,"completed":87,"completionRate":0.966667,"passRate":0.402299,"failRate":0.597701},{"name":"Sumaoang, Rosalinda","students":204,"passed":83,"failed":114,"incomplete":7,"completed":197,"completionRate":0.965686,"passRate":0.42132,"failRate":0.57868},{"name":"Loeak, Rosemary","students":25,"passed":11,"failed":14,"incomplete":0,"completed":25,"completionRate":1.0,"passRate":0.44,"failRate":0.56},{"name":"Finiasi, Sa'a","students":203,"passed":87,"failed":109,"incomplete":7,"completed":196,"completionRate":0.965517,"passRate":0.443878,"failRate":0.556122},{"name":"Sidal, Ronald","students":228,"passed":103,"failed":123,"incomplete":2,"completed":226,"completionRate":0.991228,"passRate":0.455752,"failRate":0.544248},{"name":"Poquita, Jennifer","students":283,"passed":132,"failed":151,"incomplete":0,"completed":283,"completionRate":1.0,"passRate":0.466431,"failRate":0.533569},{"name":"Vila, Curtis","students":240,"passed":122,"failed":116,"incomplete":2,"completed":238,"completionRate":0.991667,"passRate":0.512605,"failRate":0.487395},{"name":"Castro, Charina","students":91,"passed":47,"failed":43,"incomplete":1,"completed":90,"completionRate":0.989011,"passRate":0.522222,"failRate":0.477778},{"name":"Savu, Silipa","students":230,"passed":117,"failed":107,"incomplete":6,"completed":224,"completionRate":0.973913,"passRate":0.522321,"failRate":0.477679},{"name":"Maqosa, Miriama","students":13,"passed":7,"failed":6,"incomplete":0,"completed":13,"completionRate":1.0,"passRate":0.538462,"failRate":0.461538},{"name":"Maitokana, Gade","students":205,"passed":114,"failed":90,"incomplete":1,"completed":204,"completionRate":0.995122,"passRate":0.558824,"failRate":0.441176},{"name":"Uriona, Viviana","students":174,"passed":96,"failed":71,"incomplete":7,"completed":167,"completionRate":0.95977,"passRate":0.57485,"failRate":0.42515},{"name":"Nabukabuka, Litiana","students":235,"passed":132,"failed":95,"incomplete":8,"completed":227,"completionRate":0.965957,"passRate":0.581498,"failRate":0.418502},{"name":"Romany, Kendal","students":105,"passed":61,"failed":43,"incomplete":0,"completed":104,"completionRate":0.990476,"passRate":0.586538,"failRate":0.413462},{"name":"Vroom, Bernardus","students":27,"passed":16,"failed":11,"incomplete":0,"completed":27,"completionRate":1.0,"passRate":0.592593,"failRate":0.407407},{"name":"Velasquez, Alexander","students":257,"passed":149,"failed":98,"incomplete":10,"completed":247,"completionRate":0.961089,"passRate":0.603239,"failRate":0.396761},{"name":"Savu, Vasemaca","students":115,"passed":67,"failed":44,"incomplete":4,"completed":111,"completionRate":0.965217,"passRate":0.603604,"failRate":0.396396},{"name":"Soriano, Necy","students":39,"passed":23,"failed":15,"incomplete":1,"completed":38,"completionRate":0.974359,"passRate":0.605263,"failRate":0.394737},{"name":"Ogunmokun, Adedayo","students":109,"passed":66,"failed":41,"incomplete":2,"completed":107,"completionRate":0.981651,"passRate":0.616822,"failRate":0.383178},{"name":"Baleikorocau, Waisiki","students":226,"passed":141,"failed":83,"incomplete":2,"completed":224,"completionRate":0.99115,"passRate":0.629464,"failRate":0.370536},{"name":"Ratidara, Timoci","students":14,"passed":9,"failed":5,"incomplete":0,"completed":14,"completionRate":1.0,"passRate":0.642857,"failRate":0.357143},{"name":"Seru, Jennifer","students":183,"passed":119,"failed":64,"incomplete":0,"completed":183,"completionRate":1.0,"passRate":0.650273,"failRate":0.349727},{"name":"Robert, Peter","students":174,"passed":116,"failed":57,"incomplete":1,"completed":173,"completionRate":0.994253,"passRate":0.67052,"failRate":0.32948},{"name":"Bilimon, Mylast","students":129,"passed":85,"failed":41,"incomplete":3,"completed":126,"completionRate":0.976744,"passRate":0.674603,"failRate":0.325397},{"name":"Henry, James","students":125,"passed":85,"failed":38,"incomplete":2,"completed":123,"completionRate":0.984,"passRate":0.691057,"failRate":0.308943},{"name":"Madan, Ekta","students":26,"passed":18,"failed":8,"incomplete":0,"completed":26,"completionRate":1.0,"passRate":0.692308,"failRate":0.307692},{"name":"Okoro, Linus","students":168,"passed":113,"failed":49,"incomplete":6,"completed":162,"completionRate":0.964286,"passRate":0.697531,"failRate":0.302469},{"name":"Maqosa, Logayau","students":21,"passed":14,"failed":6,"incomplete":1,"completed":20,"completionRate":0.952381,"passRate":0.7,"failRate":0.3},{"name":"Jora, Jora","students":62,"passed":45,"failed":16,"incomplete":1,"completed":61,"completionRate":0.983871,"passRate":0.737705,"failRate":0.262295},{"name":"Nating, Dako","students":141,"passed":102,"failed":36,"incomplete":3,"completed":138,"completionRate":0.978723,"passRate":0.73913,"failRate":0.26087},{"name":"Jakabot, Rolson","students":54,"passed":40,"failed":14,"incomplete":0,"completed":54,"completionRate":1.0,"passRate":0.740741,"failRate":0.259259},{"name":"Matthew, Risi","students":248,"passed":184,"failed":62,"incomplete":2,"completed":246,"completionRate":0.991935,"passRate":0.747967,"failRate":0.252033},{"name":"Doulatram, Desmond","students":241,"passed":179,"failed":60,"incomplete":2,"completed":239,"completionRate":0.991701,"passRate":0.748954,"failRate":0.251046},{"name":"Page, Alvin","students":136,"passed":102,"failed":31,"incomplete":3,"completed":133,"completionRate":0.977941,"passRate":0.766917,"failRate":0.233083},{"name":"Shoniber, Jennifer","students":54,"passed":41,"failed":12,"incomplete":1,"completed":53,"completionRate":0.981481,"passRate":0.773585,"failRate":0.226415},{"name":"Zedkaia, John","students":36,"passed":28,"failed":8,"incomplete":0,"completed":36,"completionRate":1.0,"passRate":0.777778,"failRate":0.222222},{"name":"Latrick, Jessio","students":95,"passed":74,"failed":20,"incomplete":1,"completed":94,"completionRate":0.989474,"passRate":0.787234,"failRate":0.212766},{"name":"Bulavakarua, Ana","students":83,"passed":66,"failed":16,"incomplete":1,"completed":82,"completionRate":0.987952,"passRate":0.804878,"failRate":0.195122},{"name":"Alfonso, Edward","students":190,"passed":151,"failed":33,"incomplete":4,"completed":184,"completionRate":0.968421,"passRate":0.820652,"failRate":0.179348},{"name":"Crawford, Mellessia","students":23,"passed":19,"failed":4,"incomplete":0,"completed":23,"completionRate":1.0,"passRate":0.826087,"failRate":0.173913},{"name":"Ferolino, Maria","students":54,"passed":45,"failed":9,"incomplete":0,"completed":54,"completionRate":1.0,"passRate":0.833333,"failRate":0.166667},{"name":"Koroi, Rosie","students":226,"passed":186,"failed":35,"incomplete":5,"completed":221,"completionRate":0.977876,"passRate":0.841629,"failRate":0.158371},{"name":"Ragus, Oscar","students":123,"passed":105,"failed":18,"incomplete":0,"completed":123,"completionRate":1.0,"passRate":0.853659,"failRate":0.146341},{"name":"Henos, Tarry","students":91,"passed":76,"failed":13,"incomplete":2,"completed":89,"completionRate":0.978022,"passRate":0.853933,"failRate":0.146067},{"name":"Sinkey, Kelly","students":93,"passed":76,"failed":13,"incomplete":4,"completed":89,"completionRate":0.956989,"passRate":0.853933,"failRate":0.146067},{"name":"Lanwe, Jakio","students":30,"passed":24,"failed":4,"incomplete":2,"completed":28,"completionRate":0.933333,"passRate":0.857143,"failRate":0.142857},{"name":"Sumaoang, Moses","students":166,"passed":143,"failed":23,"incomplete":0,"completed":166,"completionRate":1.0,"passRate":0.861446,"failRate":0.138554},{"name":"Bokadrik, Ricky","students":45,"passed":39,"failed":6,"incomplete":0,"completed":45,"completionRate":1.0,"passRate":0.866667,"failRate":0.133333},{"name":"Owens-Livai, Patricia","students":34,"passed":30,"failed":4,"incomplete":0,"completed":34,"completionRate":1.0,"passRate":0.882353,"failRate":0.117647},{"name":"Kaious, Pam","students":18,"passed":16,"failed":2,"incomplete":0,"completed":18,"completionRate":1.0,"passRate":0.888889,"failRate":0.111111},{"name":"Karben, Pruter","students":217,"passed":191,"failed":23,"incomplete":3,"completed":214,"completionRate":0.986175,"passRate":0.892523,"failRate":0.107477},{"name":"Mottelang, Manny","students":157,"passed":140,"failed":16,"incomplete":1,"completed":156,"completionRate":0.993631,"passRate":0.897436,"failRate":0.102564},{"name":"Ogunmokun, Oyinade","students":121,"passed":105,"failed":11,"incomplete":4,"completed":116,"completionRate":0.958678,"passRate":0.905172,"failRate":0.094828},{"name":"Linus, Oke-Oghene","students":37,"passed":34,"failed":3,"incomplete":0,"completed":37,"completionRate":1.0,"passRate":0.918919,"failRate":0.081081},{"name":"Kedi, Kenneth","students":53,"passed":48,"failed":4,"incomplete":1,"completed":52,"completionRate":0.981132,"passRate":0.923077,"failRate":0.076923},{"name":"Sharma, Roneel","students":27,"passed":24,"failed":2,"incomplete":1,"completed":26,"completionRate":0.962963,"passRate":0.923077,"failRate":0.076923},{"name":"Silk, Mary","students":13,"passed":12,"failed":1,"incomplete":0,"completed":13,"completionRate":1.0,"passRate":0.923077,"failRate":0.076923},{"name":"Adiniwin, Edward","students":53,"passed":49,"failed":4,"incomplete":0,"completed":53,"completionRate":1.0,"passRate":0.924528,"failRate":0.075472},{"name":"Kendall-Lekka, Meitaka","students":115,"passed":102,"failed":7,"incomplete":6,"completed":109,"completionRate":0.947826,"passRate":0.93578,"failRate":0.06422},{"name":"Lussier, Kannea","students":53,"passed":50,"failed":3,"incomplete":0,"completed":53,"completionRate":1.0,"passRate":0.943396,"failRate":0.056604},{"name":"Kamenio, Luisa","students":91,"passed":85,"failed":5,"incomplete":1,"completed":90,"completionRate":0.989011,"passRate":0.944444,"failRate":0.055556},{"name":"Yamamoto, Taichi","students":20,"passed":19,"failed":1,"incomplete":0,"completed":20,"completionRate":1.0,"passRate":0.95,"failRate":0.05},{"name":"Rufus, Lajkit","students":21,"passed":20,"failed":1,"incomplete":0,"completed":21,"completionRate":1.0,"passRate":0.952381,"failRate":0.047619},{"name":"Kotton, Stevenson","students":27,"passed":26,"failed":1,"incomplete":0,"completed":27,"completionRate":1.0,"passRate":0.962963,"failRate":0.037037},{"name":"Ralpho, Marson","students":194,"passed":184,"failed":7,"incomplete":3,"completed":191,"completionRate":0.984536,"passRate":0.963351,"failRate":0.036649},{"name":"Lewis, Lennon","students":60,"passed":58,"failed":2,"incomplete":0,"completed":60,"completionRate":1.0,"passRate":0.966667,"failRate":0.033333},{"name":"Bohanny, Walton","students":57,"passed":56,"failed":1,"incomplete":0,"completed":57,"completionRate":1.0,"passRate":0.982456,"failRate":0.017544},{"name":"Savu, Waisake","students":75,"passed":75,"failed":0,"incomplete":0,"completed":75,"completionRate":1.0,"passRate":1.0,"failRate":0.0},{"name":"Rainibogi, Marica","students":58,"passed":56,"failed":0,"incomplete":2,"completed":56,"completionRate":0.965517,"passRate":1.0,"failRate":0.0},{"name":"Hugo, Bugoro","students":35,"passed":35,"failed":0,"incomplete":0,"completed":35,"completionRate":1.0,"passRate":1.0,"failRate":0.0},{"name":"Vili, John","students":14,"passed":14,"failed":0,"incomplete":0,"completed":14,"completionRate":1.0,"passRate":1.0,"failRate":0.0}];
+const courseFall=[{"code":"SCI 112","name":"CLIMATE CHANGE","enrolled":15,"passed":4,"failed":11,"completed":15,"passRate":0.266667,"failRate":0.733333},{"code":"ASL 101","name":"AMERICAN SIGN LANGUAGE I","enrolled":18,"passed":6,"failed":12,"completed":18,"passRate":0.333333,"failRate":0.666667},{"code":"ENG 097","name":"INTRODUCTION TO ACADEMIC READING AND WRITING","enrolled":195,"passed":77,"failed":114,"completed":191,"passRate":0.403141,"failRate":0.596859},{"code":"ENG 201","name":"CREATIVE WRITING","enrolled":14,"passed":6,"failed":8,"completed":14,"passRate":0.428571,"failRate":0.571429},{"code":"MATH 099","name":"FUNDAMENTALS OF MATHEMATICS","enrolled":73,"passed":32,"failed":38,"completed":70,"passRate":0.457143,"failRate":0.542857},{"code":"ENG 111","name":"ENGLISH COMPOSITION I","enrolled":147,"passed":67,"failed":76,"completed":143,"passRate":0.468531,"failRate":0.531469},{"code":"ENG 096","name":"ADVANCED ACADEMIC LISTENING AND SPEAKING","enrolled":182,"passed":86,"failed":94,"completed":180,"passRate":0.477778,"failRate":0.522222},{"code":"HIS 201","name":"WORLD HISTORY I","enrolled":13,"passed":6,"failed":6,"completed":12,"passRate":0.5,"failRate":0.5},{"code":"PHIL 101","name":"INTRODUCTION TO PHILOSOPHY","enrolled":18,"passed":6,"failed":6,"completed":12,"passRate":0.5,"failRate":0.5},{"code":"MATH 068","name":"PRE-ALGEBRA","enrolled":151,"passed":75,"failed":73,"completed":148,"passRate":0.506757,"failRate":0.493243},{"code":"ENG 086","name":"INTERMEDIATE ACADEMIC LISTENING AND SPEAKING","enrolled":136,"passed":69,"failed":67,"completed":136,"passRate":0.507353,"failRate":0.492647},{"code":"ETH 101","name":"ETHICS","enrolled":38,"passed":19,"failed":18,"completed":37,"passRate":0.513514,"failRate":0.486486},{"code":"MATH 102","name":"SURVEY OF MATHEMATICS","enrolled":50,"passed":26,"failed":23,"completed":49,"passRate":0.530612,"failRate":0.469388},{"code":"ENG 220","name":"WRITING RESEARCH PAPERS","enrolled":68,"passed":33,"failed":29,"completed":62,"passRate":0.532258,"failRate":0.467742},{"code":"ENG 087","name":"INTERMEDIATE ACADEMIC READING AND WRITING","enrolled":131,"passed":73,"failed":58,"completed":131,"passRate":0.557252,"failRate":0.442748},{"code":"SCI 111","name":"ENVIRONMENTAL SCIENCE","enrolled":14,"passed":8,"failed":6,"completed":14,"passRate":0.571429,"failRate":0.428571},{"code":"ENG 105","name":"FUNDAMENTALS OF SPEECH","enrolled":120,"passed":68,"failed":49,"completed":117,"passRate":0.581197,"failRate":0.418803},{"code":"SCI 220","name":"MARINE FIELD RESEARCH METHODS","enrolled":12,"passed":7,"failed":5,"completed":12,"passRate":0.583333,"failRate":0.416667},{"code":"ICS 104","name":"SPREADSHEETS","enrolled":22,"passed":13,"failed":9,"completed":22,"passRate":0.590909,"failRate":0.409091},{"code":"ENG 112","name":"ENGLISH COMPOSITION II","enrolled":78,"passed":45,"failed":29,"completed":74,"passRate":0.608108,"failRate":0.391892},{"code":"CHEM 101","name":"INTRODUCTION TO CHEMISTRY","enrolled":27,"passed":14,"failed":9,"completed":23,"passRate":0.608696,"failRate":0.391304},{"code":"CMI 101","name":"FIRST YEAR SEMINAR","enrolled":287,"passed":176,"failed":108,"completed":284,"passRate":0.619718,"failRate":0.380282},{"code":"MATH 088","name":"INTRODUCTION TO ALGEBRA","enrolled":50,"passed":31,"failed":19,"completed":50,"passRate":0.62,"failRate":0.38},{"code":"MATH 111","name":"COLLEGE ALGEBRA","enrolled":57,"passed":35,"failed":21,"completed":56,"passRate":0.625,"failRate":0.375},{"code":"MATH 160","name":"ELEMENTARY STATISTICS","enrolled":79,"passed":47,"failed":28,"completed":75,"passRate":0.626667,"failRate":0.373333},{"code":"ENG 211","name":"CHILDREN'S LITERATURE","enrolled":34,"passed":22,"failed":12,"completed":34,"passRate":0.647059,"failRate":0.352941},{"code":"MAR 130","name":"MARSHALLESE CULTURE","enrolled":141,"passed":94,"failed":44,"completed":138,"passRate":0.681159,"failRate":0.318841},{"code":"ICS 101","name":"INTRODUCTION TO MICROSOFT OFFICE","enrolled":110,"passed":72,"failed":33,"completed":105,"passRate":0.685714,"failRate":0.314286},{"code":"SOC 130","name":"INTRODUCTION TO SOCIOLOGY","enrolled":20,"passed":14,"failed":6,"completed":20,"passRate":0.7,"failRate":0.3},{"code":"AGR 101","name":"INTRODUCTION TO AGRICULTURE","enrolled":50,"passed":37,"failed":13,"completed":50,"passRate":0.74,"failRate":0.26},{"code":"MAR 140","name":"MARSHALLESE GOVERNMENT","enrolled":56,"passed":41,"failed":14,"completed":55,"passRate":0.745455,"failRate":0.254545},{"code":"BIO 101","name":"INTRODUCTION TO BIOLOGY","enrolled":33,"passed":24,"failed":8,"completed":32,"passRate":0.75,"failRate":0.25},{"code":"SCI 235","name":"TROPICAL MARINE ECOSYSTEMS OF THE PACIFIC","enrolled":12,"passed":9,"failed":3,"completed":12,"passRate":0.75,"failRate":0.25},{"code":"MATH 098","name":"INTERMEDIATE ALGEBRA","enrolled":54,"passed":41,"failed":13,"completed":54,"passRate":0.759259,"failRate":0.240741},{"code":"MAR 120","name":"MARSHALLESE ORTHOGRAPHY","enrolled":71,"passed":53,"failed":16,"completed":69,"passRate":0.768116,"failRate":0.231884},{"code":"EDU 109","name":"PHILOSOPHICAL FOUNDATIONS OF EDUCATION","enrolled":19,"passed":15,"failed":4,"completed":19,"passRate":0.789474,"failRate":0.210526},{"code":"EDU 250","name":"MATHEMATICS FOR ELEMENTARY TEACHERS II","enrolled":19,"passed":15,"failed":4,"completed":19,"passRate":0.789474,"failRate":0.210526},{"code":"EDU 416","name":"TEACHING WITH CURRICULUM MATERIALS","enrolled":11,"passed":9,"failed":2,"completed":11,"passRate":0.818182,"failRate":0.181818},{"code":"EDU 444","name":"EVALUATION AND ASSESSMENT","enrolled":11,"passed":9,"failed":2,"completed":11,"passRate":0.818182,"failRate":0.181818},{"code":"EDU 313","name":"LITERATURE AND LITERACY I","enrolled":17,"passed":14,"failed":3,"completed":17,"passRate":0.823529,"failRate":0.176471},{"code":"MART 101","name":"TRADITIONAL NAVIGATION AND SEAFARING","enrolled":23,"passed":19,"failed":4,"completed":23,"passRate":0.826087,"failRate":0.173913},{"code":"MART 103","name":"ENGLISH FOR MARINERS","enrolled":24,"passed":20,"failed":4,"completed":24,"passRate":0.833333,"failRate":0.166667},{"code":"ENG 230","name":"CRITICAL THINKING IN FILM","enrolled":13,"passed":10,"failed":2,"completed":12,"passRate":0.833333,"failRate":0.166667},{"code":"EDU 101","name":"FOUNDATION LITERACY FOR ELEMENTARY CLASSROOM TEACHERS","enrolled":27,"passed":22,"failed":4,"completed":26,"passRate":0.846154,"failRate":0.153846},{"code":"EDU 325","name":"ELEMENTARY MATHEMATICS II","enrolled":21,"passed":17,"failed":3,"completed":20,"passRate":0.85,"failRate":0.15},{"code":"MGT 261","name":"PRINCIPLES OF MANAGEMENT","enrolled":15,"passed":12,"failed":2,"completed":14,"passRate":0.857143,"failRate":0.142857},{"code":"PSY 201","name":"HUMAN GROWTH AND DEVELOPMENT","enrolled":16,"passed":13,"failed":2,"completed":15,"passRate":0.866667,"failRate":0.133333},{"code":"AH 114","name":"NUTRITION","enrolled":16,"passed":14,"failed":2,"completed":16,"passRate":0.875,"failRate":0.125},{"code":"PI 122","name":"ISSUES IN THE PACIFIC STUDIES","enrolled":25,"passed":22,"failed":3,"completed":25,"passRate":0.88,"failRate":0.12},{"code":"PSY 101","name":"INTRODUCTION TO PSYCHOLOGY","enrolled":26,"passed":22,"failed":3,"completed":25,"passRate":0.88,"failRate":0.12},{"code":"EDU 210","name":"INTRODUCTION TO TEACHING","enrolled":18,"passed":16,"failed":2,"completed":18,"passRate":0.888889,"failRate":0.111111},{"code":"EDU 314","name":"LITERACY AND LITERATURE II","enrolled":19,"passed":16,"failed":2,"completed":18,"passRate":0.888889,"failRate":0.111111},{"code":"SOC 140","name":"CONTEMPORARY SOCIAL ISSUES IN MICRONESIA","enrolled":38,"passed":33,"failed":4,"completed":37,"passRate":0.891892,"failRate":0.108108},{"code":"BUS 200","name":"ACCOUNTING CLERKSHIP INTERNSHIP","enrolled":10,"passed":9,"failed":1,"completed":10,"passRate":0.9,"failRate":0.1},{"code":"IDS 428","name":"PERSONAL AND SOCIAL HEALTH SKILLS","enrolled":10,"passed":9,"failed":1,"completed":10,"passRate":0.9,"failRate":0.1},{"code":"BUS 101","name":"INTRODUCTION TO BUSINESS","enrolled":26,"passed":22,"failed":2,"completed":24,"passRate":0.916667,"failRate":0.083333},{"code":"MKT 241","name":"PRINCIPLES OF MARKETING","enrolled":25,"passed":22,"failed":2,"completed":24,"passRate":0.916667,"failRate":0.083333},{"code":"AH 101","name":"ESSENTIAL PUBLIC HEALTH FUNCTIONS AND PRIMARY HEALTH CARE","enrolled":13,"passed":12,"failed":1,"completed":13,"passRate":0.923077,"failRate":0.076923},{"code":"EDU 211","name":"CLASSROOM METHODS AND STRATEGIES","enrolled":13,"passed":12,"failed":1,"completed":13,"passRate":0.923077,"failRate":0.076923},{"code":"PI 260","name":"NUCLEAR TEST IN THE PACIFIC","enrolled":13,"passed":12,"failed":1,"completed":13,"passRate":0.923077,"failRate":0.076923},{"code":"BUS 106","name":"BUSINESS MATHEMATICS","enrolled":28,"passed":25,"failed":2,"completed":27,"passRate":0.925926,"failRate":0.074074},{"code":"EDU 341","name":"CLASSROOM MANAGEMENT II","enrolled":15,"passed":14,"failed":1,"completed":15,"passRate":0.933333,"failRate":0.066667},{"code":"HIS 132","name":"HISTORY OF MARSHALL ISLANDS","enrolled":15,"passed":14,"failed":1,"completed":15,"passRate":0.933333,"failRate":0.066667},{"code":"NURS 122","name":"NURSING OF ADULTS I","enrolled":16,"passed":15,"failed":1,"completed":16,"passRate":0.9375,"failRate":0.0625},{"code":"NURS 235","name":"FAMILY HEALTH","enrolled":17,"passed":16,"failed":1,"completed":17,"passRate":0.941176,"failRate":0.058824},{"code":"ART 329","name":"PERFORMING ARTS","enrolled":20,"passed":19,"failed":1,"completed":20,"passRate":0.95,"failRate":0.05},{"code":"ETH 300","name":"ETHICS AND ORGANIZATIONAL GOVERNANCE","enrolled":28,"passed":26,"failed":1,"completed":27,"passRate":0.962963,"failRate":0.037037},{"code":"ACC 133","name":"BASIC ACCOUNTING","enrolled":27,"passed":25,"failed":0,"completed":25,"passRate":1.0,"failRate":0.0},{"code":"MART 102","name":"MATHEMATICS FOR MARINERS","enrolled":24,"passed":22,"failed":0,"completed":22,"passRate":1.0,"failRate":0.0},{"code":"EDU 324","name":"ELEMENTARY MATHEMATICS I","enrolled":20,"passed":20,"failed":0,"completed":20,"passRate":1.0,"failRate":0.0},{"code":"ANAT 110","name":"ANATOMY AND PHYSIOLOGY I","enrolled":16,"passed":15,"failed":0,"completed":15,"passRate":1.0,"failRate":0.0},{"code":"AH 107","name":"COMMUNITY HEALTH EDUCATION","enrolled":14,"passed":14,"failed":0,"completed":14,"passRate":1.0,"failRate":0.0},{"code":"EDU 241","name":"CLASSROOM MANAGEMENT","enrolled":13,"passed":13,"failed":0,"completed":13,"passRate":1.0,"failRate":0.0},{"code":"EDU 322","name":"ELEMENTARY SOCIAL STUDIES","enrolled":13,"passed":13,"failed":0,"completed":13,"passRate":1.0,"failRate":0.0},{"code":"EDU 496","name":"ELEMENTARY STUDENT TEACHING","enrolled":14,"passed":13,"failed":0,"completed":13,"passRate":1.0,"failRate":0.0},{"code":"EDU 497","name":"ELEMENTARY SEMINAR FOR STUDENT TEACHING","enrolled":14,"passed":13,"failed":0,"completed":13,"passRate":1.0,"failRate":0.0},{"code":"AH 103","name":"INTRODUCTION TO INFORMATION SYSTEMS FOR HEALTH MANAGERS","enrolled":12,"passed":12,"failed":0,"completed":12,"passRate":1.0,"failRate":0.0},{"code":"BUS 251","name":"ENTREPRENEURSHIP","enrolled":12,"passed":12,"failed":0,"completed":12,"passRate":1.0,"failRate":0.0},{"code":"EDU 150","name":"MATHEMATICS FOR ELEMENTARY TEACHERS","enrolled":10,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0},{"code":"VCARP 050","name":"VOCATIONAL ENGLISH I","enrolled":10,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0},{"code":"VCARP 060","name":"MATH FOR CONTRUCTION","enrolled":10,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0},{"code":"VCARP 101","name":"INTRODUCTION TO CONSTRUCTION","enrolled":10,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0},{"code":"VCARP 102","name":"CONTRUCTION SAFETY-TOOL AND EQUIPMENT","enrolled":10,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0},{"code":"VCARP 103","name":"BLUEPRINT READING","enrolled":10,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0},{"code":"VCARP 104","name":"FOOTING AND FOUNDATION","enrolled":10,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0}];
+const courseSpring=[{"code":"SOC 130","name":"INTRODUCTION TO SOCIOLOGY","enrolled":20,"passed":3,"failed":17,"completed":20,"passRate":0.15,"failRate":0.85},{"code":"ENG 097","name":"INTRODUCTION TO ACADEMIC READING AND WRITING","enrolled":204,"passed":50,"failed":152,"completed":202,"passRate":0.247525,"failRate":0.752475},{"code":"SCI 281","name":"INTERNSHIPS IN MARINE SCIENCE","enrolled":15,"passed":5,"failed":10,"completed":15,"passRate":0.333333,"failRate":0.666667},{"code":"ENG 086","name":"INTERMEDIATE ACADEMIC LISTENING AND SPEAKING","enrolled":108,"passed":37,"failed":71,"completed":108,"passRate":0.342593,"failRate":0.657407},{"code":"ENG 087","name":"INTERMEDIATE ACADEMIC READING AND WRITING","enrolled":104,"passed":40,"failed":64,"completed":104,"passRate":0.384615,"failRate":0.615385},{"code":"ICS 101","name":"INTRODUCTION TO MICROSOFT OFFICE","enrolled":147,"passed":62,"failed":85,"completed":147,"passRate":0.421769,"failRate":0.578231},{"code":"ENG 096","name":"ADVANCED ACADEMIC LISTENING AND SPEAKING","enrolled":172,"passed":73,"failed":95,"completed":168,"passRate":0.434524,"failRate":0.565476},{"code":"CMI 101","name":"FIRST YEAR SEMINAR","enrolled":191,"passed":84,"failed":103,"completed":187,"passRate":0.449198,"failRate":0.550802},{"code":"MATH 111","name":"COLLEGE ALGEBRA","enrolled":34,"passed":16,"failed":18,"completed":34,"passRate":0.470588,"failRate":0.529412},{"code":"MATH 098","name":"INTERMEDIATE ALGEBRA","enrolled":40,"passed":19,"failed":18,"completed":37,"passRate":0.513514,"failRate":0.486486},{"code":"SOC 140","name":"CONTEMPORARY SOCIAL ISSUES IN MICRONESIA","enrolled":51,"passed":27,"failed":24,"completed":51,"passRate":0.529412,"failRate":0.470588},{"code":"EDU 150","name":"MATHEMATICS FOR ELEMENTARY TEACHERS","enrolled":16,"passed":8,"failed":7,"completed":15,"passRate":0.533333,"failRate":0.466667},{"code":"BUS 101","name":"INTRODUCTION TO BUSINESS","enrolled":22,"passed":12,"failed":10,"completed":22,"passRate":0.545455,"failRate":0.454545},{"code":"ENG 111","name":"ENGLISH COMPOSITION I","enrolled":139,"passed":75,"failed":60,"completed":135,"passRate":0.555556,"failRate":0.444444},{"code":"MATH 088","name":"INTRODUCTION TO ALGEBRA","enrolled":70,"passed":39,"failed":31,"completed":70,"passRate":0.557143,"failRate":0.442857},{"code":"ENG 105","name":"FUNDAMENTALS OF SPEECH","enrolled":121,"passed":66,"failed":52,"completed":118,"passRate":0.559322,"failRate":0.440678},{"code":"AGR 101","name":"INTRODUCTION TO AGRICULTURE","enrolled":45,"passed":27,"failed":17,"completed":44,"passRate":0.613636,"failRate":0.386364},{"code":"ICS 104","name":"SPREADSHEETS","enrolled":39,"passed":24,"failed":15,"completed":39,"passRate":0.615385,"failRate":0.384615},{"code":"ENG 112","name":"ENGLISH COMPOSITION II","enrolled":89,"passed":56,"failed":33,"completed":89,"passRate":0.629213,"failRate":0.370787},{"code":"MAR 160","name":"MARSHALLESE PUBLIC SPEAKING","enrolled":21,"passed":14,"failed":7,"completed":21,"passRate":0.666667,"failRate":0.333333},{"code":"MART 110","name":"STCW BASIC SAFETY TRAINING","enrolled":18,"passed":12,"failed":6,"completed":18,"passRate":0.666667,"failRate":0.333333},{"code":"MAR 130","name":"MARSHALLESE CULTURE","enrolled":151,"passed":100,"failed":49,"completed":149,"passRate":0.671141,"failRate":0.328859},{"code":"MATH 160","name":"ELEMENTARY STATISTICS","enrolled":61,"passed":41,"failed":19,"completed":60,"passRate":0.683333,"failRate":0.316667},{"code":"MATH 099","name":"FUNDAMENTALS OF MATHEMATICS","enrolled":104,"passed":71,"failed":32,"completed":103,"passRate":0.68932,"failRate":0.31068},{"code":"MATH 089","name":"BASIC MATHEMATICS","enrolled":116,"passed":81,"failed":35,"completed":116,"passRate":0.698276,"failRate":0.301724},{"code":"HIS 202","name":"WORLD HISTORY II","enrolled":22,"passed":15,"failed":6,"completed":21,"passRate":0.714286,"failRate":0.285714},{"code":"PI 122","name":"ISSUES IN THE PACIFIC STUDIES","enrolled":21,"passed":15,"failed":6,"completed":21,"passRate":0.714286,"failRate":0.285714},{"code":"ENG 151","name":"PACIFIC LITERATURE","enrolled":18,"passed":13,"failed":5,"completed":18,"passRate":0.722222,"failRate":0.277778},{"code":"ENG 220","name":"WRITING RESEARCH PAPERS","enrolled":76,"passed":55,"failed":21,"completed":76,"passRate":0.723684,"failRate":0.276316},{"code":"MATH 102","name":"SURVEY OF MATHEMATICS","enrolled":69,"passed":48,"failed":18,"completed":66,"passRate":0.727273,"failRate":0.272727},{"code":"PHIL 101","name":"INTRODUCTION TO PHILOSOPHY","enrolled":19,"passed":14,"failed":5,"completed":19,"passRate":0.736842,"failRate":0.263158},{"code":"EDU 324","name":"ELEMENTARY MATHEMATICS I","enrolled":16,"passed":12,"failed":4,"completed":16,"passRate":0.75,"failRate":0.25},{"code":"HIS 132","name":"HISTORY OF MARSHALL ISLANDS","enrolled":29,"passed":22,"failed":7,"completed":29,"passRate":0.758621,"failRate":0.241379},{"code":"BUS 106","name":"BUSINESS MATHEMATICS","enrolled":21,"passed":16,"failed":5,"completed":21,"passRate":0.761905,"failRate":0.238095},{"code":"PSY 101","name":"INTRODUCTION TO PSYCHOLOGY","enrolled":28,"passed":20,"failed":6,"completed":26,"passRate":0.769231,"failRate":0.230769},{"code":"CHEM 101","name":"INTRODUCTION TO CHEMISTRY","enrolled":19,"passed":15,"failed":4,"completed":19,"passRate":0.789474,"failRate":0.210526},{"code":"EDU 101","name":"FOUNDATION LITERACY FOR ELEMENTARY CLASSROOM TEACHERS","enrolled":21,"passed":15,"failed":4,"completed":19,"passRate":0.789474,"failRate":0.210526},{"code":"ETH 101","name":"ETHICS","enrolled":20,"passed":16,"failed":4,"completed":20,"passRate":0.8,"failRate":0.2},{"code":"SCI 112","name":"CLIMATE CHANGE","enrolled":15,"passed":12,"failed":3,"completed":15,"passRate":0.8,"failRate":0.2},{"code":"MATH 121","name":"COLLEGE TRIGONOMETRY","enrolled":10,"passed":8,"failed":2,"completed":10,"passRate":0.8,"failRate":0.2},{"code":"MAR 140","name":"MARSHALLESE GOVERNMENT","enrolled":64,"passed":53,"failed":10,"completed":63,"passRate":0.84127,"failRate":0.15873},{"code":"EDU 241","name":"CLASSROOM MANAGEMENT","enrolled":14,"passed":12,"failed":2,"completed":14,"passRate":0.857143,"failRate":0.142857},{"code":"EDU 312","name":"FOUNDATIONS IN CURRICULUM AND INSTRUCTION","enrolled":14,"passed":12,"failed":2,"completed":14,"passRate":0.857143,"failRate":0.142857},{"code":"SCI 111","name":"ENVIRONMENTAL SCIENCE","enrolled":18,"passed":15,"failed":2,"completed":17,"passRate":0.882353,"failRate":0.117647},{"code":"EDU 250","name":"MATHEMATICS FOR ELEMENTARY TEACHERS II","enrolled":18,"passed":16,"failed":2,"completed":18,"passRate":0.888889,"failRate":0.111111},{"code":"EDU 325","name":"ELEMENTARY MATHEMATICS II","enrolled":19,"passed":17,"failed":2,"completed":19,"passRate":0.894737,"failRate":0.105263},{"code":"BUS 251","name":"ENTREPRENEURSHIP","enrolled":29,"passed":26,"failed":3,"completed":29,"passRate":0.896552,"failRate":0.103448},{"code":"SCI 225","name":"PRINCIPLES OF AQUACULTURE","enrolled":10,"passed":9,"failed":1,"completed":10,"passRate":0.9,"failRate":0.1},{"code":"AH 230","name":"PUBLIC HEALTH INTERNSHIP","enrolled":11,"passed":10,"failed":1,"completed":11,"passRate":0.909091,"failRate":0.090909},{"code":"JPN 101","name":"JAPANESE I","enrolled":11,"passed":10,"failed":1,"completed":11,"passRate":0.909091,"failRate":0.090909},{"code":"MKT 241","name":"PRINCIPLES OF MARKETING","enrolled":23,"passed":21,"failed":2,"completed":23,"passRate":0.913043,"failRate":0.086957},{"code":"ENG 211","name":"CHILDREN'S LITERATURE","enrolled":37,"passed":32,"failed":3,"completed":35,"passRate":0.914286,"failRate":0.085714},{"code":"EDU 109","name":"PHILOSOPHICAL FOUNDATIONS OF EDUCATION","enrolled":13,"passed":12,"failed":1,"completed":13,"passRate":0.923077,"failRate":0.076923},{"code":"AH 101","name":"ESSENTIAL PUBLIC HEALTH FUNCTIONS AND PRIMARY HEALTH CARE","enrolled":14,"passed":13,"failed":1,"completed":14,"passRate":0.928571,"failRate":0.071429},{"code":"EDU 210","name":"INTRODUCTION TO TEACHING","enrolled":14,"passed":13,"failed":1,"completed":14,"passRate":0.928571,"failRate":0.071429},{"code":"EDU 251","name":"SCIENCE FOR TEACHERS","enrolled":14,"passed":13,"failed":1,"completed":14,"passRate":0.928571,"failRate":0.071429},{"code":"SCI 245","name":"INTEGRATED COASTAL MANAGEMENT","enrolled":14,"passed":13,"failed":1,"completed":14,"passRate":0.928571,"failRate":0.071429},{"code":"MICR 101","name":"INTRODUCTION TO MICROBIOLOGY","enrolled":15,"passed":14,"failed":1,"completed":15,"passRate":0.933333,"failRate":0.066667},{"code":"ACC 251","name":"MANAGERIAL ACCOUNTING","enrolled":18,"passed":17,"failed":1,"completed":18,"passRate":0.944444,"failRate":0.055556},{"code":"EDU 211","name":"CLASSROOM METHODS AND STRATEGIES","enrolled":19,"passed":18,"failed":1,"completed":19,"passRate":0.947368,"failRate":0.052632},{"code":"MAR 120","name":"MARSHALLESE ORTHOGRAPHY","enrolled":40,"passed":38,"failed":2,"completed":40,"passRate":0.95,"failRate":0.05},{"code":"ACC 133","name":"BASIC ACCOUNTING","enrolled":28,"passed":27,"failed":1,"completed":28,"passRate":0.964286,"failRate":0.035714},{"code":"EDU 496","name":"ELEMENTARY STUDENT TEACHING","enrolled":18,"passed":18,"failed":0,"completed":18,"passRate":1.0,"failRate":0.0},{"code":"EDU 497","name":"ELEMENTARY SEMINAR FOR STUDENT TEACHING","enrolled":18,"passed":18,"failed":0,"completed":18,"passRate":1.0,"failRate":0.0},{"code":"MGT 261","name":"PRINCIPLES OF MANAGEMENT","enrolled":17,"passed":17,"failed":0,"completed":17,"passRate":1.0,"failRate":0.0},{"code":"ACC 250","name":"FINANCIAL ACCOUNTING","enrolled":16,"passed":16,"failed":0,"completed":16,"passRate":1.0,"failRate":0.0},{"code":"NURS 110","name":"FUNDAMENTALS OF NURSING","enrolled":16,"passed":16,"failed":0,"completed":16,"passRate":1.0,"failRate":0.0},{"code":"BIO 101","name":"INTRODUCTION TO BIOLOGY","enrolled":14,"passed":14,"failed":0,"completed":14,"passRate":1.0,"failRate":0.0},{"code":"ENG 210","name":"INTRODUCTION TO LITERATURE","enrolled":14,"passed":14,"failed":0,"completed":14,"passRate":1.0,"failRate":0.0},{"code":"MAR 150","name":"MARSHALLESE COMPOSITION","enrolled":14,"passed":13,"failed":0,"completed":13,"passRate":1.0,"failRate":0.0},{"code":"MART 101","name":"TRADITIONAL NAVIGATION AND SEAFARING","enrolled":13,"passed":13,"failed":0,"completed":13,"passRate":1.0,"failRate":0.0},{"code":"MART 102","name":"MATHEMATICS FOR MARINERS","enrolled":13,"passed":13,"failed":0,"completed":13,"passRate":1.0,"failRate":0.0},{"code":"MART 103","name":"ENGLISH FOR MARINERS","enrolled":13,"passed":13,"failed":0,"completed":13,"passRate":1.0,"failRate":0.0},{"code":"AH 104","name":"HEALTH PROMOTION AND DISEASE PREVENTION","enrolled":12,"passed":12,"failed":0,"completed":12,"passRate":1.0,"failRate":0.0},{"code":"EDU 444","name":"EVALUATION AND ASSESSMENT","enrolled":12,"passed":12,"failed":0,"completed":12,"passRate":1.0,"failRate":0.0},{"code":"MAR 230","name":"MARSHALLESE GRAMMAR","enrolled":12,"passed":12,"failed":0,"completed":12,"passRate":1.0,"failRate":0.0},{"code":"NURS 222","name":"NURSING OF ADULTS II","enrolled":12,"passed":12,"failed":0,"completed":12,"passRate":1.0,"failRate":0.0},{"code":"NURS 245","name":"FAMILY HEALTH NURSING II","enrolled":12,"passed":12,"failed":0,"completed":12,"passRate":1.0,"failRate":0.0},{"code":"NURS 256","name":"COMMUNITY AND MENTAL HEALTH NURSING","enrolled":12,"passed":12,"failed":0,"completed":12,"passRate":1.0,"failRate":0.0},{"code":"NURS 260","name":"SENIOR NURSING SEMINAR","enrolled":12,"passed":12,"failed":0,"completed":12,"passRate":1.0,"failRate":0.0},{"code":"PI 260","name":"NUCLEAR TEST IN THE PACIFIC","enrolled":12,"passed":12,"failed":0,"completed":12,"passRate":1.0,"failRate":0.0},{"code":"EDU 341","name":"CLASSROOM MANAGEMENT II","enrolled":11,"passed":11,"failed":0,"completed":11,"passRate":1.0,"failRate":0.0},{"code":"EDU 416","name":"TEACHING WITH CURRICULUM MATERIALS","enrolled":11,"passed":11,"failed":0,"completed":11,"passRate":1.0,"failRate":0.0},{"code":"IDS 428","name":"PERSONAL AND SOCIAL HEALTH SKILLS","enrolled":11,"passed":11,"failed":0,"completed":11,"passRate":1.0,"failRate":0.0},{"code":"PSY 201","name":"HUMAN GROWTH AND DEVELOPMENT","enrolled":11,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0},{"code":"SCI 135","name":"INTRODUCTION TO MARINE BIOLOGY","enrolled":11,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0}];
+const courseSummer=[{"code":"MATH 098","name":"INTERMEDIATE ALGEBRA","enrolled":14,"passed":7,"failed":7,"completed":14,"passRate":0.5,"failRate":0.5},{"code":"ENG 097","name":"INTRODUCTION TO ACADEMIC READING AND WRITING","enrolled":88,"passed":45,"failed":43,"completed":88,"passRate":0.511364,"failRate":0.488636},{"code":"ENG 096","name":"ADVANCED ACADEMIC LISTENING AND SPEAKING","enrolled":75,"passed":41,"failed":34,"completed":75,"passRate":0.546667,"failRate":0.453333},{"code":"ENG 086","name":"INTERMEDIATE ACADEMIC LISTENING AND SPEAKING","enrolled":51,"passed":28,"failed":23,"completed":51,"passRate":0.54902,"failRate":0.45098},{"code":"ENG 087","name":"INTERMEDIATE ACADEMIC READING AND WRITING","enrolled":46,"passed":27,"failed":19,"completed":46,"passRate":0.586957,"failRate":0.413043},{"code":"ICS 104","name":"SPREADSHEETS","enrolled":10,"passed":6,"failed":4,"completed":10,"passRate":0.6,"failRate":0.4},{"code":"ICS 101","name":"INTRODUCTION TO MICROSOFT OFFICE","enrolled":62,"passed":38,"failed":23,"completed":61,"passRate":0.622951,"failRate":0.377049},{"code":"MATH 111","name":"COLLEGE ALGEBRA","enrolled":34,"passed":23,"failed":11,"completed":34,"passRate":0.676471,"failRate":0.323529},{"code":"ENG 112","name":"ENGLISH COMPOSITION II","enrolled":25,"passed":17,"failed":8,"completed":25,"passRate":0.68,"failRate":0.32},{"code":"BUS 101","name":"INTRODUCTION TO BUSINESS","enrolled":24,"passed":16,"failed":7,"completed":23,"passRate":0.695652,"failRate":0.304348},{"code":"MATH 102","name":"SURVEY OF MATHEMATICS","enrolled":24,"passed":17,"failed":7,"completed":24,"passRate":0.708333,"failRate":0.291667},{"code":"MATH 099","name":"FUNDAMENTALS OF MATHEMATICS","enrolled":46,"passed":33,"failed":13,"completed":46,"passRate":0.717391,"failRate":0.282609},{"code":"MATH 088","name":"INTRODUCTION TO ALGEBRA","enrolled":18,"passed":13,"failed":5,"completed":18,"passRate":0.722222,"failRate":0.277778},{"code":"ACC 133","name":"BASIC ACCOUNTING","enrolled":24,"passed":18,"failed":6,"completed":24,"passRate":0.75,"failRate":0.25},{"code":"ETH 101","name":"ETHICS","enrolled":16,"passed":12,"failed":4,"completed":16,"passRate":0.75,"failRate":0.25},{"code":"SOC 140","name":"CONTEMPORARY SOCIAL ISSUES IN MICRONESIA","enrolled":25,"passed":19,"failed":6,"completed":25,"passRate":0.76,"failRate":0.24},{"code":"MATH 160","name":"ELEMENTARY STATISTICS","enrolled":44,"passed":34,"failed":10,"completed":44,"passRate":0.772727,"failRate":0.227273},{"code":"CHEM 101","name":"INTRODUCTION TO CHEMISTRY","enrolled":18,"passed":14,"failed":4,"completed":18,"passRate":0.777778,"failRate":0.222222},{"code":"ENG 105","name":"FUNDAMENTALS OF SPEECH","enrolled":43,"passed":32,"failed":9,"completed":41,"passRate":0.780488,"failRate":0.219512},{"code":"BUS 106","name":"BUSINESS MATHEMATICS","enrolled":14,"passed":11,"failed":3,"completed":14,"passRate":0.785714,"failRate":0.214286},{"code":"PHIL 101","name":"INTRODUCTION TO PHILOSOPHY","enrolled":14,"passed":11,"failed":3,"completed":14,"passRate":0.785714,"failRate":0.214286},{"code":"EDU 211","name":"CLASSROOM METHODS AND STRATEGIES","enrolled":20,"passed":15,"failed":4,"completed":19,"passRate":0.789474,"failRate":0.210526},{"code":"MATH 089","name":"BASIC MATHEMATICS","enrolled":46,"passed":37,"failed":9,"completed":46,"passRate":0.804348,"failRate":0.195652},{"code":"MAR 130","name":"MARSHALLESE CULTURE","enrolled":52,"passed":44,"failed":8,"completed":52,"passRate":0.846154,"failRate":0.153846},{"code":"HIS 201","name":"WORLD HISTORY I","enrolled":13,"passed":11,"failed":2,"completed":13,"passRate":0.846154,"failRate":0.153846},{"code":"ENG 111","name":"ENGLISH COMPOSITION I","enrolled":66,"passed":56,"failed":8,"completed":64,"passRate":0.875,"failRate":0.125},{"code":"MAR 140","name":"MARSHALLESE GOVERNMENT","enrolled":63,"passed":57,"failed":6,"completed":63,"passRate":0.904762,"failRate":0.095238},{"code":"EDU 325","name":"ELEMENTARY MATHEMATICS II","enrolled":12,"passed":11,"failed":1,"completed":12,"passRate":0.916667,"failRate":0.083333},{"code":"MAR 150","name":"MARSHALLESE COMPOSITION","enrolled":12,"passed":11,"failed":1,"completed":12,"passRate":0.916667,"failRate":0.083333},{"code":"AGR 101","name":"INTRODUCTION TO AGRICULTURE","enrolled":20,"passed":19,"failed":1,"completed":20,"passRate":0.95,"failRate":0.05},{"code":"ETH 300","name":"ETHICS AND ORGANIZATIONAL GOVERNANCE","enrolled":49,"passed":47,"failed":2,"completed":49,"passRate":0.959184,"failRate":0.040816},{"code":"ENG 211","name":"CHILDREN'S LITERATURE","enrolled":35,"passed":33,"failed":1,"completed":34,"passRate":0.970588,"failRate":0.029412},{"code":"CMI 101","name":"FIRST YEAR SEMINAR","enrolled":48,"passed":47,"failed":1,"completed":48,"passRate":0.979167,"failRate":0.020833},{"code":"EDU 323","name":"ELEMENTARY SCIENCE","enrolled":48,"passed":47,"failed":1,"completed":48,"passRate":0.979167,"failRate":0.020833},{"code":"EDU 427","name":"PHYSICAL EDUCATION AND ELEMENTARY SCHOOL ART","enrolled":30,"passed":30,"failed":0,"completed":30,"passRate":1.0,"failRate":0.0},{"code":"PSY 101","name":"INTRODUCTION TO PSYCHOLOGY","enrolled":27,"passed":27,"failed":0,"completed":27,"passRate":1.0,"failRate":0.0},{"code":"MAR 120","name":"MARSHALLESE ORTHOGRAPHY","enrolled":17,"passed":17,"failed":0,"completed":17,"passRate":1.0,"failRate":0.0},{"code":"BIO 101","name":"INTRODUCTION TO BIOLOGY","enrolled":14,"passed":14,"failed":0,"completed":14,"passRate":1.0,"failRate":0.0},{"code":"MART 110","name":"STCW BASIC SAFETY TRAINING","enrolled":14,"passed":14,"failed":0,"completed":14,"passRate":1.0,"failRate":0.0},{"code":"EDU 251","name":"SCIENCE FOR TEACHERS","enrolled":14,"passed":13,"failed":0,"completed":13,"passRate":1.0,"failRate":0.0},{"code":"MART 120","name":"INTRODUCTION TO SEAMANSHIP","enrolled":13,"passed":13,"failed":0,"completed":13,"passRate":1.0,"failRate":0.0},{"code":"PSY 201","name":"HUMAN GROWTH AND DEVELOPMENT","enrolled":12,"passed":12,"failed":0,"completed":12,"passRate":1.0,"failRate":0.0}];
+const facultyFall=[{"name":"Sinkey, David","students":95,"passed":27,"failed":67,"incomplete":1,"completed":94,"completionRate":0.989474,"passRate":0.287234,"failRate":0.712766},{"name":"Finiasi, Sa'a","students":110,"passed":32,"failed":74,"incomplete":4,"completed":106,"completionRate":0.963636,"passRate":0.301887,"failRate":0.698113},{"name":"Bujen, Jelina","students":18,"passed":6,"failed":12,"incomplete":0,"completed":18,"completionRate":1.0,"passRate":0.333333,"failRate":0.666667},{"name":"Bojos, Rosalie","students":110,"passed":40,"failed":67,"incomplete":3,"completed":107,"completionRate":0.972727,"passRate":0.373832,"failRate":0.626168},{"name":"Sumaoang, Rosalinda","students":103,"passed":38,"failed":63,"incomplete":2,"completed":101,"completionRate":0.980583,"passRate":0.376238,"failRate":0.623762},{"name":"Layton, Kirk","students":90,"passed":35,"failed":52,"incomplete":3,"completed":87,"completionRate":0.966667,"passRate":0.402299,"failRate":0.597701},{"name":"Sidal, Ronald","students":106,"passed":42,"failed":62,"incomplete":2,"completed":104,"completionRate":0.981132,"passRate":0.403846,"failRate":0.596154},{"name":"Velasquez, Alexander","students":118,"passed":50,"failed":58,"incomplete":10,"completed":108,"completionRate":0.915254,"passRate":0.462963,"failRate":0.537037},{"name":"Poquita, Jennifer","students":138,"passed":64,"failed":74,"incomplete":0,"completed":138,"completionRate":1.0,"passRate":0.463768,"failRate":0.536232},{"name":"Romany, Kendal","students":58,"passed":28,"failed":30,"incomplete":0,"completed":58,"completionRate":1.0,"passRate":0.482759,"failRate":0.517241},{"name":"Osborne, Karalaini","students":121,"passed":63,"failed":58,"incomplete":0,"completed":121,"completionRate":1.0,"passRate":0.520661,"failRate":0.479339},{"name":"Jora, Jora","students":22,"passed":11,"failed":10,"incomplete":1,"completed":21,"completionRate":0.954545,"passRate":0.52381,"failRate":0.47619},{"name":"Nabukabuka, Litiana","students":100,"passed":49,"failed":44,"incomplete":7,"completed":93,"completionRate":0.93,"passRate":0.526882,"failRate":0.473118},{"name":"Zedkaia, John","students":15,"passed":8,"failed":7,"incomplete":0,"completed":15,"completionRate":1.0,"passRate":0.533333,"failRate":0.466667},{"name":"Vila, Curtis","students":69,"passed":36,"failed":31,"incomplete":2,"completed":67,"completionRate":0.971014,"passRate":0.537313,"failRate":0.462687},{"name":"Okoro, Linus","students":63,"passed":31,"failed":26,"incomplete":6,"completed":57,"completionRate":0.904762,"passRate":0.54386,"failRate":0.45614},{"name":"Ogunmokun, Adedayo","students":109,"passed":66,"failed":41,"incomplete":2,"completed":107,"completionRate":0.981651,"passRate":0.616822,"failRate":0.383178},{"name":"Baleikorocau, Waisiki","students":94,"passed":60,"failed":32,"incomplete":2,"completed":92,"completionRate":0.978723,"passRate":0.652174,"failRate":0.347826},{"name":"Maitokana, Gade","students":92,"passed":60,"failed":32,"incomplete":0,"completed":92,"completionRate":1.0,"passRate":0.652174,"failRate":0.347826},{"name":"Uriona, Viviana","students":54,"passed":34,"failed":17,"incomplete":3,"completed":51,"completionRate":0.944444,"passRate":0.666667,"failRate":0.333333},{"name":"Madan, Ekta","students":26,"passed":18,"failed":8,"incomplete":0,"completed":26,"completionRate":1.0,"passRate":0.692308,"failRate":0.307692},{"name":"Page, Alvin","students":86,"passed":58,"failed":25,"incomplete":3,"completed":83,"completionRate":0.965116,"passRate":0.698795,"failRate":0.301205},{"name":"Maqosa, Logayau","students":21,"passed":14,"failed":6,"incomplete":1,"completed":20,"completionRate":0.952381,"passRate":0.7,"failRate":0.3},{"name":"Bilimon, Mylast","students":61,"passed":43,"failed":17,"incomplete":1,"completed":60,"completionRate":0.983607,"passRate":0.716667,"failRate":0.283333},{"name":"Matthew, Risi","students":106,"passed":76,"failed":28,"incomplete":2,"completed":104,"completionRate":0.981132,"passRate":0.730769,"failRate":0.269231},{"name":"Savu, Silipa","students":96,"passed":69,"failed":25,"incomplete":2,"completed":94,"completionRate":0.979167,"passRate":0.734043,"failRate":0.265957},{"name":"Nating, Dako","students":75,"passed":56,"failed":18,"incomplete":1,"completed":74,"completionRate":0.986667,"passRate":0.756757,"failRate":0.243243},{"name":"Koroi, Rosie","students":80,"passed":61,"failed":19,"incomplete":0,"completed":80,"completionRate":1.0,"passRate":0.7625,"failRate":0.2375},{"name":"Robert, Peter","students":47,"passed":36,"failed":11,"incomplete":0,"completed":47,"completionRate":1.0,"passRate":0.765957,"failRate":0.234043},{"name":"Jakabot, Rolson","students":19,"passed":15,"failed":4,"incomplete":0,"completed":19,"completionRate":1.0,"passRate":0.789474,"failRate":0.210526},{"name":"Karben, Pruter","students":88,"passed":68,"failed":18,"incomplete":2,"completed":86,"completionRate":0.977273,"passRate":0.790698,"failRate":0.209302},{"name":"Seru, Jennifer","students":94,"passed":75,"failed":19,"incomplete":0,"completed":94,"completionRate":1.0,"passRate":0.797872,"failRate":0.202128},{"name":"Alfonso, Edward","students":83,"passed":64,"failed":16,"incomplete":3,"completed":80,"completionRate":0.963855,"passRate":0.8,"failRate":0.2},{"name":"Crawford, Mellessia","students":20,"passed":16,"failed":4,"incomplete":0,"completed":20,"completionRate":1.0,"passRate":0.8,"failRate":0.2},{"name":"Bulavakarua, Ana","students":83,"passed":66,"failed":16,"incomplete":1,"completed":82,"completionRate":0.987952,"passRate":0.804878,"failRate":0.195122},{"name":"Henos, Tarry","students":50,"passed":40,"failed":8,"incomplete":2,"completed":48,"completionRate":0.96,"passRate":0.833333,"failRate":0.166667},{"name":"Adiniwin, Edward","students":24,"passed":20,"failed":4,"incomplete":0,"completed":24,"completionRate":1.0,"passRate":0.833333,"failRate":0.166667},{"name":"Sinkey, Kelly","students":64,"passed":53,"failed":9,"incomplete":2,"completed":62,"completionRate":0.96875,"passRate":0.854839,"failRate":0.145161},{"name":"Lanwe, Jakio","students":30,"passed":24,"failed":4,"incomplete":2,"completed":28,"completionRate":0.933333,"passRate":0.857143,"failRate":0.142857},{"name":"Mottelang, Manny","students":81,"passed":70,"failed":10,"incomplete":1,"completed":80,"completionRate":0.987654,"passRate":0.875,"failRate":0.125},{"name":"Ogunmokun, Oyinade","students":42,"passed":35,"failed":5,"incomplete":2,"completed":40,"completionRate":0.952381,"passRate":0.875,"failRate":0.125},{"name":"Owens-Livai, Patricia","students":34,"passed":30,"failed":4,"incomplete":0,"completed":34,"completionRate":1.0,"passRate":0.882353,"failRate":0.117647},{"name":"Doulatram, Desmond","students":79,"passed":70,"failed":8,"incomplete":1,"completed":78,"completionRate":0.987342,"passRate":0.897436,"failRate":0.102564},{"name":"Kamenio, Luisa","students":59,"passed":54,"failed":5,"incomplete":0,"completed":59,"completionRate":1.0,"passRate":0.915254,"failRate":0.084746},{"name":"Sharma, Roneel","students":27,"passed":24,"failed":2,"incomplete":1,"completed":26,"completionRate":0.962963,"passRate":0.923077,"failRate":0.076923},{"name":"Silk, Mary","students":13,"passed":12,"failed":1,"incomplete":0,"completed":13,"completionRate":1.0,"passRate":0.923077,"failRate":0.076923},{"name":"Kendall-Lekka, Meitaka","students":115,"passed":102,"failed":7,"incomplete":6,"completed":109,"completionRate":0.947826,"passRate":0.93578,"failRate":0.06422},{"name":"Bohanny, Walton","students":16,"passed":15,"failed":1,"incomplete":0,"completed":16,"completionRate":1.0,"passRate":0.9375,"failRate":0.0625},{"name":"Ralpho, Marson","students":68,"passed":62,"failed":4,"incomplete":2,"completed":66,"completionRate":0.970588,"passRate":0.939394,"failRate":0.060606},{"name":"Sumaoang, Moses","students":73,"passed":69,"failed":4,"incomplete":0,"completed":73,"completionRate":1.0,"passRate":0.945205,"failRate":0.054795},{"name":"Savu, Waisake","students":40,"passed":40,"failed":0,"incomplete":0,"completed":40,"completionRate":1.0,"passRate":1.0,"failRate":0.0},{"name":"Rainibogi, Marica","students":26,"passed":24,"failed":0,"incomplete":2,"completed":24,"completionRate":0.923077,"passRate":1.0,"failRate":0.0},{"name":"Lussier, Kannea","students":13,"passed":13,"failed":0,"incomplete":0,"completed":13,"completionRate":1.0,"passRate":1.0,"failRate":0.0}];
+const facultySpring=[{"name":"Osborne, Karalaini","students":94,"passed":20,"failed":74,"incomplete":0,"completed":94,"completionRate":1.0,"passRate":0.212766,"failRate":0.787234},{"name":"Sinkey, David","students":104,"passed":22,"failed":80,"incomplete":2,"completed":102,"completionRate":0.980769,"passRate":0.215686,"failRate":0.784314},{"name":"Jakabot, Rolson","students":14,"passed":4,"failed":10,"incomplete":0,"completed":14,"completionRate":1.0,"passRate":0.285714,"failRate":0.714286},{"name":"Bojos, Rosalie","students":52,"passed":15,"failed":37,"incomplete":0,"completed":52,"completionRate":1.0,"passRate":0.288462,"failRate":0.711538},{"name":"Savu, Silipa","students":98,"passed":31,"failed":63,"incomplete":4,"completed":94,"completionRate":0.959184,"passRate":0.329787,"failRate":0.670213},{"name":"Poquita, Jennifer","students":106,"passed":40,"failed":66,"incomplete":0,"completed":106,"completionRate":1.0,"passRate":0.377358,"failRate":0.622642},{"name":"Sumaoang, Rosalinda","students":78,"passed":30,"failed":44,"incomplete":4,"completed":74,"completionRate":0.948718,"passRate":0.405405,"failRate":0.594595},{"name":"Uriona, Viviana","students":78,"passed":31,"failed":45,"incomplete":2,"completed":76,"completionRate":0.974359,"passRate":0.407895,"failRate":0.592105},{"name":"Savu, Vasemaca","students":72,"passed":29,"failed":40,"incomplete":3,"completed":69,"completionRate":0.958333,"passRate":0.42029,"failRate":0.57971},{"name":"Vila, Curtis","students":140,"passed":62,"failed":78,"incomplete":0,"completed":140,"completionRate":1.0,"passRate":0.442857,"failRate":0.557143},{"name":"Sidal, Ronald","students":83,"passed":38,"failed":45,"incomplete":0,"completed":83,"completionRate":1.0,"passRate":0.457831,"failRate":0.542169},{"name":"Maitokana, Gade","students":75,"passed":35,"failed":39,"incomplete":1,"completed":74,"completionRate":0.986667,"passRate":0.472973,"failRate":0.527027},{"name":"Seru, Jennifer","students":60,"passed":29,"failed":31,"incomplete":0,"completed":60,"completionRate":1.0,"passRate":0.483333,"failRate":0.516667},{"name":"Castro, Charina","students":46,"passed":24,"failed":22,"incomplete":0,"completed":46,"completionRate":1.0,"passRate":0.521739,"failRate":0.478261},{"name":"Bokadrik, Ricky","students":13,"passed":7,"failed":6,"incomplete":0,"completed":13,"completionRate":1.0,"passRate":0.538462,"failRate":0.461538},{"name":"Nabukabuka, Litiana","students":87,"passed":48,"failed":39,"incomplete":0,"completed":87,"completionRate":1.0,"passRate":0.551724,"failRate":0.448276},{"name":"Vroom, Bernardus","students":27,"passed":16,"failed":11,"incomplete":0,"completed":27,"completionRate":1.0,"passRate":0.592593,"failRate":0.407407},{"name":"Soriano, Necy","students":39,"passed":23,"failed":15,"incomplete":1,"completed":38,"completionRate":0.974359,"passRate":0.605263,"failRate":0.394737},{"name":"Finiasi, Sa'a","students":93,"passed":55,"failed":35,"incomplete":3,"completed":90,"completionRate":0.967742,"passRate":0.611111,"failRate":0.388889},{"name":"Robert, Peter","students":99,"passed":60,"failed":38,"incomplete":1,"completed":98,"completionRate":0.989899,"passRate":0.612245,"failRate":0.387755},{"name":"Baleikorocau, Waisiki","students":79,"passed":50,"failed":29,"incomplete":0,"completed":79,"completionRate":1.0,"passRate":0.632911,"failRate":0.367089},{"name":"Bilimon, Mylast","students":68,"passed":42,"failed":24,"incomplete":2,"completed":66,"completionRate":0.970588,"passRate":0.636364,"failRate":0.363636},{"name":"Doulatram, Desmond","students":124,"passed":79,"failed":44,"incomplete":1,"completed":123,"completionRate":0.991935,"passRate":0.642276,"failRate":0.357724},{"name":"Ratidara, Timoci","students":14,"passed":9,"failed":5,"incomplete":0,"completed":14,"completionRate":1.0,"passRate":0.642857,"failRate":0.357143},{"name":"Henry, James","students":125,"passed":85,"failed":38,"incomplete":2,"completed":123,"completionRate":0.984,"passRate":0.691057,"failRate":0.308943},{"name":"Velasquez, Alexander","students":108,"passed":75,"failed":33,"incomplete":0,"completed":108,"completionRate":1.0,"passRate":0.694444,"failRate":0.305556},{"name":"Romany, Kendal","students":47,"passed":33,"failed":13,"incomplete":0,"completed":46,"completionRate":0.978723,"passRate":0.717391,"failRate":0.282609},{"name":"Nating, Dako","students":66,"passed":46,"failed":18,"incomplete":2,"completed":64,"completionRate":0.969697,"passRate":0.71875,"failRate":0.28125},{"name":"Jora, Jora","students":19,"passed":14,"failed":5,"incomplete":0,"completed":19,"completionRate":1.0,"passRate":0.736842,"failRate":0.263158},{"name":"Okoro, Linus","students":73,"passed":54,"failed":19,"incomplete":0,"completed":73,"completionRate":1.0,"passRate":0.739726,"failRate":0.260274},{"name":"Matthew, Risi","students":102,"passed":78,"failed":24,"incomplete":0,"completed":102,"completionRate":1.0,"passRate":0.764706,"failRate":0.235294},{"name":"Shoniber, Jennifer","students":54,"passed":41,"failed":12,"incomplete":1,"completed":53,"completionRate":0.981481,"passRate":0.773585,"failRate":0.226415},{"name":"Latrick, Jessio","students":71,"passed":58,"failed":13,"incomplete":0,"completed":71,"completionRate":1.0,"passRate":0.816901,"failRate":0.183099},{"name":"Mottelang, Manny","students":28,"passed":23,"failed":5,"incomplete":0,"completed":28,"completionRate":1.0,"passRate":0.821429,"failRate":0.178571},{"name":"Alfonso, Edward","students":68,"passed":54,"failed":11,"incomplete":1,"completed":65,"completionRate":0.955882,"passRate":0.830769,"failRate":0.169231},{"name":"Ferolino, Maria","students":54,"passed":45,"failed":9,"incomplete":0,"completed":54,"completionRate":1.0,"passRate":0.833333,"failRate":0.166667},{"name":"Ogunmokun, Oyinade","students":39,"passed":30,"failed":6,"incomplete":2,"completed":36,"completionRate":0.923077,"passRate":0.833333,"failRate":0.166667},{"name":"Sumaoang, Moses","students":75,"passed":63,"failed":12,"incomplete":0,"completed":75,"completionRate":1.0,"passRate":0.84,"failRate":0.16},{"name":"Sinkey, Kelly","students":29,"passed":23,"failed":4,"incomplete":2,"completed":27,"completionRate":0.931034,"passRate":0.851852,"failRate":0.148148},{"name":"Koroi, Rosie","students":90,"passed":76,"failed":11,"incomplete":3,"completed":87,"completionRate":0.966667,"passRate":0.873563,"failRate":0.126437},{"name":"Page, Alvin","students":50,"passed":44,"failed":6,"incomplete":0,"completed":50,"completionRate":1.0,"passRate":0.88,"failRate":0.12},{"name":"Ragus, Oscar","students":85,"passed":76,"failed":9,"incomplete":0,"completed":85,"completionRate":1.0,"passRate":0.894118,"failRate":0.105882},{"name":"Kedi, Kenneth","students":32,"passed":28,"failed":3,"incomplete":1,"completed":31,"completionRate":0.96875,"passRate":0.903226,"failRate":0.096774},{"name":"Yamamoto, Taichi","students":11,"passed":10,"failed":1,"incomplete":0,"completed":11,"completionRate":1.0,"passRate":0.909091,"failRate":0.090909},{"name":"Zedkaia, John","students":13,"passed":12,"failed":1,"incomplete":0,"completed":13,"completionRate":1.0,"passRate":0.923077,"failRate":0.076923},{"name":"Lussier, Kannea","students":40,"passed":37,"failed":3,"incomplete":0,"completed":40,"completionRate":1.0,"passRate":0.925,"failRate":0.075},{"name":"Linus, Oke-Oghene","students":31,"passed":29,"failed":2,"incomplete":0,"completed":31,"completionRate":1.0,"passRate":0.935484,"failRate":0.064516},{"name":"Kotton, Stevenson","students":27,"passed":26,"failed":1,"incomplete":0,"completed":27,"completionRate":1.0,"passRate":0.962963,"failRate":0.037037},{"name":"Karben, Pruter","students":88,"passed":85,"failed":2,"incomplete":1,"completed":87,"completionRate":0.988636,"passRate":0.977011,"failRate":0.022989},{"name":"Ralpho, Marson","students":62,"passed":61,"failed":1,"incomplete":0,"completed":62,"completionRate":1.0,"passRate":0.983871,"failRate":0.016129},{"name":"Rainibogi, Marica","students":32,"passed":32,"failed":0,"incomplete":0,"completed":32,"completionRate":1.0,"passRate":1.0,"failRate":0.0},{"name":"Kamenio, Luisa","students":32,"passed":31,"failed":0,"incomplete":1,"completed":31,"completionRate":0.96875,"passRate":1.0,"failRate":0.0},{"name":"Bohanny, Walton","students":29,"passed":29,"failed":0,"incomplete":0,"completed":29,"completionRate":1.0,"passRate":1.0,"failRate":0.0},{"name":"Savu, Waisake","students":28,"passed":28,"failed":0,"incomplete":0,"completed":28,"completionRate":1.0,"passRate":1.0,"failRate":0.0},{"name":"Adiniwin, Edward","students":26,"passed":26,"failed":0,"incomplete":0,"completed":26,"completionRate":1.0,"passRate":1.0,"failRate":0.0},{"name":"Hugo, Bugoro","students":22,"passed":22,"failed":0,"incomplete":0,"completed":22,"completionRate":1.0,"passRate":1.0,"failRate":0.0}];
+const facultySummer=[{"name":"Loeak, Rosemary","students":18,"passed":8,"failed":10,"incomplete":0,"completed":18,"completionRate":1.0,"passRate":0.444444,"failRate":0.555556},{"name":"Osborne, Karalaini","students":22,"passed":10,"failed":12,"incomplete":0,"completed":22,"completionRate":1.0,"passRate":0.454545,"failRate":0.545455},{"name":"Savu, Silipa","students":36,"passed":17,"failed":19,"incomplete":0,"completed":36,"completionRate":1.0,"passRate":0.472222,"failRate":0.527778},{"name":"Bojos, Rosalie","students":44,"passed":22,"failed":22,"incomplete":0,"completed":44,"completionRate":1.0,"passRate":0.5,"failRate":0.5},{"name":"Maitokana, Gade","students":38,"passed":19,"failed":19,"incomplete":0,"completed":38,"completionRate":1.0,"passRate":0.5,"failRate":0.5},{"name":"Seru, Jennifer","students":29,"passed":15,"failed":14,"incomplete":0,"completed":29,"completionRate":1.0,"passRate":0.517241,"failRate":0.482759},{"name":"Castro, Charina","students":45,"passed":23,"failed":21,"incomplete":1,"completed":44,"completionRate":0.977778,"passRate":0.522727,"failRate":0.477273},{"name":"Maqosa, Miriama","students":13,"passed":7,"failed":6,"incomplete":0,"completed":13,"completionRate":1.0,"passRate":0.538462,"failRate":0.461538},{"name":"Baleikorocau, Waisiki","students":53,"passed":31,"failed":22,"incomplete":0,"completed":53,"completionRate":1.0,"passRate":0.584906,"failRate":0.415094},{"name":"Sidal, Ronald","students":39,"passed":23,"failed":16,"incomplete":0,"completed":39,"completionRate":1.0,"passRate":0.589744,"failRate":0.410256},{"name":"Sumaoang, Moses","students":18,"passed":11,"failed":7,"incomplete":0,"completed":18,"completionRate":1.0,"passRate":0.611111,"failRate":0.388889},{"name":"Sumaoang, Rosalinda","students":23,"passed":15,"failed":7,"incomplete":1,"completed":22,"completionRate":0.956522,"passRate":0.681818,"failRate":0.318182},{"name":"Latrick, Jessio","students":24,"passed":16,"failed":7,"incomplete":1,"completed":23,"completionRate":0.958333,"passRate":0.695652,"failRate":0.304348},{"name":"Robert, Peter","students":28,"passed":20,"failed":8,"incomplete":0,"completed":28,"completionRate":1.0,"passRate":0.714286,"failRate":0.285714},{"name":"Poquita, Jennifer","students":39,"passed":28,"failed":11,"incomplete":0,"completed":39,"completionRate":1.0,"passRate":0.717949,"failRate":0.282051},{"name":"Nabukabuka, Litiana","students":48,"passed":35,"failed":12,"incomplete":1,"completed":47,"completionRate":0.979167,"passRate":0.744681,"failRate":0.255319},{"name":"Matthew, Risi","students":40,"passed":30,"failed":10,"incomplete":0,"completed":40,"completionRate":1.0,"passRate":0.75,"failRate":0.25},{"name":"Ragus, Oscar","students":38,"passed":29,"failed":9,"incomplete":0,"completed":38,"completionRate":1.0,"passRate":0.763158,"failRate":0.236842},{"name":"Velasquez, Alexander","students":31,"passed":24,"failed":7,"incomplete":0,"completed":31,"completionRate":1.0,"passRate":0.774194,"failRate":0.225806},{"name":"Vila, Curtis","students":31,"passed":24,"failed":7,"incomplete":0,"completed":31,"completionRate":1.0,"passRate":0.774194,"failRate":0.225806},{"name":"Uriona, Viviana","students":42,"passed":31,"failed":9,"incomplete":2,"completed":40,"completionRate":0.952381,"passRate":0.775,"failRate":0.225},{"name":"Doulatram, Desmond","students":38,"passed":30,"failed":8,"incomplete":0,"completed":38,"completionRate":1.0,"passRate":0.789474,"failRate":0.210526},{"name":"Alfonso, Edward","students":39,"passed":33,"failed":6,"incomplete":0,"completed":39,"completionRate":1.0,"passRate":0.846154,"failRate":0.153846},{"name":"Okoro, Linus","students":32,"passed":28,"failed":4,"incomplete":0,"completed":32,"completionRate":1.0,"passRate":0.875,"failRate":0.125},{"name":"Henos, Tarry","students":41,"passed":36,"failed":5,"incomplete":0,"completed":41,"completionRate":1.0,"passRate":0.878049,"failRate":0.121951},{"name":"Kaious, Pam","students":10,"passed":9,"failed":1,"incomplete":0,"completed":10,"completionRate":1.0,"passRate":0.9,"failRate":0.1},{"name":"Savu, Vasemaca","students":43,"passed":38,"failed":4,"incomplete":1,"completed":42,"completionRate":0.976744,"passRate":0.904762,"failRate":0.095238},{"name":"Koroi, Rosie","students":56,"passed":49,"failed":5,"incomplete":2,"completed":54,"completionRate":0.964286,"passRate":0.907407,"failRate":0.092593},{"name":"Karben, Pruter","students":41,"passed":38,"failed":3,"incomplete":0,"completed":41,"completionRate":1.0,"passRate":0.926829,"failRate":0.073171},{"name":"Jora, Jora","students":21,"passed":20,"failed":1,"incomplete":0,"completed":21,"completionRate":1.0,"passRate":0.952381,"failRate":0.047619},{"name":"Kedi, Kenneth","students":21,"passed":20,"failed":1,"incomplete":0,"completed":21,"completionRate":1.0,"passRate":0.952381,"failRate":0.047619},{"name":"Rufus, Lajkit","students":21,"passed":20,"failed":1,"incomplete":0,"completed":21,"completionRate":1.0,"passRate":0.952381,"failRate":0.047619},{"name":"Lewis, Lennon","students":60,"passed":58,"failed":2,"incomplete":0,"completed":60,"completionRate":1.0,"passRate":0.966667,"failRate":0.033333},{"name":"Ralpho, Marson","students":64,"passed":61,"failed":2,"incomplete":1,"completed":63,"completionRate":0.984375,"passRate":0.968254,"failRate":0.031746},{"name":"Mottelang, Manny","students":48,"passed":47,"failed":1,"incomplete":0,"completed":48,"completionRate":1.0,"passRate":0.979167,"failRate":0.020833},{"name":"Ogunmokun, Oyinade","students":40,"passed":40,"failed":0,"incomplete":0,"completed":40,"completionRate":1.0,"passRate":1.0,"failRate":0.0},{"name":"Bokadrik, Ricky","students":32,"passed":32,"failed":0,"incomplete":0,"completed":32,"completionRate":1.0,"passRate":1.0,"failRate":0.0},{"name":"Jakabot, Rolson","students":21,"passed":21,"failed":0,"incomplete":0,"completed":21,"completionRate":1.0,"passRate":1.0,"failRate":0.0},{"name":"Vili, John","students":14,"passed":14,"failed":0,"incomplete":0,"completed":14,"completionRate":1.0,"passRate":1.0,"failRate":0.0},{"name":"Hugo, Bugoro","students":13,"passed":13,"failed":0,"incomplete":0,"completed":13,"completionRate":1.0,"passRate":1.0,"failRate":0.0},{"name":"Bohanny, Walton","students":12,"passed":12,"failed":0,"incomplete":0,"completed":12,"completionRate":1.0,"passRate":1.0,"failRate":0.0}];
+
+Chart.defaults.font.family="'DM Sans',sans-serif";
+Chart.defaults.font.size=11;
+Chart.defaults.color='#7d8590';
+Chart.defaults.plugins.legend.display=false;
+const GRID='rgba(48,54,61,0.6)';
+const C={pass:'#3fb950',fail:'#f85149',warn:'#e3b341',accent:'#58a6ff',inc:'#a371f7',muted:'#7d8590'};
+function barCol(r){return r<0.6?C.fail:r<0.7?C.warn:C.pass;}
+function riskPill(r){
+  const cls=r<0.6?'pill pill-fail':r<0.7?'pill pill-warn':'pill pill-pass';
+  const lbl=r<0.6?'Critical':r<0.7?'Watch':'Good';
+  return `<span class="${cls}">${lbl}</span>`;
+}
+
+// ── TAB SWITCHING ──
+function switchTab(group, sem, btn){
+  document.querySelectorAll(`#${group}-all,#${group}-fall,#${group}-spring,#${group}-summer`).forEach(p=>p.classList.remove('active'));
+  document.getElementById(`${group}-${sem}`).classList.add('active');
+  btn.closest('.chart-card,.section').querySelectorAll('.sem-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
+const chartTabInstances={};
+function switchChartTab(group, sem, btn){
+  const prefix = group==='course'?'cchart':'fchart';
+  document.querySelectorAll(`#${prefix}-fall,#${prefix}-spring,#${prefix}-summer`).forEach(p=>p.classList.remove('active'));
+  document.getElementById(`${prefix}-${sem}`).classList.add('active');
+  btn.closest('div').querySelectorAll('.sem-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  // Resize charts in newly visible panel
+  Object.values(Chart.instances).forEach(c=>{try{c.resize();}catch(e){}});
+}
+
+// ── CHART HELPERS ──
+function makeHBar(id, labels, vals, colors){
+  const ctx=document.getElementById(id);
+  if(!ctx)return;
+  return new Chart(ctx,{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:colors,borderRadius:4,borderWidth:0}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{tooltip:{callbacks:{label:ctx=>' Pass Rate: '+ctx.raw+'%'}}},
+      scales:{x:{min:0,max:100,ticks:{callback:v=>v+'%'},grid:{color:GRID},border:{color:GRID}},
+              y:{grid:{display:false},border:{color:GRID},ticks:{font:{size:10}}}}}});
+}
+function makeSemHBar(id, data, top=true, n=10){
+  const sorted=[...data].sort((a,b)=>top?b.passRate-a.passRate:a.passRate-b.passRate).slice(0,n);
+  makeHBar(id, sorted.map(x=>x.code||x.name.split(',')[0]), sorted.map(x=>+(x.passRate*100).toFixed(1)), sorted.map(x=>barCol(x.passRate)));
+}
+function fillCourseTable(tbodyId, data){
+  const tb=document.getElementById(tbodyId);
+  if(!tb)return;
+  [...data].sort((a,b)=>a.passRate-b.passRate).forEach(c=>{
+    const pp=(c.passRate*100).toFixed(1),pf=(c.failRate*100).toFixed(1);
+    tb.innerHTML+=`<tr>
+      <td class="mono">${c.code}</td>
+      <td style="font-size:11px;max-width:240px;">${c.name}</td>
+      <td class="right">${c.enrolled.toLocaleString()}</td>
+      <td class="right">${c.passed.toLocaleString()}</td>
+      <td class="right">${c.failed.toLocaleString()}</td>
+      <td class="right">${pp}%</td><td class="right">${pf}%</td>
+      <td>${riskPill(c.passRate)}</td>
+      <td style="width:130px;"><div class="bar-wrap"><div class="bar-track"><div class="bar-fill" style="width:${Math.round(c.passRate*100)}%;background:${barCol(c.passRate)};"></div></div><span class="bar-num">${pp}%</span></div></td>
+    </tr>`;
+  });
+}
+function fillFacultyTable(tbodyId, data){
+  const tb=document.getElementById(tbodyId);
+  if(!tb)return;
+  [...data].sort((a,b)=>a.passRate-b.passRate).forEach(f=>{
+    const hasFull='completionRate' in f;
+    tb.innerHTML+=`<tr>
+      <td style="font-weight:500;">${f.name}</td>
+      <td class="right">${f.students}</td>
+      <td class="right">${f.passed}</td>
+      <td class="right">${f.failed}</td>
+      <td class="right">${f.incomplete}</td>
+      <td class="right">${hasFull?(f.completionRate*100).toFixed(1)+'%':'—'}</td>
+      <td class="right">${(f.passRate*100).toFixed(1)}%</td>
+      <td class="right">${(f.failRate*100).toFixed(1)}%</td>
+      <td>${riskPill(f.passRate)}</td>
+    </tr>`;
+  });
+}
+function fillHeatmap(tbodyId, data){
+  const tb=document.getElementById(tbodyId);
+  if(!tb)return;
+  [...data].sort((a,b)=>a.passRate-b.passRate).forEach(c=>{
+    function hmCol(r){
+      if(r>=0.85)return{bg:'#1a4731',color:'#3fb950'};
+      if(r>=0.70)return{bg:'#22633f',color:'#3fb950'};
+      if(r>=0.60)return{bg:'#5a4a10',color:'#e3b341'};
+      if(r>=0.50)return{bg:'#6b2e0e',color:'#f0813a'};
+      return{bg:'#5a1e1e',color:'#f85149'};
+    }
+    const col=hmCol(c.passRate),pp=(c.passRate*100).toFixed(1),pf=(c.failRate*100).toFixed(1);
+    tb.innerHTML+=`<tr>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:#3d5166;">${c.code}</td>
+      <td style="font-size:11px;">${c.name}</td>
+      <td style="text-align:center;font-family:'DM Mono',monospace;">${c.enrolled}</td>
+      <td style="text-align:center;"><span class="hm-cell" style="background:${col.bg};color:${col.color};">${pp}%</span></td>
+      <td style="text-align:center;"><span class="hm-cell" style="background:${c.failRate>0.5?'#5a1e1e':'#1c2330'};color:${c.failRate>0.5?'#f85149':'#7d8590'};">${pf}%</span></td>
+      <td style="text-align:center;">${riskPill(c.passRate)}</td>
+      <td><div class="bar-track" style="height:8px;background:#1c2330;"><div class="bar-fill" style="width:${Math.round(c.passRate*100)}%;background:${col.color};"></div></div></td>
+    </tr>`;
+  });
+}
+
+// ── TREND CHARTS ──
+new Chart(document.getElementById('trendChart'),{type:'line',data:{labels:semData.labels,datasets:[{data:semData.passRate,borderColor:C.accent,backgroundColor:'rgba(88,166,255,0.08)',borderWidth:2.5,pointBackgroundColor:semData.passRate.map(v=>v>=75?C.pass:v>=65?C.warn:C.fail),pointRadius:7,pointBorderWidth:2,pointBorderColor:'#161b22',fill:true,tension:0.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{tooltip:{callbacks:{label:ctx=>' Pass Rate: '+ctx.raw.toFixed(1)+'%'}}},scales:{y:{min:55,max:85,ticks:{callback:v=>v+'%'},grid:{color:GRID},border:{color:GRID}},x:{grid:{color:GRID},border:{color:GRID}}}}});
+new Chart(document.getElementById('donutChart'),{type:'doughnut',data:{labels:['Passed','Failed','Incomplete/W'],datasets:[{data:[5569,2657,135],backgroundColor:[C.pass,C.fail,C.warn],borderWidth:2,borderColor:'#161b22',hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:10,padding:12,font:{size:11},color:'#7d8590'}},tooltip:{callbacks:{label:ctx=>' '+ctx.label+': '+ctx.raw.toLocaleString()+' ('+(ctx.raw/8365*100).toFixed(1)+'%)'}}}}});
+const gradeColors=gradeData.labels.map(g=>['A','B+','B','C+','C','P'].includes(g)?C.pass:['D','D+','F','NP'].includes(g)?C.fail:C.warn);
+new Chart(document.getElementById('gradeChart'),{type:'bar',data:{labels:gradeData.labels,datasets:[{data:gradeData.counts,backgroundColor:gradeColors,borderRadius:4,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{grid:{color:GRID},border:{color:GRID},ticks:{callback:v=>v>=1000?(v/1000).toFixed(1)+'k':v}},x:{grid:{display:false},border:{color:GRID}}}}});
+new Chart(document.getElementById('enrollPassChart'),{type:'bar',data:{labels:semData.labels,datasets:[{label:'Enrolled',data:semData.enrolled,backgroundColor:'rgba(88,166,255,0.15)',borderColor:C.accent,borderWidth:1,borderRadius:4},{label:'Passed',data:semData.passed,backgroundColor:C.pass,borderRadius:4,borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:10,color:'#7d8590'}}},scales:{y:{grid:{color:GRID},border:{color:GRID}},x:{grid:{display:false},border:{color:GRID}}}}});
+new Chart(document.getElementById('completionChart'),{type:'bar',data:{labels:semData.labels,datasets:[{label:'Completion Rate',data:semData.completionRate,backgroundColor:[C.accent,C.accent,C.pass],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:95,max:100,ticks:{callback:v=>v+'%'},grid:{color:GRID},border:{color:GRID}},x:{grid:{display:false},border:{color:GRID}}}}});
+
+// ── COURSE CHARTS — ALL YEAR ──
+const sigC=courseData.filter(c=>c.completed>=10).sort((a,b)=>b.passRate-a.passRate);
+const top15C=sigC.slice(0,15), bot15C=[...sigC].sort((a,b)=>a.passRate-b.passRate).slice(0,15);
+makeHBar('topCoursesChart',top15C.map(c=>c.code),top15C.map(c=>+(c.passRate*100).toFixed(1)),top15C.map(c=>barCol(c.passRate)));
+makeHBar('bottomCoursesChart',bot15C.map(c=>c.code),bot15C.map(c=>+(c.passRate*100).toFixed(1)),bot15C.map(c=>barCol(c.passRate)));
+
+// ── FACULTY CHARTS — ALL YEAR ──
+const sigF=facultyData.filter(f=>f.students>=10).sort((a,b)=>b.passRate-a.passRate);
+const top15F=sigF.slice(0,15), bot15F=[...sigF].sort((a,b)=>a.passRate-b.passRate).slice(0,15);
+makeHBar('topFacultyChart',top15F.map(f=>f.name),top15F.map(f=>+(f.passRate*100).toFixed(1)),top15F.map(f=>barCol(f.passRate)));
+makeHBar('bottomFacultyChart',bot15F.map(f=>f.name),bot15F.map(f=>+(f.passRate*100).toFixed(1)),bot15F.map(f=>barCol(f.passRate)));
+
+// ── SEMESTER COURSE CHARTS ──
+makeSemHBar('topCoursesFall',   courseFall,   true);
+makeSemHBar('botCoursesFall',   courseFall,   false);
+makeSemHBar('topCoursesSpring', courseSpring, true);
+makeSemHBar('botCoursesSpring', courseSpring, false);
+makeSemHBar('topCoursesSummer', courseSummer, true);
+makeSemHBar('botCoursesSummer', courseSummer, false);
+
+// ── SEMESTER FACULTY CHARTS ──
+function makeSemFacHBar(id, data, top=true, n=10){
+  const sorted=[...data].sort((a,b)=>top?b.passRate-a.passRate:a.passRate-b.passRate).slice(0,n);
+  makeHBar(id, sorted.map(x=>x.name), sorted.map(x=>+(x.passRate*100).toFixed(1)), sorted.map(x=>barCol(x.passRate)));
+}
+makeSemFacHBar('topFacultyFall',    facultyFall,   true);
+makeSemFacHBar('botFacultyFall',    facultyFall,   false);
+makeSemFacHBar('topFacultySpring',  facultySpring, true);
+makeSemFacHBar('botFacultySpring',  facultySpring, false);
+makeSemFacHBar('topFacultySummer',  facultySummer, true);
+makeSemFacHBar('botFacultySummer',  facultySummer, false);
+
+// ── TABLES ──
+fillCourseTable('courseTableAll',    courseData);
+fillCourseTable('courseTableFall',   courseFall);
+fillCourseTable('courseTableSpring', courseSpring);
+fillCourseTable('courseTableSummer', courseSummer);
+fillFacultyTable('facultyTableAll',    facultyData);
+fillFacultyTable('facultyTableFall',   facultyFall);
+fillFacultyTable('facultyTableSpring', facultySpring);
+fillFacultyTable('facultyTableSummer', facultySummer);
+
+// ── HEATMAPS ──
+fillHeatmap('heatmapAll',    courseData.filter(c=>c.completed>=10));
+fillHeatmap('heatmapFall',   courseFall);
+fillHeatmap('heatmapSpring', courseSpring);
+fillHeatmap('heatmapSummer', courseSummer);
+
+// ── NAV ACTIVE ──
+const secs=document.querySelectorAll('section[id]');
+const navAs=document.querySelectorAll('.nav a');
+window.addEventListener('scroll',()=>{
+  let cur='';
+  secs.forEach(s=>{if(window.scrollY>=s.offsetTop-80)cur=s.id;});
+  navAs.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+cur));
+});
+</script>
+</body>
+</html>
