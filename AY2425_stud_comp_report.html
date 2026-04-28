@@ -191,6 +191,7 @@ tbody td.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent)
   <a href="#kpis" class="active">KPIs</a>
   <a href="#trends">Trends</a>
   <a href="#departments">Departments</a>
+  <a href="#dev-courses">Dev Courses</a>
   <a href="#courses">Courses</a>
   <a href="#faculty">Faculty</a>
   <a href="#heatmap">Heatmap</a>
@@ -326,6 +327,48 @@ tbody td.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent)
         <th class="right">Incomplete</th><th class="right">Completion</th><th class="right">Pass Rate</th><th class="right">Fail Rate</th><th>Risk</th><th>Pass Bar</th>
       </tr></thead><tbody id="deptTblSummerBody"></tbody></table></div>
     </div>
+  </div>
+</section>
+
+
+<!-- ══ DEVELOPMENTAL COURSES ══ -->
+<section class="section" id="dev-courses">
+  <div class="section-title">Developmental Course Pass Rates</div>
+  <div class="section-desc">All courses with numbers starting in 0 — these are developmental/remedial courses (e.g. ENG 086, ENG 097, MATH 068). Risk thresholds: Critical &lt;60% · Watch 60–70% · Good ≥70%.</div>
+  <div id="devKpiStrip" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:24px;"></div>
+  <div class="charts-row charts-2col" style="margin-bottom:20px;">
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot" style="background:var(--accent)"></span>All Year — Pass Rate by Dev Course</div>
+      <div style="position:relative;height:320px;"><canvas id="devAllChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot" style="background:var(--warn)"></span>Semester Trend — Dev Course Pass Rates</div>
+      <div style="position:relative;height:320px;"><canvas id="devTrendChart"></canvas></div>
+    </div>
+  </div>
+  <div class="chart-card" style="margin-bottom:20px;">
+    <div class="chart-title"><span class="dot" style="background:var(--muted)"></span>Pass Rate by Semester</div>
+    <div class="sem-tabs">
+      <button class="sem-tab active" onclick="switchTab('devSem','fall',this)">Fall 2024</button>
+      <button class="sem-tab" onclick="switchTab('devSem','spring',this)">Spring 2025</button>
+      <button class="sem-tab" onclick="switchTab('devSem','summer',this)">Summer 2025</button>
+    </div>
+    <div id="devSem-fall"   class="sem-panel active" style="position:relative;height:300px;"><canvas id="devFallChart"></canvas></div>
+    <div id="devSem-spring" class="sem-panel"        style="position:relative;height:260px;"><canvas id="devSpringChart"></canvas></div>
+    <div id="devSem-summer" class="sem-panel"        style="position:relative;height:260px;"><canvas id="devSummerChart"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title"><span class="dot" style="background:var(--muted)"></span>Full Developmental Course Breakdown</div>
+    <div class="sem-tabs">
+      <button class="sem-tab active" onclick="switchTab('devTbl','all',this)">All Year</button>
+      <button class="sem-tab" onclick="switchTab('devTbl','fall',this)">Fall 2024</button>
+      <button class="sem-tab" onclick="switchTab('devTbl','spring',this)">Spring 2025</button>
+      <button class="sem-tab" onclick="switchTab('devTbl','summer',this)">Summer 2025</button>
+    </div>
+    <div id="devTbl-all"    class="sem-panel active"><div class="scroll-table-wrap" style="margin-top:0;"><table><thead><tr><th>Course</th><th>Description</th><th class="right">Enrolled</th><th class="right">Passed</th><th class="right">Failed</th><th class="right">Completed</th><th class="right">Pass Rate</th><th class="right">Fail Rate</th><th>Risk</th><th>Pass Bar</th></tr></thead><tbody id="devTblAll"></tbody></table></div></div>
+    <div id="devTbl-fall"   class="sem-panel"><div class="scroll-table-wrap" style="margin-top:0;"><table><thead><tr><th>Course</th><th>Description</th><th class="right">Enrolled</th><th class="right">Passed</th><th class="right">Failed</th><th class="right">Completed</th><th class="right">Pass Rate</th><th class="right">Fail Rate</th><th>Risk</th><th>Pass Bar</th></tr></thead><tbody id="devTblFall"></tbody></table></div></div>
+    <div id="devTbl-spring" class="sem-panel"><div class="scroll-table-wrap" style="margin-top:0;"><table><thead><tr><th>Course</th><th>Description</th><th class="right">Enrolled</th><th class="right">Passed</th><th class="right">Failed</th><th class="right">Completed</th><th class="right">Pass Rate</th><th class="right">Fail Rate</th><th>Risk</th><th>Pass Bar</th></tr></thead><tbody id="devTblSpring"></tbody></table></div></div>
+    <div id="devTbl-summer" class="sem-panel"><div class="scroll-table-wrap" style="margin-top:0;"><table><thead><tr><th>Course</th><th>Description</th><th class="right">Enrolled</th><th class="right">Passed</th><th class="right">Failed</th><th class="right">Completed</th><th class="right">Pass Rate</th><th class="right">Fail Rate</th><th>Risk</th><th>Pass Bar</th></tr></thead><tbody id="devTblSummer"></tbody></table></div></div>
   </div>
 </section>
 
@@ -701,6 +744,81 @@ fillHeatmap('heatmapAll',    courseData.filter(c=>c.completed>=10));
 fillHeatmap('heatmapFall',   courseFall);
 fillHeatmap('heatmapSpring', courseSpring);
 fillHeatmap('heatmapSummer', courseSummer);
+
+
+// ══ DEVELOPMENTAL COURSES ══
+const devAll    = [{"code":"ENG 097","name":"INTRODUCTION TO ACADEMIC READING AND WRITING","enrolled":487,"passed":172,"failed":309,"completed":481,"passRate":0.357588,"failRate":0.642412},{"code":"ENG 086","name":"INTERMEDIATE ACADEMIC LISTENING AND SPEAKING","enrolled":295,"passed":134,"failed":161,"completed":295,"passRate":0.454237,"failRate":0.545763},{"code":"ENG 096","name":"ADVANCED ACADEMIC LISTENING AND SPEAKING","enrolled":429,"passed":200,"failed":223,"completed":423,"passRate":0.472813,"failRate":0.527187},{"code":"ENG 087","name":"INTERMEDIATE ACADEMIC READING AND WRITING","enrolled":281,"passed":140,"failed":141,"completed":281,"passRate":0.498221,"failRate":0.501779},{"code":"MATH 068","name":"PRE-ALGEBRA","enrolled":151,"passed":75,"failed":73,"completed":148,"passRate":0.506757,"failRate":0.493243},{"code":"MATH 088","name":"INTRODUCTION TO ALGEBRA","enrolled":138,"passed":83,"failed":55,"completed":138,"passRate":0.601449,"failRate":0.398551},{"code":"MATH 099","name":"FUNDAMENTALS OF MATHEMATICS","enrolled":223,"passed":136,"failed":83,"completed":219,"passRate":0.621005,"failRate":0.378995},{"code":"MATH 098","name":"INTERMEDIATE ALGEBRA","enrolled":108,"passed":67,"failed":38,"completed":105,"passRate":0.638095,"failRate":0.361905},{"code":"MATH 089","name":"BASIC MATHEMATICS","enrolled":162,"passed":118,"failed":44,"completed":162,"passRate":0.728395,"failRate":0.271605},{"code":"VCARP 050","name":"VOCATIONAL ENGLISH I","enrolled":10,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0},{"code":"VCARP 060","name":"MATH FOR CONTRUCTION","enrolled":10,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0}];
+const devFall   = [{"code":"ENG 097","name":"INTRODUCTION TO ACADEMIC READING AND WRITING","enrolled":195,"passed":77,"failed":114,"completed":191,"passRate":0.403141,"failRate":0.596859},{"code":"MATH 099","name":"FUNDAMENTALS OF MATHEMATICS","enrolled":73,"passed":32,"failed":38,"completed":70,"passRate":0.457143,"failRate":0.542857},{"code":"ENG 096","name":"ADVANCED ACADEMIC LISTENING AND SPEAKING","enrolled":182,"passed":86,"failed":94,"completed":180,"passRate":0.477778,"failRate":0.522222},{"code":"MATH 068","name":"PRE-ALGEBRA","enrolled":151,"passed":75,"failed":73,"completed":148,"passRate":0.506757,"failRate":0.493243},{"code":"ENG 086","name":"INTERMEDIATE ACADEMIC LISTENING AND SPEAKING","enrolled":136,"passed":69,"failed":67,"completed":136,"passRate":0.507353,"failRate":0.492647},{"code":"ENG 087","name":"INTERMEDIATE ACADEMIC READING AND WRITING","enrolled":131,"passed":73,"failed":58,"completed":131,"passRate":0.557252,"failRate":0.442748},{"code":"MATH 088","name":"INTRODUCTION TO ALGEBRA","enrolled":50,"passed":31,"failed":19,"completed":50,"passRate":0.62,"failRate":0.38},{"code":"MATH 098","name":"INTERMEDIATE ALGEBRA","enrolled":54,"passed":41,"failed":13,"completed":54,"passRate":0.759259,"failRate":0.240741},{"code":"VCARP 050","name":"VOCATIONAL ENGLISH I","enrolled":10,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0},{"code":"VCARP 060","name":"MATH FOR CONTRUCTION","enrolled":10,"passed":10,"failed":0,"completed":10,"passRate":1.0,"failRate":0.0}];
+const devSpring = [{"code":"ENG 097","name":"INTRODUCTION TO ACADEMIC READING AND WRITING","enrolled":204,"passed":50,"failed":152,"completed":202,"passRate":0.247525,"failRate":0.752475},{"code":"ENG 086","name":"INTERMEDIATE ACADEMIC LISTENING AND SPEAKING","enrolled":108,"passed":37,"failed":71,"completed":108,"passRate":0.342593,"failRate":0.657407},{"code":"ENG 087","name":"INTERMEDIATE ACADEMIC READING AND WRITING","enrolled":104,"passed":40,"failed":64,"completed":104,"passRate":0.384615,"failRate":0.615385},{"code":"ENG 096","name":"ADVANCED ACADEMIC LISTENING AND SPEAKING","enrolled":172,"passed":73,"failed":95,"completed":168,"passRate":0.434524,"failRate":0.565476},{"code":"MATH 098","name":"INTERMEDIATE ALGEBRA","enrolled":40,"passed":19,"failed":18,"completed":37,"passRate":0.513514,"failRate":0.486486},{"code":"MATH 088","name":"INTRODUCTION TO ALGEBRA","enrolled":70,"passed":39,"failed":31,"completed":70,"passRate":0.557143,"failRate":0.442857},{"code":"MATH 099","name":"FUNDAMENTALS OF MATHEMATICS","enrolled":104,"passed":71,"failed":32,"completed":103,"passRate":0.68932,"failRate":0.31068},{"code":"MATH 089","name":"BASIC MATHEMATICS","enrolled":116,"passed":81,"failed":35,"completed":116,"passRate":0.698276,"failRate":0.301724}];
+const devSummer = [{"code":"MATH 098","name":"INTERMEDIATE ALGEBRA","enrolled":14,"passed":7,"failed":7,"completed":14,"passRate":0.5,"failRate":0.5},{"code":"ENG 097","name":"INTRODUCTION TO ACADEMIC READING AND WRITING","enrolled":88,"passed":45,"failed":43,"completed":88,"passRate":0.511364,"failRate":0.488636},{"code":"ENG 096","name":"ADVANCED ACADEMIC LISTENING AND SPEAKING","enrolled":75,"passed":41,"failed":34,"completed":75,"passRate":0.546667,"failRate":0.453333},{"code":"ENG 086","name":"INTERMEDIATE ACADEMIC LISTENING AND SPEAKING","enrolled":51,"passed":28,"failed":23,"completed":51,"passRate":0.54902,"failRate":0.45098},{"code":"ENG 087","name":"INTERMEDIATE ACADEMIC READING AND WRITING","enrolled":46,"passed":27,"failed":19,"completed":46,"passRate":0.586957,"failRate":0.413043},{"code":"MATH 099","name":"FUNDAMENTALS OF MATHEMATICS","enrolled":46,"passed":33,"failed":13,"completed":46,"passRate":0.717391,"failRate":0.282609},{"code":"MATH 088","name":"INTRODUCTION TO ALGEBRA","enrolled":18,"passed":13,"failed":5,"completed":18,"passRate":0.722222,"failRate":0.277778},{"code":"MATH 089","name":"BASIC MATHEMATICS","enrolled":46,"passed":37,"failed":9,"completed":46,"passRate":0.804348,"failRate":0.195652}];
+
+(function(){
+  const strip = document.getElementById('devKpiStrip');
+  const tEnr  = devAll.reduce((s,c)=>s+c.enrolled,  0);
+  const tPass = devAll.reduce((s,c)=>s+c.passed,    0);
+  const tFail = devAll.reduce((s,c)=>s+c.failed,    0);
+  const tComp = devAll.reduce((s,c)=>s+c.completed, 0);
+  const oRate = tPass / tComp;
+  const worst = devAll[0];
+  const best  = devAll[devAll.length-1];
+  const crit  = devAll.filter(c=>c.passRate<0.6).length;
+  strip.innerHTML =
+    `<div class="kpi-card red"><div class="kpi-label">Overall Dev Pass Rate</div><div class="kpi-value" style="color:var(--fail);">${(oRate*100).toFixed(1)}%</div><div class="kpi-sub">${tPass.toLocaleString()} passed of ${tComp.toLocaleString()} completed</div></div>`+
+    `<div class="kpi-card blue"><div class="kpi-label">Total Dev Enrolled</div><div class="kpi-value" style="font-size:2rem;">${tEnr.toLocaleString()}</div><div class="kpi-sub">Across ${devAll.length} dev courses</div></div>`+
+    `<div class="kpi-card red"><div class="kpi-label">Total Dev Failed</div><div class="kpi-value" style="font-size:2rem;color:var(--fail);">${tFail.toLocaleString()}</div><div class="kpi-sub">${(tFail/tComp*100).toFixed(1)}% dev fail rate</div></div>`+
+    `<div class="kpi-card gold"><div class="kpi-label">Critical (&lt;60%)</div><div class="kpi-value" style="font-size:2rem;color:var(--warn);">${crit}</div><div class="kpi-sub">Courses below 60% pass</div></div>`+
+    `<div class="kpi-card red"><div class="kpi-label">Lowest Pass Rate</div><div class="kpi-value" style="font-size:1.6rem;color:var(--fail);">${(worst.passRate*100).toFixed(1)}%</div><div class="kpi-sub">${worst.code}</div></div>`+
+    `<div class="kpi-card green"><div class="kpi-label">Highest Pass Rate</div><div class="kpi-value" style="font-size:1.6rem;color:var(--pass);">${(best.passRate*100).toFixed(1)}%</div><div class="kpi-sub">${best.code}</div></div>`;
+})();
+
+makeHBar('devAllChart', devAll.map(c=>c.code), devAll.map(c=>+(c.passRate*100).toFixed(1)), devAll.map(c=>barCol(c.passRate)));
+
+(function(){
+  const allCodes  = [...new Set([...devFall,...devSpring,...devSummer].map(c=>c.code))];
+  const semArrays = [devFall, devSpring, devSummer];
+  const semLabels = ['Fall 2024','Spring 2025','Summer 2025'];
+  const palette   = ['#f85149','#e3b341','#58a6ff','#3fb950','#a371f7','#f0813a','#79c0ff','#56d364','#d2a8ff','#ffa657','#ff7b72'];
+  const datasets  = allCodes.map((code,i)=>{
+    const col = palette[i % palette.length];
+    return {label:code, data:semArrays.map(sem=>{ const r=sem.find(c=>c.code===code); return r?+(r.passRate*100).toFixed(1):null; }),
+      borderColor:col, backgroundColor:col+'22', borderWidth:2, pointRadius:5,
+      pointBorderWidth:2, pointBorderColor:'#161b22', pointBackgroundColor:col,
+      fill:false, tension:0.3, spanGaps:true};
+  });
+  new Chart(document.getElementById('devTrendChart'),{type:'line',data:{labels:semLabels,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:10,font:{size:10},color:'#7d8590',padding:8}},
+        tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.raw}%`}}},
+      scales:{y:{min:0,max:110,ticks:{callback:v=>v+'%'},grid:{color:GRID},border:{color:GRID}},x:{grid:{color:GRID},border:{color:GRID}}}
+    }});
+})();
+
+makeHBar('devFallChart',   devFall.map(c=>c.code),   devFall.map(c=>+(c.passRate*100).toFixed(1)),   devFall.map(c=>barCol(c.passRate)));
+makeHBar('devSpringChart', devSpring.map(c=>c.code), devSpring.map(c=>+(c.passRate*100).toFixed(1)), devSpring.map(c=>barCol(c.passRate)));
+makeHBar('devSummerChart', devSummer.map(c=>c.code), devSummer.map(c=>+(c.passRate*100).toFixed(1)), devSummer.map(c=>barCol(c.passRate)));
+
+function fillDevTable(id, data){
+  const tb = document.getElementById(id); if(!tb) return;
+  [...data].sort((a,b)=>a.passRate-b.passRate).forEach(c=>{
+    const pp=(c.passRate*100).toFixed(1), pf=(c.failRate*100).toFixed(1);
+    tb.innerHTML+=`<tr>
+      <td class="mono">${c.code}</td>
+      <td style="font-size:11px;max-width:220px;">${c.name||''}</td>
+      <td class="right">${c.enrolled.toLocaleString()}</td>
+      <td class="right">${c.passed.toLocaleString()}</td>
+      <td class="right">${c.failed.toLocaleString()}</td>
+      <td class="right">${c.completed.toLocaleString()}</td>
+      <td class="right">${pp}%</td>
+      <td class="right">${pf}%</td>
+      <td>${riskPill(c.passRate)}</td>
+      <td style="width:120px;"><div class="bar-wrap"><div class="bar-track"><div class="bar-fill" style="width:${Math.round(c.passRate*100)}%;background:${barCol(c.passRate)};"></div></div><span class="bar-num">${pp}%</span></div></td>
+    </tr>`;
+  });
+}
+fillDevTable('devTblAll',    devAll);
+fillDevTable('devTblFall',   devFall);
+fillDevTable('devTblSpring', devSpring);
+fillDevTable('devTblSummer', devSummer);
 
 // ══ NAV ACTIVE ══
 const secs=document.querySelectorAll('section[id]');
