@@ -652,7 +652,25 @@ const ACADEMIC = {
 const itConfirmed   = IT.items.reduce((s,x)=>s+(x.savings||0),0);
 const energyConf    = 85680;
 const academicConf  = 89600 + 500000; // ABE annual + eBook
-const TOTAL_CONF    = itConfirmed + energyConf + academicConf;
+const travelConf    = 337312;          // 20% General Fund cut
+const repConf       = 118900;          // $243,900 → $125,000 target
+const TOTAL_CONF    = itConfirmed + energyConf + academicConf + travelConf + repConf;
+
+const TRAVEL = {
+  label:'Travel Savings', color:'#E67E22', icon:'✈️',
+  items:[
+    {icon:'📉',title:'General Fund Travel Cut (20%)',sub:'FY2026 Budget Reduction',desc:'A 20% across-the-board budget cut was applied to the General Fund, reducing travel expenditures significantly. Oct–Feb General Fund travel dropped from $76,191.84 (prior year) to $7,262.93.',prev:76191.84,next:7262.93,savings:337312,note:'$337,312 is the total 20% General Fund reduction. Period comparison: Oct 2024–Feb 2025 vs Oct 2025–Feb 2026.'},
+    {icon:'🔒',title:'Restricted Fund Travel Reduction',sub:'Tightened Travel Controls',desc:'Restricted fund travel for the same Oct–Feb period dropped from $240,128.68 to $8,993.92 — a 96% year-over-year reduction reflecting stronger travel approval controls.',prev:240128.68,next:8993.92,savings:231134.76,note:'Savings reflect the Oct–Feb same-period comparison only.'},
+  ]
+};
+
+const REPRESENTATION = {
+  label:'Representation & Events', color:'#C9A84C', icon:'🍽️',
+  items:[
+    {icon:'🏛️',title:'On-Campus Event Hosting',sub:'Eliminate Offsite Facility Fees',desc:'Transitioning six annual college retreats and faculty in-service events from offsite venues to CMI campus facilities eliminates the $700 per-event facility fee entirely.',prev:4200,next:0,savings:4200},
+    {icon:'🍽️',title:'Food & Representation Spending Controls',sub:'Office of the President Memorandum',desc:'Reducing overall representation spending from $243,900 to a $125,000 target through a presidential memorandum limiting food expenses to approved categories only.',prev:243900,next:125000,savings:118900,note:'Target savings of ~$118,900 achieved through vendor controls, spending limits, and stricter e-requisition requirements.'},
+  ]
+};
 
 /* ═══════════════════════════════════════════════
    HELPERS
@@ -720,7 +738,9 @@ const cats = [
   {icon:'💻',name:'IT Systems',saving:itConfirmed,lbl:'Confirmed / yr',color:'#2980b9'},
   {icon:'☀️',name:'Energy & Solar',saving:85680,lbl:'Confirmed / yr',color:'#148F77'},
   {icon:'📚',name:'Academic Programs',saving:589600,lbl:'Confirmed / yr',color:'#7D3C98'},
-  {icon:'📄',name:'Paperless (Est.)',saving:32500,lbl:'Estimate / yr',color:'#E67E22'},
+  {icon:'✈️',name:'Travel Savings',saving:travelConf,lbl:'Confirmed / yr',color:'#E67E22'},
+  {icon:'🍽️',name:'Representation & Events',saving:repConf,lbl:'Target Savings / yr',color:'#C9A84C'},
+  {icon:'📄',name:'Paperless (Est.)',saving:32500,lbl:'Estimate / yr',color:'#95A5A6'},
 ];
 const strip=document.getElementById('catStrip');
 cats.forEach(c=>{
@@ -745,6 +765,8 @@ const catStyle={
   'IT Systems':{color:'#2980b9',bg:'#D6EAF8'},
   'Energy & Solar':{color:'#148F77',bg:'#D5F5E3'},
   'Academic Programs':{color:'#7D3C98',bg:'#E8DAEF'},
+  'Travel Savings':{color:'#E67E22',bg:'#FDEBD0'},
+  'Representation & Events':{color:'#C9A84C',bg:'#FEF9E7'},
 };
 
 function addRows(tbody,items,catLabel){
@@ -764,6 +786,8 @@ function addRows(tbody,items,catLabel){
 addRows(mTbody,IT.items,'IT Systems');
 addRows(mTbody,ENERGY.items,'Energy & Solar');
 addRows(mTbody,ACADEMIC.items,'Academic Programs');
+addRows(mTbody,TRAVEL.items,'Travel Savings');
+addRows(mTbody,REPRESENTATION.items,'Representation & Events');
 document.getElementById('masterTotal').textContent=fmt(masterTotal);
 
 /* ═══════════════════════════════════════════════
