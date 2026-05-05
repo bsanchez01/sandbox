@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Completion Dashboard — AY 2024–25</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117;--surface:#161b22;--surface2:#1c2330;--border:#30363d;
+  --text:#e6edf3;--muted:#7d8590;
+  --accent:#58a6ff;--pass:#3fb950;--fail:#f85149;--warn:#e3b341;--inc:#a371f7;
+  --pass-bg:rgba(63,185,80,0.12);--fail-bg:rgba(248,81,73,0.12);--warn-bg:rgba(227,179,65,0.12);--accent-bg:rgba(88,166,255,0.12);
+  --pass-dim:rgba(63,185,80,0.6);--fail-dim:rgba(248,81,73,0.5);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6;}
+/* UPLOAD */
+#upload-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;background:radial-gradient(ellipse 50% 50% at 50% 30%,rgba(88,166,255,0.08) 0%,transparent 70%),var(--bg);}
+.upload-box{width:100%;max-width:580px;background:var(--surface);border:2px dashed var(--border);border-radius:12px;padding:3rem 2.5rem;text-align:center;cursor:pointer;position:relative;transition:all .3s;}
+.upload-box:hover,.upload-box.drag{border-color:var(--accent);background:var(--surface2);}
+.upload-box input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.upload-icon{width:80px;height:80px;margin:0 auto 1.5rem;background:var(--accent-bg);border-radius:50%;display:flex;align-items:center;justify-content:center;transition:transform .3s;}
+.upload-box:hover .upload-icon{transform:translateY(-4px);}
+.upload-icon svg{width:36px;height:36px;color:var(--accent);}
+.upload-box h2{font-family:'DM Serif Display',Georgia,serif;font-size:1.6rem;color:var(--text);margin-bottom:.8rem;}
+.upload-box p{color:var(--muted);font-size:.95rem;line-height:1.6;margin-bottom:1.5rem;}
+.upload-cta{display:inline-block;padding:.7rem 2rem;background:var(--accent);color:#0d1117;border-radius:8px;font-weight:600;pointer-events:none;}
+#upload-msg{margin-top:1.2rem;font-size:.9rem;min-height:1.5rem;}
+#upload-msg.err{color:var(--fail);}
+#upload-msg.ok{color:var(--pass);}
+/* LOADING */
+#loading{display:none;position:fixed;inset:0;z-index:9999;background:rgba(13,17,23,.95);backdrop-filter:blur(12px);flex-direction:column;align-items:center;justify-content:center;}
+#loading.on{display:flex;}
+.spinner{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.load-msg{margin-top:1.2rem;color:var(--muted);font-size:.9rem;}
+/* HEADER */
+.header{background:linear-gradient(135deg,#0d1117 0%,#161b22 50%,#1a2235 100%);padding:28px 48px 24px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+.header::before{content:'';position:absolute;top:-60px;right:-80px;width:320px;height:320px;background:radial-gradient(circle,rgba(88,166,255,.07) 0%,transparent 70%);pointer-events:none;}
+.header-eyebrow{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
+.header-left h1{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(22px,3vw,32px);font-weight:400;color:var(--text);line-height:1.2;}
+.header-left h1 em{color:var(--accent);font-style:italic;}
+.header-left .subtitle{font-size:12px;color:var(--muted);margin-top:8px;display:flex;gap:20px;flex-wrap:wrap;}
+.header-left .subtitle strong{color:var(--text);}
+.header-right{text-align:right;font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;}
+.badge{display:inline-block;background:var(--accent-bg);border:1px solid rgba(88,166,255,.3);color:var(--accent);padding:4px 14px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:.04em;margin-bottom:6px;}
+.header-actions{display:flex;gap:8px;margin-top:8px;justify-content:flex-end;}
+.btn{padding:7px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;font-weight:500;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+.btn:hover{background:var(--accent);color:#0d1117;border-color:var(--accent);}
+.btn-ghost:hover{background:var(--fail-bg);border-color:var(--fail);color:var(--fail);}
+/* NAV */
+.nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 48px;display:flex;overflow-x:auto;position:sticky;top:0;z-index:100;}
+.nav a{display:block;padding:14px 18px;font-size:13px;font-weight:500;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;}
+.nav a:hover{color:var(--text);}
+.nav a.active{color:var(--accent);border-bottom-color:var(--accent);}
+/* MAIN */
+.main{padding:36px 48px;max-width:1440px;margin:0 auto;}
+.section{margin-bottom:52px;}
+.section-title{font-family:'DM Serif Display',Georgia,serif;font-size:20px;font-weight:400;color:var(--text);padding-bottom:10px;border-bottom:1px solid var(--border);}
+.section-desc{font-size:12px;color:var(--muted);margin-top:6px;margin-bottom:20px;}
+/* KPI */
+.kpi-grid-6{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;}
+.kpi-grid-7{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 18px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s;}
+.kpi-card:hover{transform:translateY(-2px);}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:10px 10px 0 0;}
+.kpi-card.blue::before{background:var(--accent);}.kpi-card.blue:hover{border-color:var(--accent);}
+.kpi-card.green::before{background:var(--pass);}.kpi-card.green:hover{border-color:var(--pass);}
+.kpi-card.red::before{background:var(--fail);}.kpi-card.red:hover{border-color:var(--fail);}
+.kpi-card.gold::before{background:var(--warn);}.kpi-card.gold:hover{border-color:var(--warn);}
+.kpi-card.purple::before{background:var(--inc);}.kpi-card.purple:hover{border-color:var(--inc);}
+.kpi-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;}
+.kpi-value{font-family:'DM Serif Display',Georgia,serif;font-size:30px;line-height:1;margin-bottom:4px;}
+.kpi-sub{font-size:11px;color:var(--muted);}
+/* CHART CARDS */
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:22px;transition:border-color .2s;}
+.chart-card:hover{border-color:rgba(88,166,255,.15);}
+.chart-title{font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:6px;}
+.chart-title .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--dt,var(--pass));}
+.chart-wrap{position:relative;}
+/* GRID LAYOUTS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;}
+.g21{display:grid;grid-template-columns:2fr 1fr;gap:20px;}
+.g12{display:grid;grid-template-columns:1fr 2fr;gap:20px;}
+/* SEM CARDS (trends) */
+.sem-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.sem-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center;transition:border-color .2s;}
+.sem-card:hover{border-color:rgba(88,166,255,.25);}
+.sem-name{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;}
+.sem-rate{font-family:'DM Serif Display',Georgia,serif;font-size:36px;line-height:1;}
+.sem-detail{font-size:11px;color:var(--muted);margin-top:6px;font-family:'DM Mono',monospace;}
+/* DEPT STAT CARDS */
+.dept-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:24px;}
+.dept-stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;border-top:3px solid;transition:transform .2s,box-shadow .2s;}
+.dept-stat-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3);}
+.dept-code{font-family:'DM Mono',monospace;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.dept-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;line-height:1.3;}
+.dept-rate{font-family:'DM Serif Display',Georgia,serif;font-size:28px;line-height:1;margin-bottom:4px;}
+.dept-bar{height:3px;border-radius:2px;margin:6px 0;}
+.dept-meta{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:4px;}
+/* TABLES */
+.tbl-wrap{border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.tbl-scroll{max-height:480px;overflow-y:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead th{background:var(--surface2);color:var(--muted);padding:10px 14px;text-align:left;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;position:sticky;top:0;z-index:2;border-bottom:1px solid var(--border);}
+th.r{text-align:right;}
+tbody tr{border-bottom:1px solid rgba(48,54,61,.5);transition:background .15s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:rgba(88,166,255,.04);}
+tbody td{padding:10px 14px;color:var(--text);vertical-align:middle;}
+td.r{text-align:right;font-family:'DM Mono',monospace;font-size:11px;}
+td.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);font-weight:600;}
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;gap:0;}
+.tab-btn{padding:10px 20px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Sans',sans-serif;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-panel{display:none;}.tab-panel.active{display:block;}
+/* PILLS & BADGES */
+.pill{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;}
+.pill-pass{background:var(--pass-bg);color:var(--pass);}
+.pill-warn{background:var(--warn-bg);color:var(--warn);}
+.pill-fail{background:var(--fail-bg);color:var(--fail);}
+.pill-blue{background:var(--accent-bg);color:var(--accent);}
+.risk-badge{padding:3px 10px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;display:inline-block;}
+.risk-critical{background:rgba(248,81,73,.15);color:var(--fail);}
+.risk-watch{background:rgba(227,179,65,.15);color:var(--warn);}
+.risk-good{background:rgba(63,185,80,.15);color:var(--pass);}
+/* PASS BAR in tables */
+.pass-bar-wrap{display:flex;align-items:center;gap:8px;min-width:120px;}
+.pass-bar-track{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+.pass-bar-fill{height:100%;border-radius:3px;}
+.pass-bar-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);min-width:38px;text-align:right;}
+/* ALERTS */
+.alerts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.alert-card{border-left:4px solid;border-radius:8px;padding:18px 22px;}
+.alert-card.critical{background:rgba(248,81,73,.08);border-color:var(--fail);}
+.alert-card.warning{background:rgba(227,179,65,.08);border-color:var(--warn);}
+.alert-card.info{background:rgba(63,185,80,.08);border-color:var(--pass);}
+.alert-card.blue{background:var(--accent-bg);border-color:var(--accent);}
+.alert-title{font-weight:700;font-size:12px;letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px;}
+.alert-card.critical .alert-title{color:var(--fail);}
+.alert-card.warning .alert-title{color:var(--warn);}
+.alert-card.info .alert-title{color:var(--pass);}
+.alert-card.blue .alert-title{color:var(--accent);}
+.alert-body{font-size:12px;color:var(--muted);line-height:1.65;}
+.alert-body strong{color:var(--text);}
+/* HEATMAP */
+.heatmap-table{width:100%;border-collapse:collapse;font-size:12px;}
+.heatmap-table th{background:var(--surface2);color:var(--muted);padding:10px 14px;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--border);border-right:1px solid var(--border);white-space:nowrap;}
+.heatmap-table td{padding:8px 12px;border-bottom:1px solid rgba(48,54,61,.4);border-right:1px solid rgba(48,54,61,.4);vertical-align:middle;}
+.hm-cell{display:inline-block;padding:4px 10px;border-radius:4px;font-family:'DM Mono',monospace;font-size:11px;font-weight:600;min-width:58px;text-align:center;}
+.hm-critical{background:rgba(248,81,73,.18);color:#f85149;}
+.hm-watch{background:rgba(227,179,65,.18);color:#e3b341;}
+.hm-good{background:rgba(63,185,80,.18);color:#3fb950;}
+.hm-na{background:rgba(48,54,61,.3);color:var(--muted);}
+/* RECOMMENDATIONS */
+.rec-list{display:flex;flex-direction:column;gap:14px;}
+.rec-item{background:var(--surface);border:1px solid var(--border);border-left:4px solid;border-radius:0 10px 10px 0;padding:18px 22px;display:flex;gap:18px;align-items:flex-start;}
+.rec-num{font-family:'DM Serif Display',Georgia,serif;font-size:32px;color:rgba(88,166,255,.15);line-height:1;flex-shrink:0;width:32px;margin-top:2px;}
+.rec-body-wrap{flex:1;}
+.rec-tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;}
+.rec-tag-red{background:var(--fail-bg);color:var(--fail);}
+.rec-tag-amber{background:var(--warn-bg);color:var(--warn);}
+.rec-tag-blue{background:var(--accent-bg);color:var(--accent);}
+.rec-tag-green{background:var(--pass-bg);color:var(--pass);}
+.rec-tag-purple{background:rgba(163,113,247,.15);color:var(--inc);}
+.rec-title{font-weight:600;font-size:13px;margin-bottom:6px;color:var(--text);}
+.rec-desc{font-size:12px;color:var(--muted);line-height:1.7;}
+.rec-desc strong{color:var(--text);}
+/* SEM CARDS */
+.sem-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center;transition:border-color .2s;}
+.sem-card:hover{border-color:rgba(88,166,255,.25);}
+.sem-name{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;}
+.sem-rate{font-family:'DM Serif Display',Georgia,serif;font-size:36px;line-height:1;}
+.sem-detail{font-size:11px;color:var(--muted);margin-top:6px;font-family:'DM Mono',monospace;}
+/* INSIGHT CARDS */
+.insights-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.insight-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;}
+.insight-num{font-family:'DM Serif Display',Georgia,serif;font-size:36px;color:var(--accent);line-height:1;margin-bottom:6px;}
+.insight-title{font-weight:600;font-size:13px;margin-bottom:6px;color:var(--text);}
+.insight-body{font-size:12px;color:var(--muted);line-height:1.6;}
+.insight-body strong{color:var(--text);}
+@media(max-width:900px){.insights-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:1200px){.kpi-grid-6{grid-template-columns:repeat(3,1fr);}.kpi-grid-7{grid-template-columns:repeat(4,1fr);}}
+@media(max-width:900px){.g2,.g3,.g21,.g12{grid-template-columns:1fr;}.kpi-grid-6,.kpi-grid-7{grid-template-columns:repeat(2,1fr);}.dept-grid{grid-template-columns:1fr 1fr;}.alerts-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- ══ UPLOAD ══ -->
+<div id="upload-screen">
+  <div class="upload-box" id="uzone">
+    <input type="file" id="finput" accept=".xlsx,.xls">
+    <div class="upload-icon">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+    </div>
+    <h2>CMI Student Completion Report</h2>
+    <p>Drag &amp; drop your student completion report <strong>.xlsx</strong> or <strong>.xls</strong> workbook here, or click to browse. Any filename is accepted.</p>
+    <span class="upload-cta">Choose File</span>
+  </div>
+  <div id="upload-msg"></div>
+</div>
+
+<!-- ══ LOADING ══ -->
+<div id="loading">
+  <div class="spinner"></div>
+  <div class="load-msg" id="lmsg">Parsing workbook…</div>
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+<div id="dash" style="display:none;">
+  <header class="header">
+    <div class="header-left">
+      <div class="header-eyebrow">College of the Marshall Islands</div>
+      <h1>Student Completion <em>Report</em></h1>
+      <div class="subtitle">
+        <span>Academic Year <strong>2024–25</strong></span>
+        <span id="hdr-rec">—</span>
+        <span id="hdr-file">—</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="badge">EXECUTIVE DASHBOARD · FOR INTERNAL USE ONLY</div>
+      <div id="hdr-date"></div>
+      <div class="header-actions">
+        <button class="btn" onclick="dlReport()">↓ Download Report</button>
+        <button class="btn btn-ghost" onclick="resetApp()">↑ New File</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="nav" id="mainnav">
+    <a href="#kpis">KPIs</a>
+    <a href="#trends">Trends</a>
+    <a href="#departments">Departments</a>
+    <a href="#dev-courses">Dev Courses</a>
+    <a href="#courses">Courses</a>
+    <a href="#faculty">Faculty</a>
+    <a href="#programs">Programs</a>
+    <a href="#gender">Gender</a>
+    <a href="#heatmap">Heatmap</a>
+    <a href="#insights">Insights</a>
+    <a href="#alerts">Alerts</a>
+    <a href="#recommendations">Recommendations</a>
+  </nav>
+
+  <div class="main">
+
+    <!-- ══ KPIs ══ -->
+    <section class="section" id="kpis">
+      <div class="section-title">Key Performance Indicators</div>
+      <div class="section-desc">Aggregate metrics across all semesters. Pass grades: A, B, B+, C, C+, P. Fail grades: D, D+, F, NP. Completion rate = (Passed + Failed) / Total.</div>
+      <div class="kpi-grid-6" id="overview-kpis" style="margin-bottom:20px;"></div>
+      <div class="g3" id="sem-cards"></div>
+    </section>
+
+    <!-- ══ TRENDS ══ -->
+    <section class="section" id="trends">
+      <div class="section-title">Semester Trends</div>
+      <div class="section-desc">Pass/fail distribution and completion trends across all semesters and grade categories</div>
+      <div class="g3" style="margin-bottom:20px;">
+        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--pass)"></span>PASS RATE BY SEMESTER</div><div class="chart-wrap" style="height:200px;"><canvas id="ch-trend-line"></canvas></div></div>
+        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--pass)"></span>PASS VS FAIL DISTRIBUTION</div><div class="chart-wrap" style="height:200px;"><canvas id="ch-donut"></canvas></div></div>
+        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--warn)"></span>GRADE DISTRIBUTION</div><div class="chart-wrap" style="height:200px;"><canvas id="ch-grade"></canvas></div></div>
+      </div>
+      <div class="g2">
+        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>ENROLLMENT VS PASS COUNT BY SEMESTER</div><div class="chart-wrap" style="height:220px;"><canvas id="ch-enroll"></canvas></div></div>
+        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>COMPLETION RATE BY SEMESTER</div><div class="chart-wrap" style="height:220px;"><canvas id="ch-comp"></canvas></div></div>
+      </div>
+    </section>
+
+    <!-- ══ DEPARTMENTS ══ -->
+    <section class="section" id="departments">
+      <div class="section-title">Department Performance</div>
+      <div class="section-desc">Pass rates by academic department. Departments with fewer than 5 completed records are excluded from charts but shown in tables.</div>
+      <div class="dept-grid" id="dept-cards"></div>
+      <div class="g2" style="margin-bottom:20px;">
+        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--pass)"></span>DEPARTMENT PASS RATE — ALL YEAR (RANKED)</div><div class="chart-wrap" style="height:280px;"><canvas id="ch-dept-bar"></canvas></div></div>
+        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>DEPARTMENT ENROLLED VS PASSED — ALL YEAR</div><div class="chart-wrap" style="height:280px;"><canvas id="ch-dept-enroll"></canvas></div></div>
+      </div>
+      <div class="chart-card" style="margin-bottom:20px;"><div class="chart-title"><span class="dot" style="--dt:var(--warn)"></span>DEPARTMENT PASS RATE — SEMESTER COMPARISON</div><div class="chart-wrap" style="height:260px;"><canvas id="ch-dept-sem"></canvas></div></div>
+      <div class="chart-card" style="margin-bottom:20px;">
+        <div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>DEPARTMENT PASS RATE — BY SEMESTER</div>
+        <div class="tabs" id="dept-sem-tabs"></div>
+        <div id="dept-sem-panels"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>FULL DEPARTMENT BREAKDOWN</div>
+        <div class="tabs" id="dept-tbl-tabs"></div>
+        <div id="dept-tbl-panels"></div>
+      </div>
+    </section>
+
+    <!-- ══ DEV COURSES ══ -->
+    <section class="section" id="dev-courses">
+      <div class="section-title">Developmental Course Pass Rates</div>
+      <div class="section-desc">All courses with numbers starting in 0 — these are developmental/remedial courses. Risk thresholds: Critical &lt;60% · Watch 60–70% · Good ≥70%.</div>
+      <div class="kpi-grid-7" id="dev-kpis" style="margin-bottom:24px;"></div>
+      <div class="g2" style="margin-bottom:20px;">
+        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>ALL YEAR — PASS RATE BY DEV COURSE</div><div class="chart-wrap" style="height:340px;"><canvas id="ch-dev-bar"></canvas></div></div>
+        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--warn)"></span>SEMESTER TREND — DEV COURSE PASS RATES</div><div class="chart-wrap" style="height:340px;"><canvas id="ch-dev-trend"></canvas></div></div>
+      </div>
+      <div class="chart-card" style="margin-bottom:20px;">
+        <div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>PASS RATE BY SEMESTER</div>
+        <div class="tabs" id="dev-sem-tabs"></div>
+        <div id="dev-sem-panels"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>FULL DEVELOPMENTAL COURSE BREAKDOWN</div>
+        <div class="tabs" id="dev-tbl-tabs"></div>
+        <div id="dev-tbl-panels"></div>
+      </div>
+    </section>
+
+    <!-- ══ COURSES ══ -->
+    <section class="section" id="courses">
+      <div class="section-title">Course Performance</div>
+      <div class="section-desc" id="course-desc"></div>
+      <div class="g2" style="margin-bottom:20px;">
+        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--pass)"></span>TOP 15 COURSES — HIGHEST PASS RATE (ALL YEAR)</div><div class="chart-wrap" style="height:380px;"><canvas id="ch-course-top"></canvas></div></div>
+        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--fail)"></span>BOTTOM 15 COURSES — LOWEST PASS RATE (ALL YEAR)</div><div class="chart-wrap" style="height:380px;"><canvas id="ch-course-bot"></canvas></div></div>
+      </div>
+      <div class="chart-card" style="margin-bottom:20px;">
+        <div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>TOP &amp; BOTTOM 10 BY SEMESTER</div>
+        <div class="tabs" id="course-sem-tabs"></div>
+        <div id="course-sem-panels"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>FULL COURSE BREAKDOWN</div>
+        <div class="tabs" id="course-tbl-tabs"></div>
+        <div id="course-tbl-panels"></div>
+      </div>
+    </section>
+
+    <!-- ══ FACULTY ══ -->
+    <section class="section" id="faculty">
+      <div class="section-title">Faculty Performance</div>
+      <div class="section-desc" id="faculty-desc"></div>
+      <div class="g2" style="margin-bottom:20px;">
+        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--pass)"></span>TOP 15 FACULTY — HIGHEST PASS RATE (ALL YEAR)</div><div class="chart-wrap" style="height:380px;"><canvas id="ch-fac-top"></canvas></div></div>
+        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--fail)"></span>BOTTOM 15 FACULTY — LOWEST PASS RATE (ALL YEAR)</div><div class="chart-wrap" style="height:380px;"><canvas id="ch-fac-bot"></canvas></div></div>
+      </div>
+      <div class="chart-card" style="margin-bottom:20px;">
+        <div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>TOP &amp; BOTTOM 10 FACULTY BY SEMESTER</div>
+        <div class="tabs" id="fac-sem-tabs"></div>
+        <div id="fac-sem-panels"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>FULL FACULTY SUMMARY</div>
+        <div class="tabs" id="fac-tbl-tabs"></div>
+        <div id="fac-tbl-panels"></div>
+      </div>
+    </section>
+
+    <!-- ══ PROGRAMS ══ -->
+    <section class="section" id="programs">
+      <div class="section-title">Program Code Pass Rates</div>
+      <div class="section-desc">Pass rates by student program enrollment code across all semesters. Programs with 0 completed records are excluded from rate calculations.</div>
+      <div class="kpi-grid-6" id="prog-kpis" style="margin-bottom:24px;"></div>
+      <div class="g2" style="margin-bottom:20px;">
+        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>ALL YEAR — PASS RATE BY PROGRAM CODE</div><div class="chart-wrap" style="height:520px;"><canvas id="ch-prog-bar"></canvas></div></div>
+        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--warn)"></span>ALL YEAR — ENROLLED VS PASSED BY PROGRAM</div><div class="chart-wrap" style="height:520px;"><canvas id="ch-prog-enroll"></canvas></div></div>
+      </div>
+      <div class="chart-card" style="margin-bottom:20px;"><div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>PROGRAM PASS RATE — SEMESTER COMPARISON (TOP 15 BY ENROLLMENT)</div><div class="chart-wrap" style="height:280px;"><canvas id="ch-prog-sem"></canvas></div></div>
+      <div class="chart-card" style="margin-bottom:20px;">
+        <div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>PASS RATE BY SEMESTER</div>
+        <div class="tabs" id="prog-sem-tabs"></div>
+        <div id="prog-sem-panels"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>FULL PROGRAM CODE BREAKDOWN</div>
+        <div class="tabs" id="prog-tbl-tabs"></div>
+        <div id="prog-tbl-panels"></div>
+      </div>
+    </section>
+
+    <!-- ══ GENDER ══ -->
+    <section class="section" id="gender">
+      <div class="section-title">Pass Rate by Gender</div>
+      <div class="section-desc">Pass rates broken down by gender across all three semesters. M = Male · F = Female. Data sourced directly from grade input files.</div>
+      <div class="kpi-grid-6" id="gender-kpis" style="margin-bottom:24px;"></div>
+      <div class="g2" style="margin-bottom:20px;">
+        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>OVERALL PASS RATE — MALE VS FEMALE</div><div class="chart-wrap" style="height:260px;"><canvas id="ch-gender-bar"></canvas></div></div>
+        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--warn)"></span>PASS RATE BY SEMESTER — MALE VS FEMALE</div><div class="chart-wrap" style="height:260px;"><canvas id="ch-gender-trend"></canvas></div></div>
+      </div>
+      <div class="chart-card" style="margin-bottom:20px;"><div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>ENROLLED VS PASSED — ALL YEAR BY GENDER</div><div class="chart-wrap" style="height:240px;"><canvas id="ch-gender-enroll"></canvas></div></div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>FULL GENDER BREAKDOWN</div>
+        <div class="tabs" id="gender-tbl-tabs"></div>
+        <div id="gender-tbl-panels"></div>
+      </div>
+    </section>
+
+    <!-- ══ HEATMAP ══ -->
+    <section class="section" id="heatmap">
+      <div class="section-title">Department × Semester Heatmap</div>
+      <div class="section-desc">Pass rate matrix across all departments and semesters. Color key: <span style="color:var(--fail)">■ Critical &lt;60%</span> · <span style="color:var(--warn)">■ Watch 60–70%</span> · <span style="color:var(--pass)">■ Good ≥70%</span></div>
+      <div id="heatmap-content"></div>
+      <div class="chart-card" style="margin-top:20px;">
+        <div class="chart-title"><span class="dot" style="--dt:var(--warn)"></span>COURSE × DEPARTMENT RISK SUMMARY</div>
+        <div id="course-risk-content"></div>
+      </div>
+    </section>
+
+    <!-- ══ INSIGHTS ══ -->
+    <section class="section" id="insights">
+      <div class="section-title">Executive Insights</div>
+      <div class="section-desc">Auto-identified patterns and key metrics</div>
+      <div id="insights-content"></div>
+    </section>
+
+    <!-- ══ ALERTS ══ -->
+    <section class="section" id="alerts">
+      <div class="section-title">Alerts</div>
+      <div class="section-desc">Risk flags based on pass rate thresholds</div>
+      <div class="alerts-grid" id="alerts-content"></div>
+    </section>
+
+    <!-- ══ RECOMMENDATIONS ══ -->
+    <section class="section" id="recommendations">
+      <div class="section-title">Recommendations</div>
+      <div class="section-desc">Data-driven action items prioritized by risk level and impact</div>
+      <div id="rec-content"></div>
+    </section>
+
+  </div><!-- /main -->
+</div><!-- /dash -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   CMI COMPLETION DASHBOARD — AY 2024-25
+   Data: any CMI student completion report workbook (Cleaned Data sheet required)
+   ═══════════════════════════════════════════════════════════════ */
+
+// ── CONSTANTS ──────────────────────────────────────────────────
+const DEPT_NAMES = {
+  MS:'Marshallese Studies', ST:'Science & Technology', LA:'Liberal Arts',
+  BS:'Business Studies', NS:'Nursing & Health Sciences', AU:'Audit',
+  DU:'Dual Enrollment', ED:'Education', WV:'Workforce & Vocational'
+};
+const PROG_NAMES = {
+  'ASAEHL-TPC':'AS — Applied English & Humanities (TPC)',
+  'CCAST':'Certificate — Automotive Service Technology',
+  'Unknown':'Unknown',
+  'AABS':'Associate of Arts — Business Studies',
+  'AABS-ACC':'AABS — Accounting Track',
+  'AALA-SCI':'AALA — Science',
+  'AALA':'Associate of Arts — Liberal Arts',
+  'AALA-BM':'AALA — Business Management',
+  'ASNURS':'AS — Nursing',
+  'ASEEDU':'AS — Elementary Education',
+  'AALA-ENG':'AALA — English',
+  'AALA-MAR':'AALA — Maritime',
+  'AALA-MATH':'AALA — Mathematics',
+  'AABS-MGT':'AABS — Management Track',
+  'ASAEHL-AE':'AS — Applied English & Humanities (AE)',
+  'BAEE':'BA — Elementary Education',
+  'CCACC':'CC — Accounting',
+  'CCAST':'CC — Automotive Service Technology',
+  'CCCARP':'CC — Carpentry',
+  'CCCT-W':'CC — Construction Technology (W)',
+  'CCMLA':'CC — Maritime Logistics Admin',
+  'CCMS':'CC — Maritime Studies',
+  'CCMSS':'CC — Maritime Safety & Survival',
+  'CCPH':'CC — Public Health',
+  'CCRFPERW':'CC — Refrigeration & Electrical (RW)',
+  'CCRFPNW':'CC — Refrigeration & Electrical (NW)',
+  'CCSE':'CC — Sustainable Energy',
+  'CCT':'CC — Technology',
+  'DUAL':'Dual Enrollment',
+  'AUD':'Audit'
+};
+// Friendly label map — falls back to filename if not found
+const SRC_LBL_MAP = {
+  'Grade_Input_fall24_1.xls':'Fall 2024',
+  'Grade_Input_sp25_2.xls':'Spring 2025',
+  'Grade_Input_su25_3.xls':'Summer 2025',
+};
+// These are populated DYNAMICALLY after parsing — do NOT hardcode
+let SEM_KEYS = [];
+let SEM_LABELS = [];
+const PASS_G = new Set(['A','B','B+','C','C+','P']);
+const FAIL_G = new Set(['D','D+','F','NP']);
+const INC_G  = new Set(['W','I']);
+const GRADE_ORDER = ['A','B+','B','C+','C','D+','D','F','NP','P','W','I','RPL'];
+const GRID_COLOR = 'rgba(48,54,61,0.6)';
+// Semester colors — works for any number of semesters
+const SEM_COLORS = ['rgba(88,166,255,.7)','rgba(210,168,20,.7)','rgba(63,185,80,.7)','rgba(163,113,247,.7)','rgba(246,135,179,.7)','rgba(237,137,54,.7)'];
+const semColor = i => SEM_COLORS[i % SEM_COLORS.length];
+
+
+// Chart defaults
+Chart.defaults.font.family = "'DM Sans'";
+Chart.defaults.color = '#7d8590';
+
+// ── HELPERS ───────────────────────────────────────────────────
+const fmt = n => (+n).toLocaleString();
+const pct = n => isNaN(n) || !isFinite(n) ? '—' : n.toFixed(1) + '%';
+const esc = s => (s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const sl = k => SRC_LBL_MAP[k] || k.replace(/\.(xlsx|xls)$/i,'').replace(/_/g,' ');
+
+function getR(r) {
+  const res = (r['Result']||'').trim();
+  if(['Pass','Fail','Incomplete','Other'].includes(res)) return res;
+  const g = (r['Grade']||'').trim().toUpperCase();
+  if(PASS_G.has(g)) return 'Pass';
+  if(FAIL_G.has(g)) return 'Fail';
+  if(INC_G.has(g))  return 'Incomplete';
+  return g ? 'Other' : 'Incomplete';
+}
+const isP = r => getR(r) === 'Pass';
+const isF = r => getR(r) === 'Fail';
+
+function calc(rows) {
+  const n = rows.length;
+  const p = rows.filter(isP).length;
+  const f = rows.filter(isF).length;
+  const c = p + f;
+  const inc = rows.filter(r => getR(r) === 'Incomplete').length;
+  return {
+    n, passed:p, failed:f, completed:c, incomplete:inc,
+    compRate: n ? c/n*100 : 0,
+    passRate: c ? p/c*100 : 0,
+    failRate: c ? f/c*100 : 0,
+    students: new Set(rows.map(r=>(r['Stud. ID']||'').trim()).filter(Boolean)).size,
+    courses:  new Set(rows.map(r=>(r['Course']||'').trim()).filter(Boolean)).size,
+    faculty:  new Set(rows.map(r=>(r['Faculty']||'').trim()).filter(Boolean)).size,
+  };
+}
+
+function grpCalc(rows, keyFn) {
+  const m = new Map();
+  for(const r of rows) {
+    const k = keyFn(r); if(!k) continue;
+    if(!m.has(k)) m.set(k,[]);
+    m.get(k).push(r);
+  }
+  return [...m.entries()].map(([key,rws]) => ({key,...calc(rws)}));
+}
+
+function riskBadge(rate) {
+  if(rate < 60) return '<span class="risk-badge risk-critical">CRITICAL</span>';
+  if(rate < 70) return '<span class="risk-badge risk-watch">WATCH</span>';
+  return '<span class="risk-badge risk-good">GOOD</span>';
+}
+function riskColor(rate) {
+  return rate < 60 ? '#f85149' : rate < 70 ? '#e3b341' : '#3fb950';
+}
+function barColor(rate) {
+  return rate < 60 ? 'rgba(248,81,73,0.75)' : rate < 70 ? 'rgba(227,179,65,0.75)' : 'rgba(63,185,80,0.75)';
+}
+function passBarHTML(rate) {
+  const c = riskColor(rate);
+  return `<div class="pass-bar-wrap"><div class="pass-bar-track"><div class="pass-bar-fill" style="width:${Math.max(0,rate).toFixed(0)}%;background:${c};"></div></div><span class="pass-bar-num">${pct(rate)}</span></div>`;
+}
+function destroyChart(id) {
+  const c = Chart.getChart(id);
+  if(c) c.destroy();
+}
+function mkTabs(tabsId, panelsId, labels, renderFn) {
+  const tabsEl = document.getElementById(tabsId);
+  const panelsEl = document.getElementById(panelsId);
+  if(!tabsEl || !panelsEl) return;
+  tabsEl.innerHTML = labels.map((l,i) => `<button class="tab-btn${i===0?' active':''}" onclick="switchTab('${tabsId}','${panelsId}',${i})">${l}</button>`).join('');
+  panelsEl.innerHTML = labels.map((l,i) => `<div class="tab-panel${i===0?' active':''}" id="${panelsId}-${i}">${renderFn(i,l)}</div>`).join('');
+}
+function switchTab(tabsId, panelsId, idx) {
+  document.querySelectorAll(`#${tabsId} .tab-btn`).forEach((b,i)=>b.classList.toggle('active',i===idx));
+  document.querySelectorAll(`#${panelsId} .tab-panel`).forEach((p,i)=>p.classList.toggle('active',i===idx));
+}
+
+// ── STATE ──────────────────────────────────────────────────────
+let RAW = [], BY_SEM = {}, FILE_NAME = '';
+
+// ── UPLOAD ─────────────────────────────────────────────────────
+const uzone = document.getElementById('uzone');
+const finp  = document.getElementById('finput');
+uzone.addEventListener('dragover', e=>{e.preventDefault();uzone.classList.add('drag');});
+uzone.addEventListener('dragleave', ()=>uzone.classList.remove('drag'));
+uzone.addEventListener('drop', e=>{e.preventDefault();uzone.classList.remove('drag');if(e.dataTransfer.files[0])go(e.dataTransfer.files[0]);});
+finp.addEventListener('change', e=>{if(e.target.files[0])go(e.target.files[0]);});
+
+function setMsg(t,c=''){const el=document.getElementById('upload-msg');el.textContent=t;el.className=c;}
+function setLoad(on,t='Parsing workbook…'){document.getElementById('loading').classList.toggle('on',on);document.getElementById('lmsg').textContent=t;}
+
+function go(file) {
+  if(!/\.(xlsx|xls)$/i.test(file.name)){setMsg('Please upload .xlsx or .xls','err');return;}
+  FILE_NAME = file.name;
+  setMsg('Reading…','ok'); setLoad(true);
+  const r = new FileReader();
+  r.onload = e => setTimeout(()=>{try{parse(XLSX.read(e.target.result,{type:'array'}));}catch(err){setLoad(false);setMsg('Error: '+err.message,'err');}},60);
+  r.readAsArrayBuffer(file);
+}
+
+function parse(wb) {
+  const nm = wb.SheetNames;
+  const cn = nm.find(n=>n.replace(/\s/g,'').toLowerCase().includes('cleaneddata'))
+           ||nm.find(n=>n.toLowerCase().includes('cleaned'))
+           ||nm[nm.length-1];
+  setLoad(true, `Reading "${cn}"…`);
+  const sh = wb.Sheets[cn];
+  if(!sh||!sh['!ref']){setLoad(false);setMsg('Sheet empty.','err');return;}
+  const aoa = XLSX.utils.sheet_to_json(sh,{header:1,defval:''});
+  let hIdx = -1;
+  for(let i=0;i<Math.min(aoa.length,12);i++){
+    const row = aoa[i].map(v=>(v||'').toString().trim().toLowerCase());
+    if(row.includes('year')&&row.includes('semester')){hIdx=i;break;}
+  }
+  if(hIdx===-1){setLoad(false);setMsg('Cannot find headers.','err');return;}
+  const hdrs = aoa[hIdx].map(v=>(v||'').toString().trim());
+  RAW = aoa.slice(hIdx+1)
+    .filter(row=>row.some(v=>v!==''))
+    .map(row=>{const o={};hdrs.forEach((h,i)=>{o[h]=row[i]===null||row[i]===undefined?'':String(row[i]).trim();});return o;})
+    .filter(r=>r['Year']&&r['Course']);
+  if(!RAW.length){setLoad(false);setMsg('No data rows.','err');return;}
+  // Dynamically detect all source files from data (sorted)
+  SEM_KEYS = [...new Set(RAW.map(r=>(r['Source File']||'').trim()).filter(Boolean))].sort();
+  SEM_LABELS = SEM_KEYS.map(sl);
+  BY_SEM = {};
+  SEM_KEYS.forEach(k=>{ BY_SEM[k]=RAW.filter(r=>r['Source File']===k); });
+  renderDash();
+  document.getElementById('upload-screen').style.display='none';
+  document.getElementById('dash').style.display='block';
+  document.getElementById('hdr-rec').innerHTML=`<strong>${fmt(RAW.length)}</strong> records`;
+  document.getElementById('hdr-file').innerHTML=`<strong>${FILE_NAME}</strong>`;
+  document.getElementById('hdr-date').textContent=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  setLoad(false);
+  initNavSpy();
+}
+
+function resetApp(){
+  if(confirm('Upload a new file?')){
+    document.getElementById('upload-screen').style.display='flex';
+    document.getElementById('dash').style.display='none';
+    finp.value=''; RAW=[]; BY_SEM={}; SEM_KEYS=[]; SEM_LABELS=[];
+    Chart.instances.forEach?.(c=>c.destroy());
+  }
+}
+
+// ── NAV SPY ────────────────────────────────────────────────────
+function initNavSpy(){
+  const secs = document.querySelectorAll('.section[id]');
+  const as = document.querySelectorAll('.nav a');
+  window.addEventListener('scroll',()=>{
+    let cur='';
+    secs.forEach(s=>{if(window.scrollY>=s.offsetTop-90)cur=s.id;});
+    as.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+cur));
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  RENDER ALL SECTIONS
+// ══════════════════════════════════════════════════════════════
+function renderDash(){
+  renderKPIs();
+  renderTrends();
+  renderDepts();
+  renderDevCourses();
+  renderCourses();
+  renderFaculty();
+  renderPrograms();
+  renderGender();
+  renderHeatmap();
+  renderInsights();
+  renderAlerts();
+  renderRecommendations();
+}
+
+// ══ KPIs ══════════════════════════════════════════════════════
+function renderKPIs(){
+  const m = calc(RAW);
+  const cg = grpCalc(RAW,r=>r['Course']).filter(g=>g.completed>=10);
+  const critCourses = cg.filter(g=>g.passRate<60).length;
+
+  document.getElementById('overview-kpis').innerHTML=`
+    <div class="kpi-card blue"><div class="kpi-label">Total Records</div><div class="kpi-value">${fmt(m.n)}</div><div class="kpi-sub">Student-course records</div></div>
+    <div class="kpi-card green"><div class="kpi-label">Completion Rate</div><div class="kpi-value">${pct(m.compRate)}</div><div class="kpi-sub">${fmt(m.completed)} completed</div></div>
+    <div class="kpi-card green"><div class="kpi-label">Pass Rate</div><div class="kpi-value">${pct(m.passRate)}</div><div class="kpi-sub">Among completed</div></div>
+    <div class="kpi-card red"><div class="kpi-label">Fail Rate</div><div class="kpi-value">${pct(m.failRate)}</div><div class="kpi-sub">${fmt(m.failed)} failed</div></div>
+    <div class="kpi-card gold"><div class="kpi-label">Distinct Students</div><div class="kpi-value">${fmt(m.students)}</div><div class="kpi-sub">Unique student IDs</div></div>
+    <div class="kpi-card purple"><div class="kpi-label">Faculty Members</div><div class="kpi-value">${fmt(m.faculty)}</div><div class="kpi-sub">${fmt(m.courses)} courses · ${critCourses} critical</div></div>`;
+
+  // Semester summary cards
+  const semData = SEM_KEYS.map(k=>({key:k,...calc(BY_SEM[k]||[])}));
+  document.getElementById('sem-cards').innerHTML = semData.map(s=>{
+    const cls = s.passRate>=70?'var(--pass)':s.passRate>=60?'var(--warn)':'var(--fail)';
+    return `<div class="sem-card">
+      <div class="sem-name">${sl(s.key)}</div>
+      <div class="sem-rate" style="color:${cls}">${pct(s.passRate)}</div>
+      <div class="sem-detail">${fmt(s.passed)} / ${fmt(s.completed)} passed</div>
+      <div class="sem-detail">${fmt(s.n)} total · ${fmt(s.students)} students · ${pct(s.compRate)} completion</div>
+    </div>`;
+  }).join('');
+}
+
+// ══ TRENDS ════════════════════════════════════════════════════
+function renderTrends(){
+  const semData = SEM_KEYS.map(k=>({key:k,...calc(BY_SEM[k]||[])}));
+  const all = calc(RAW);
+
+  // Line chart: pass rate by semester
+  destroyChart('ch-trend-line');
+  new Chart(document.getElementById('ch-trend-line').getContext('2d'),{
+    type:'line',
+    data:{labels:SEM_LABELS,datasets:[{
+      data:semData.map(s=>+s.passRate.toFixed(1)),
+      borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,0.08)',
+      borderWidth:2.5,pointRadius:6,pointBackgroundColor:semData.map(s=>riskColor(s.passRate)),
+      pointBorderColor:'#161b22',pointBorderWidth:2,fill:true,tension:.3
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` Pass Rate: ${c.raw}%`}}},
+      scales:{y:{min:55,max:85,ticks:{callback:v=>v+'%'},grid:{color:GRID_COLOR},border:{color:GRID_COLOR}},x:{grid:{color:GRID_COLOR},border:{color:GRID_COLOR}}}}
+  });
+
+  // Donut: pass vs fail vs incomplete
+  destroyChart('ch-donut');
+  new Chart(document.getElementById('ch-donut').getContext('2d'),{
+    type:'doughnut',
+    data:{labels:['Passed','Failed','Incomplete/W'],datasets:[{data:[all.passed,all.failed,all.incomplete],backgroundColor:['rgba(63,185,80,.7)','rgba(248,81,73,.7)','rgba(227,179,65,.7)'],borderColor:'#161b22',borderWidth:3}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:12,color:'#7d8590'}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmt(c.raw)}`}}}}
+  });
+
+  // Grade distribution
+  const grades={};
+  RAW.forEach(r=>{const g=(r['Grade']||'blank').trim()||'blank';grades[g]=(grades[g]||0)+1;});
+  const gSorted=Object.entries(grades).sort((a,b)=>{const ai=GRADE_ORDER.indexOf(a[0]),bi=GRADE_ORDER.indexOf(b[0]);if(ai===-1&&bi===-1)return 0;if(ai===-1)return 1;if(bi===-1)return -1;return ai-bi;});
+  destroyChart('ch-grade');
+  new Chart(document.getElementById('ch-grade').getContext('2d'),{
+    type:'bar',
+    data:{labels:gSorted.map(([g])=>g),datasets:[{data:gSorted.map(([,c])=>c),backgroundColor:gSorted.map(([g])=>barColor(PASS_G.has(g.toUpperCase())?80:FAIL_G.has(g.toUpperCase())?30:65)),borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:GRID_COLOR},border:{color:GRID_COLOR}},x:{grid:{display:false},border:{color:GRID_COLOR}}}}
+  });
+
+  // Enrollment vs passed
+  destroyChart('ch-enroll');
+  new Chart(document.getElementById('ch-enroll').getContext('2d'),{
+    type:'bar',
+    data:{labels:SEM_LABELS,datasets:[
+      {label:'Enrolled',data:semData.map(s=>s.n),backgroundColor:'rgba(88,166,255,0.3)',borderRadius:4},
+      {label:'Passed',  data:semData.map(s=>s.passed),backgroundColor:'rgba(63,185,80,0.7)',borderRadius:4},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,color:'#7d8590'}}},
+      scales:{x:{grid:{display:false}},y:{grid:{color:GRID_COLOR}}}}
+  });
+
+  // Completion rate by semester
+  destroyChart('ch-comp');
+  new Chart(document.getElementById('ch-comp').getContext('2d'),{
+    type:'bar',
+    data:{labels:SEM_LABELS,datasets:[{data:semData.map(s=>+s.compRate.toFixed(1)),backgroundColor:semData.map(s=>s.compRate>99?'rgba(63,185,80,.7)':'rgba(88,166,255,.6)'),borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}%`}}},
+      scales:{y:{min:95,max:100.5,ticks:{callback:v=>v+'%'},grid:{color:GRID_COLOR}},x:{grid:{display:false}}}}
+  });
+}
+
+// ══ DEPARTMENTS ═══════════════════════════════════════════════
+function renderDepts(){
+  const dg = grpCalc(RAW, r=>r['Department Code']).sort((a,b)=>a.passRate-b.passRate);
+
+  // Stat cards (sorted by pass rate ascending = worst first)
+  document.getElementById('dept-cards').innerHTML = dg.map(g=>{
+    const c=riskColor(g.passRate);
+    return `<div class="dept-stat-card" style="border-top-color:${c};">
+      <div class="dept-code">${esc(g.key)}</div>
+      <div class="dept-name">${esc(DEPT_NAMES[g.key]||g.key)}</div>
+      <div class="dept-rate" style="color:${c};">${pct(g.passRate)}</div>
+      <div class="dept-bar" style="background:${c};width:${g.passRate.toFixed(0)}%;max-width:100%;"></div>
+      <div class="dept-meta">${fmt(g.n)} enrolled · ${fmt(g.passed)} passed · ${fmt(g.failed)} failed</div>
+    </div>`;
+  }).join('');
+
+  // Horizontal bar: pass rate all year (sorted low→high)
+  destroyChart('ch-dept-bar');
+  new Chart(document.getElementById('ch-dept-bar').getContext('2d'),{
+    type:'bar',indexAxis:'y',
+    data:{labels:dg.map(g=>DEPT_NAMES[g.key]||g.key),datasets:[{data:dg.map(g=>+g.passRate.toFixed(1)),backgroundColor:dg.map(g=>barColor(g.passRate)),borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}%`}}},
+      scales:{x:{min:0,max:100,grid:{color:GRID_COLOR},ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}}}
+  });
+
+  // Enrolled vs passed (sorted by passRate)
+  destroyChart('ch-dept-enroll');
+  new Chart(document.getElementById('ch-dept-enroll').getContext('2d'),{
+    type:'bar',indexAxis:'y',
+    data:{labels:dg.map(g=>DEPT_NAMES[g.key]||g.key),datasets:[
+      {label:'Enrolled',data:dg.map(g=>g.n),backgroundColor:'rgba(88,166,255,0.4)',borderRadius:3},
+      {label:'Passed',  data:dg.map(g=>g.passed),backgroundColor:'rgba(210,168,20,0.7)',borderRadius:3},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10}}},
+      scales:{x:{grid:{color:GRID_COLOR}},y:{grid:{display:false}}}}
+  });
+
+  // Semester comparison grouped bar
+  const dgFull = grpCalc(RAW, r=>r['Department Code']).sort((a,b)=>b.passRate-a.passRate);
+  const semByDept = SEM_KEYS.map(k=>grpCalc(BY_SEM[k]||[], r=>r['Department Code']));
+  destroyChart('ch-dept-sem');
+  new Chart(document.getElementById('ch-dept-sem').getContext('2d'),{
+    type:'bar',
+    data:{labels:dgFull.map(g=>DEPT_NAMES[g.key]||g.key),datasets:SEM_KEYS.map((k,i)=>({
+      label:SEM_LABELS[i],
+      data:dgFull.map(g=>{const s=semByDept[i].find(d=>d.key===g.key);return s?+s.passRate.toFixed(1):null;}),
+      backgroundColor:semColor(i),borderRadius:3
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10}}},
+      scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%'},grid:{color:GRID_COLOR}},x:{grid:{display:false}}}}
+  });
+
+  // Per-semester bar tabs
+  mkTabs('dept-sem-tabs','dept-sem-panels',SEM_LABELS,(si)=>{
+    const rows=BY_SEM[SEM_KEYS[si]]||[];
+    const sd=grpCalc(rows,r=>r['Department Code']).filter(g=>g.completed>=5).sort((a,b)=>a.passRate-b.passRate);
+    const cid=`ch-dept-sem-${si}`;
+    setTimeout(()=>{
+      destroyChart(cid);
+      new Chart(document.getElementById(cid).getContext('2d'),{
+        type:'bar',indexAxis:'y',
+        data:{labels:sd.map(g=>DEPT_NAMES[g.key]||g.key),datasets:[{data:sd.map(g=>+g.passRate.toFixed(1)),backgroundColor:sd.map(g=>barColor(g.passRate)),borderRadius:4}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}%`}}},
+          scales:{x:{min:0,max:100,grid:{color:GRID_COLOR},ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}}}
+      });
+    },50);
+    return `<div class="chart-wrap" style="height:${Math.max(220,sd.length*40)}px;"><canvas id="${cid}"></canvas></div>`;
+  });
+
+  // Full table tabs
+  const tblLabels=['All Year',...SEM_LABELS];
+  mkTabs('dept-tbl-tabs','dept-tbl-panels',tblLabels,(si)=>{
+    const rows = si===0?RAW:(BY_SEM[SEM_KEYS[si-1]]||[]);
+    const td=grpCalc(rows,r=>r['Department Code']).sort((a,b)=>a.passRate-b.passRate);
+    return `<div class="tbl-wrap"><div class="tbl-scroll"><table>
+      <thead><tr><th>Code</th><th>Department</th><th class="r">Enrolled</th><th class="r">Passed</th><th class="r">Failed</th><th class="r">Incomplete</th><th class="r">Completion</th><th class="r">Pass Rate</th><th class="r">Fail Rate</th><th class="r">Risk</th><th>Pass Bar</th></tr></thead>
+      <tbody>${td.map(g=>`<tr>
+        <td class="mono">${esc(g.key)}</td>
+        <td style="font-weight:600">${esc(DEPT_NAMES[g.key]||g.key)}</td>
+        <td class="r">${fmt(g.n)}</td>
+        <td class="r" style="color:var(--pass)">${fmt(g.passed)}</td>
+        <td class="r" style="color:var(--fail)">${fmt(g.failed)}</td>
+        <td class="r">${fmt(g.incomplete)}</td>
+        <td class="r">${pct(g.compRate)}</td>
+        <td class="r" style="color:${riskColor(g.passRate)};font-weight:600">${pct(g.passRate)}</td>
+        <td class="r">${pct(g.failRate)}</td>
+        <td>${riskBadge(g.passRate)}</td>
+        <td>${passBarHTML(g.passRate)}</td>
+      </tr>`).join('')}</tbody>
+    </table></div></div>`;
+  });
+}
+
+// ══ DEV COURSES ═══════════════════════════════════════════════
+function renderDevCourses(){
+  const devRows=RAW.filter(r=>(r['Developmental Course']||'').trim()==='Yes');
+  const dg=grpCalc(devRows,r=>r['Course']).sort((a,b)=>a.passRate-b.passRate);
+  const all=calc(devRows);
+  const crit=dg.filter(g=>g.passRate<60).length;
+  const watch=dg.filter(g=>g.passRate>=60&&g.passRate<70).length;
+  const lowest=dg[0]||{};
+  const highest=[...dg].sort((a,b)=>b.passRate-a.passRate)[0]||{};
+
+  // KPIs
+  document.getElementById('dev-kpis').innerHTML=`
+    <div class="kpi-card red"><div class="kpi-label">Overall Dev Pass Rate</div><div class="kpi-value" style="color:var(--fail)">${pct(all.passRate)}</div><div class="kpi-sub">${fmt(all.passed)} passed of ${fmt(all.completed)} completed</div></div>
+    <div class="kpi-card blue"><div class="kpi-label">Total Dev Enrolled</div><div class="kpi-value">${fmt(all.n)}</div><div class="kpi-sub">Across ${dg.length} dev courses</div></div>
+    <div class="kpi-card red"><div class="kpi-label">Total Dev Failed</div><div class="kpi-value" style="color:var(--fail)">${fmt(all.failed)}</div><div class="kpi-sub">${pct(all.failRate)} dev fail rate</div></div>
+    <div class="kpi-card gold"><div class="kpi-label">Critical &lt;60% (Red)</div><div class="kpi-value" style="color:var(--warn)">${crit}</div><div class="kpi-sub">Shown in red in charts</div></div>
+    <div class="kpi-card gold"><div class="kpi-label">Watch 60–70% (Yellow)</div><div class="kpi-value" style="color:var(--warn)">${watch}</div><div class="kpi-sub">Shown in yellow in charts</div></div>
+    <div class="kpi-card red"><div class="kpi-label">Lowest Pass Rate</div><div class="kpi-value" style="color:var(--fail);font-size:24px">${pct(lowest.passRate||0)}</div><div class="kpi-sub">${esc(lowest.key||'')}</div></div>
+    <div class="kpi-card green"><div class="kpi-label">Highest Pass Rate</div><div class="kpi-value" style="color:var(--pass);font-size:24px">${pct(highest.passRate||0)}</div><div class="kpi-sub">${esc(highest.key||'')}</div></div>`;
+
+  // All year horizontal bar (sorted by pass rate ascending)
+  destroyChart('ch-dev-bar');
+  new Chart(document.getElementById('ch-dev-bar').getContext('2d'),{
+    type:'bar',indexAxis:'y',
+    data:{labels:dg.map(g=>g.key),datasets:[{data:dg.map(g=>+g.passRate.toFixed(1)),backgroundColor:dg.map(g=>barColor(g.passRate)),borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}%`}}},
+      scales:{x:{min:0,max:105,grid:{color:GRID_COLOR},ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}}}
+  });
+
+  // Semester trend multi-line
+  const colors=['#f85149','#e3b341','#3fb950','#58a6ff','#a371f7','#f687b3','#ed8936','#68d391','#38b2ac','#fc8181','#63b3ed','#b794f4','#fbd38d','#9ae6b4'];
+  const dCourses=dg.map(g=>g.key);
+  const semTrendData=SEM_KEYS.map(k=>{const sg=grpCalc(BY_SEM[k]||[],r=>r['Course']);return Object.fromEntries(sg.map(g=>[g.key,g.passRate]));});
+  destroyChart('ch-dev-trend');
+  new Chart(document.getElementById('ch-dev-trend').getContext('2d'),{
+    type:'line',
+    data:{labels:SEM_LABELS,datasets:dCourses.map((c,i)=>({
+      label:c,
+      data:SEM_KEYS.map((_,si)=>semTrendData[si][c]!==undefined?+semTrendData[si][c].toFixed(1):null),
+      borderColor:colors[i%colors.length],backgroundColor:'transparent',
+      borderWidth:2,pointRadius:5,pointBorderColor:'#161b22',pointBorderWidth:2,
+      pointBackgroundColor:colors[i%colors.length],fill:false,tension:.3,spanGaps:true
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:10,font:{size:10}}}},
+      scales:{y:{min:0,max:110,ticks:{callback:v=>v+'%'},grid:{color:GRID_COLOR}},x:{grid:{color:GRID_COLOR}}}}
+  });
+
+  // Per-semester bar tabs
+  mkTabs('dev-sem-tabs','dev-sem-panels',SEM_LABELS,(si)=>{
+    const rows=BY_SEM[SEM_KEYS[si]]||[];
+    const sd=grpCalc(rows.filter(r=>(r['Developmental Course']||'').trim()==='Yes'),r=>r['Course']).sort((a,b)=>a.passRate-b.passRate);
+    const cid=`ch-dev-sem-${si}`;
+    setTimeout(()=>{
+      destroyChart(cid);
+      new Chart(document.getElementById(cid).getContext('2d'),{
+        type:'bar',indexAxis:'y',
+        data:{labels:sd.map(g=>g.key),datasets:[{data:sd.map(g=>+g.passRate.toFixed(1)),backgroundColor:sd.map(g=>barColor(g.passRate)),borderRadius:4}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}%`}}},
+          scales:{x:{min:0,max:105,grid:{color:GRID_COLOR},ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}}}
+      });
+    },50);
+    return `<div class="chart-wrap" style="height:${Math.max(200,sd.length*40)}px;"><canvas id="${cid}"></canvas></div>`;
+  });
+
+  // Full table tabs
+  const DESC={'ENG 086':'Intermediate Academic Listening and Speaking','ENG 087':'Intermediate Academic Reading and Writing','ENG 096':'Advanced Academic Listening and Speaking','ENG 097':'Introduction to Academic Reading and Writing','MATH 068':'Pre-Algebra','MATH 088':'Introduction to Algebra','MATH 089':'Basic Mathematics','MATH 098':'Intermediate Algebra','MATH 099':'Fundamentals of Mathematics','ICS 090':'Introduction to Computing','VCARP 050':'Carpentry Basics 1','VCARP 051':'Carpentry Basics 2','VCARP 060':'Carpentry Advanced 1','VCARP 061':'Carpentry Advanced 2'};
+  const tblLabels=['All Year',...SEM_LABELS];
+  mkTabs('dev-tbl-tabs','dev-tbl-panels',tblLabels,(si)=>{
+    const rows=si===0?devRows:((BY_SEM[SEM_KEYS[si-1]]||[]).filter(r=>(r['Developmental Course']||'').trim()==='Yes'));
+    const td=grpCalc(rows,r=>r['Course']).sort((a,b)=>a.passRate-b.passRate);
+    return `<div class="tbl-wrap"><div class="tbl-scroll"><table>
+      <thead><tr><th>Course</th><th>Description</th><th class="r">Enrolled</th><th class="r">Passed</th><th class="r">Failed</th><th class="r">Completed</th><th class="r">Pass Rate</th><th class="r">Fail Rate</th><th>Risk</th><th>Pass Bar</th></tr></thead>
+      <tbody>${td.map(g=>`<tr>
+        <td class="mono">${esc(g.key)}</td>
+        <td style="font-size:11px;text-transform:uppercase;color:var(--muted)">${esc(DESC[g.key]||'')}</td>
+        <td class="r">${fmt(g.n)}</td>
+        <td class="r" style="color:var(--pass)">${fmt(g.passed)}</td>
+        <td class="r" style="color:var(--fail)">${fmt(g.failed)}</td>
+        <td class="r">${fmt(g.completed)}</td>
+        <td class="r" style="color:${riskColor(g.passRate)};font-weight:600">${pct(g.passRate)}</td>
+        <td class="r">${pct(g.failRate)}</td>
+        <td>${riskBadge(g.passRate)}</td>
+        <td>${passBarHTML(g.passRate)}</td>
+      </tr>`).join('')}</tbody>
+    </table></div></div>`;
+  });
+}
+
+// ══ COURSES ════════════════════════════════════════════════════
+function renderCourses(){
+  const cg=grpCalc(RAW,r=>r['Course']).filter(g=>g.completed>=10);
+  document.getElementById('course-desc').textContent=`${cg.length} courses with ≥10 completions. Risk thresholds: Critical <60% · Watch 60–70% · Good ≥70%.`;
+  const top=[...cg].sort((a,b)=>b.passRate-a.passRate).slice(0,15);
+  const bot=[...cg].sort((a,b)=>a.passRate-b.passRate).slice(0,15);
+
+  destroyChart('ch-course-top');
+  new Chart(document.getElementById('ch-course-top').getContext('2d'),{
+    type:'bar',indexAxis:'y',
+    data:{labels:top.map(g=>g.key),datasets:[{data:top.map(g=>+g.passRate.toFixed(1)),backgroundColor:'rgba(63,185,80,.75)',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}%`}}},
+      scales:{x:{min:0,max:105,grid:{color:GRID_COLOR},ticks:{callback:v=>v+'%'}},y:{grid:{display:false},ticks:{font:{size:11}}}}}
+  });
+  destroyChart('ch-course-bot');
+  new Chart(document.getElementById('ch-course-bot').getContext('2d'),{
+    type:'bar',indexAxis:'y',
+    data:{labels:bot.map(g=>g.key),datasets:[{data:bot.map(g=>+g.passRate.toFixed(1)),backgroundColor:'rgba(248,81,73,.75)',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}%`}}},
+      scales:{x:{min:0,max:105,grid:{color:GRID_COLOR},ticks:{callback:v=>v+'%'}},y:{grid:{display:false},ticks:{font:{size:11}}}}}
+  });
+
+  // Per-semester top/bottom tabs
+  mkTabs('course-sem-tabs','course-sem-panels',SEM_LABELS,(si)=>{
+    const rows=BY_SEM[SEM_KEYS[si]]||[];
+    const sd=grpCalc(rows,r=>r['Course']).filter(g=>g.completed>=5);
+    const t=[...sd].sort((a,b)=>b.passRate-a.passRate).slice(0,10);
+    const b=[...sd].sort((a,b)=>a.passRate-b.passRate).slice(0,10);
+    const tid=`ch-cs-top-${si}`,bid=`ch-cs-bot-${si}`;
+    setTimeout(()=>{
+      destroyChart(tid);
+      new Chart(document.getElementById(tid).getContext('2d'),{type:'bar',indexAxis:'y',data:{labels:t.map(g=>g.key),datasets:[{data:t.map(g=>+g.passRate.toFixed(1)),backgroundColor:'rgba(63,185,80,.75)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}%`}}},scales:{x:{min:0,max:105,grid:{color:GRID_COLOR},ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}}}});
+      destroyChart(bid);
+      new Chart(document.getElementById(bid).getContext('2d'),{type:'bar',indexAxis:'y',data:{labels:b.map(g=>g.key),datasets:[{data:b.map(g=>+g.passRate.toFixed(1)),backgroundColor:'rgba(248,81,73,.75)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}%`}}},scales:{x:{min:0,max:105,grid:{color:GRID_COLOR},ticks:{callback:v=>v+'%'}},y:{grid:{display:false}}}}});
+    },50);
+    return `<div class="g2"><div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--pass)"></span>TOP 10 · ${SEM_LABELS[si]}</div><div class="chart-wrap" style="height:280px;"><canvas id="${tid}"></canvas></div></div><div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--fail)"></span>BOTTOM 10 · ${SEM_LABELS[si]}</div><div class="chart-wrap" style="height:280px;"><canvas id="${bid}"></canvas></div></div></div>`;
+  });
+
+  // Full table tabs (with Description column)
+  const COURSE_DESC={};
+  RAW.forEach(r=>{if(r['Course']&&r['Description'])COURSE_DESC[r['Course']]=r['Description'];});
+  const tblLabels=['All Year',...SEM_LABELS];
+  mkTabs('course-tbl-tabs','course-tbl-panels',tblLabels,(si)=>{
+    const rows=si===0?RAW:(BY_SEM[SEM_KEYS[si-1]]||[]);
+    const td=grpCalc(rows,r=>r['Course']).filter(g=>g.completed>=1).sort((a,b)=>a.passRate-b.passRate);
+    return `<div class="tbl-wrap"><div class="tbl-scroll"><table>
+      <thead><tr><th>Course</th><th>Description</th><th class="r">Enrolled</th><th class="r">Passed</th><th class="r">Failed</th><th class="r">Pass Rate</th><th class="r">Fail Rate</th><th>Risk</th><th>Pass Bar</th></tr></thead>
+      <tbody>${td.map(g=>`<tr>
+        <td class="mono">${esc(g.key)}</td>
+        <td style="font-size:11px;text-transform:uppercase;color:var(--muted);max-width:220px">${esc(COURSE_DESC[g.key]||'')}</td>
+        <td class="r">${fmt(g.n)}</td>
+        <td class="r" style="color:var(--pass)">${fmt(g.passed)}</td>
+        <td class="r" style="color:var(--fail)">${fmt(g.failed)}</td>
+        <td class="r" style="color:${riskColor(g.passRate)};font-weight:600">${pct(g.passRate)}</td>
+        <td class="r">${pct(g.failRate)}</td>
+        <td>${riskBadge(g.passRate)}</td>
+        <td>${passBarHTML(g.passRate)}</td>
+      </tr>`).join('')}</tbody>
+    </table></div></div>`;
+  });
+}
+
+// ══ FACULTY ════════════════════════════════════════════════════
+function renderFaculty(){
+  const fg=grpCalc(RAW,r=>r['Faculty']).filter(g=>g.n>=10);
+  document.getElementById('faculty-desc').textContent=`${fg.length} faculty with ≥10 completed student records across AY 2024–25 (Lastname, Firstname).`;
+  const top=[...fg].sort((a,b)=>b.passRate-a.passRate).slice(0,15);
+  const bot=[...fg].sort((a,b)=>a.passRate-b.passRate).slice(0,15);
+
+  destroyChart('ch-fac-top');
+  new Chart(document.getElementById('ch-fac-top').getContext('2d'),{
+    type:'bar',indexAxis:'y',
+    data:{labels:top.map(g=>g.key),datasets:[{data:top.map(g=>+g.passRate.toFixed(1)),backgroundColor:'rgba(63,185,80,.75)',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}%`}}},
+      scales:{x:{min:0,max:105,grid:{color:GRID_COLOR},ticks:{callback:v=>v+'%'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}
+  });
+  destroyChart('ch-fac-bot');
+  new Chart(document.getElementById('ch-fac-bot').getContext('2d'),{
+    type:'bar',indexAxis:'y',
+    data:{labels:bot.map(g=>g.key),datasets:[{data:bot.map(g=>+g.passRate.toFixed(1)),backgroundColor:'rgba(248,81,73,.75)',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}%`}}},
+      scales:{x:{min:0,max:105,grid:{color:GRID_COLOR},ticks:{callback:v=>v+'%'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}
+  });
+
+  // Per-semester top/bottom tabs
+  mkTabs('fac-sem-tabs','fac-sem-panels',SEM_LABELS,(si)=>{
+    const rows=BY_SEM[SEM_KEYS[si]]||[];
+    const sd=grpCalc(rows,r=>r['Faculty']).filter(g=>g.n>=5);
+    const t=[...sd].sort((a,b)=>b.passRate-a.passRate).slice(0,10);
+    const b=[...sd].sort((a,b)=>a.passRate-b.passRate).slice(0,10);
+    const tid=`ch-ft-${si}`,bid=`ch-fb-${si}`;
+    setTimeout(()=>{
+      destroyChart(tid);
+      new Chart(document.getElementById(tid).getContext('2d'),{type:'bar',indexAxis:'y',data:{labels:t.map(g=>g.key),datasets:[{data:t.map(g=>+g.passRate.toFixed(1)),backgroundColor:'rgba(63,185,80,.75)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}%`}}},scales:{x:{min:0,max:105,grid:{color:GRID_COLOR},ticks:{callback:v=>v+'%'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+      destroyChart(bid);
+      new Chart(document.getElementById(bid).getContext('2d'),{type:'bar',indexAxis:'y',data:{labels:b.map(g=>g.key),datasets:[{data:b.map(g=>+g.passRate.toFixed(1)),backgroundColor:'rgba(248,81,73,.75)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}%`}}},scales:{x:{min:0,max:105,grid:{color:GRID_COLOR},ticks:{callback:v=>v+'%'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+    },50);
+    return `<div class="g2"><div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--pass)"></span>TOP 10 FACULTY · ${SEM_LABELS[si]}</div><div class="chart-wrap" style="height:300px;"><canvas id="${tid}"></canvas></div></div><div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--fail)"></span>BOTTOM 10 FACULTY · ${SEM_LABELS[si]}</div><div class="chart-wrap" style="height:300px;"><canvas id="${bid}"></canvas></div></div></div>`;
+  });
+
+  // Full table
+  const tblLabels=['All Year',...SEM_LABELS];
+  mkTabs('fac-tbl-tabs','fac-tbl-panels',tblLabels,(si)=>{
+    const rows=si===0?RAW:(BY_SEM[SEM_KEYS[si-1]]||[]);
+    const td=grpCalc(rows,r=>r['Faculty']).filter(g=>g.n>=1).sort((a,b)=>a.passRate-b.passRate);
+    return `<div class="tbl-wrap"><div class="tbl-scroll"><table>
+      <thead><tr><th>Faculty (Lastname, Firstname)</th><th class="r">Students</th><th class="r">Passed</th><th class="r">Failed</th><th class="r">Incomplete</th><th class="r">Completion</th><th class="r">Pass Rate</th><th class="r">Fail Rate</th><th>Status</th></tr></thead>
+      <tbody>${td.map(g=>`<tr>
+        <td style="font-weight:600">${esc(g.key)}</td>
+        <td class="r">${fmt(g.n)}</td>
+        <td class="r" style="color:var(--pass)">${fmt(g.passed)}</td>
+        <td class="r" style="color:var(--fail)">${fmt(g.failed)}</td>
+        <td class="r">${fmt(g.incomplete)}</td>
+        <td class="r">${pct(g.compRate)}</td>
+        <td class="r" style="color:${riskColor(g.passRate)};font-weight:600">${pct(g.passRate)}</td>
+        <td class="r">${pct(g.failRate)}</td>
+        <td>${riskBadge(g.passRate)}</td>
+      </tr>`).join('')}</tbody>
+    </table></div></div>`;
+  });
+}
+
+// ══ PROGRAMS ══════════════════════════════════════════════════
+function renderPrograms(){
+  const pg=grpCalc(RAW,r=>r['Program Code']).filter(g=>g.completed>0).sort((a,b)=>a.passRate-b.passRate);
+  const all=calc(RAW);
+  const crit=pg.filter(g=>g.passRate<60&&g.completed>=10).length;
+  const lowest=[...pg].filter(g=>g.completed>=10).sort((a,b)=>a.passRate-b.passRate)[0]||{};
+  const highest=[...pg].filter(g=>g.completed>=10).sort((a,b)=>b.passRate-a.passRate)[0]||{};
+
+  document.getElementById('prog-kpis').innerHTML=`
+    <div class="kpi-card gold"><div class="kpi-label">Overall Pass Rate</div><div class="kpi-value" style="color:var(--warn)">${pct(all.passRate)}</div><div class="kpi-sub">${fmt(all.passed)} of ${fmt(all.completed)} completed</div></div>
+    <div class="kpi-card blue"><div class="kpi-label">Total Programs</div><div class="kpi-value">${pg.length}</div><div class="kpi-sub">Distinct program codes</div></div>
+    <div class="kpi-card blue"><div class="kpi-label">Total Enrolled</div><div class="kpi-value">${fmt(all.n)}</div><div class="kpi-sub">Student-course records</div></div>
+    <div class="kpi-card gold"><div class="kpi-label">Critical Programs</div><div class="kpi-value" style="color:var(--warn)">${crit}</div><div class="kpi-sub">Below 60% (≥10 completed)</div></div>
+    <div class="kpi-card red"><div class="kpi-label">Lowest Pass Rate</div><div class="kpi-value" style="color:var(--fail);font-size:22px">${pct(lowest.passRate||0)}</div><div class="kpi-sub">${esc(lowest.key||'')}</div></div>
+    <div class="kpi-card green"><div class="kpi-label">Highest Pass Rate</div><div class="kpi-value" style="color:var(--pass);font-size:22px">${pct(highest.passRate||0)}</div><div class="kpi-sub">${esc(highest.key||'')}</div></div>`;
+
+  destroyChart('ch-prog-bar');
+  new Chart(document.getElementById('ch-prog-bar').getContext('2d'),{
+    type:'bar',indexAxis:'y',
+    data:{labels:pg.map(g=>g.key),datasets:[{data:pg.map(g=>+g.passRate.toFixed(1)),backgroundColor:pg.map(g=>barColor(g.passRate)),borderRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}%`}}},
+      scales:{x:{min:0,max:105,grid:{color:GRID_COLOR},ticks:{callback:v=>v+'%'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}
+  });
+
+  destroyChart('ch-prog-enroll');
+  new Chart(document.getElementById('ch-prog-enroll').getContext('2d'),{
+    type:'bar',indexAxis:'y',
+    data:{labels:pg.map(g=>g.key),datasets:[
+      {label:'Enrolled',data:pg.map(g=>g.n),backgroundColor:'rgba(88,166,255,.35)',borderRadius:3},
+      {label:'Passed',  data:pg.map(g=>g.passed),backgroundColor:'rgba(210,168,20,.65)',borderRadius:3},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10}}},
+      scales:{x:{grid:{color:GRID_COLOR}},y:{grid:{display:false},ticks:{font:{size:10}}}}}
+  });
+
+  // Semester comparison (top 15 by enrollment)
+  const top15=grpCalc(RAW,r=>r['Program Code']).filter(g=>g.completed>0).sort((a,b)=>b.n-a.n).slice(0,15);
+  const semByProg=SEM_KEYS.map(k=>grpCalc(BY_SEM[k]||[],r=>r['Program Code']));
+  destroyChart('ch-prog-sem');
+  new Chart(document.getElementById('ch-prog-sem').getContext('2d'),{
+    type:'bar',
+    data:{labels:top15.map(g=>g.key),datasets:SEM_KEYS.map((k,i)=>({
+      label:SEM_LABELS[i],
+      data:top15.map(g=>{const s=semByProg[i].find(d=>d.key===g.key);return s&&s.completed>0?+s.passRate.toFixed(1):null;}),
+      backgroundColor:semColor(i),borderRadius:3
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10}}},
+      scales:{y:{min:0,max:105,ticks:{callback:v=>v+'%'},grid:{color:GRID_COLOR}},x:{grid:{display:false}}}}
+  });
+
+  // Per-semester bar tabs
+  mkTabs('prog-sem-tabs','prog-sem-panels',SEM_LABELS,(si)=>{
+    const rows=BY_SEM[SEM_KEYS[si]]||[];
+    const sd=grpCalc(rows,r=>r['Program Code']).filter(g=>g.completed>0).sort((a,b)=>a.passRate-b.passRate);
+    const cid=`ch-ps-${si}`;
+    setTimeout(()=>{
+      destroyChart(cid);
+      new Chart(document.getElementById(cid).getContext('2d'),{
+        type:'bar',indexAxis:'y',
+        data:{labels:sd.map(g=>g.key),datasets:[{data:sd.map(g=>+g.passRate.toFixed(1)),backgroundColor:sd.map(g=>barColor(g.passRate)),borderRadius:3}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}%`}}},
+          scales:{x:{min:0,max:105,grid:{color:GRID_COLOR},ticks:{callback:v=>v+'%'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}
+      });
+    },50);
+    return `<div class="chart-wrap" style="height:${Math.max(280,sd.length*26)}px;"><canvas id="${cid}"></canvas></div>`;
+  });
+
+  // Full table
+  const tblLabels=['All Year',...SEM_LABELS];
+  mkTabs('prog-tbl-tabs','prog-tbl-panels',tblLabels,(si)=>{
+    const rows=si===0?RAW:(BY_SEM[SEM_KEYS[si-1]]||[]);
+    const td=grpCalc(rows,r=>r['Program Code']).filter(g=>g.completed>0).sort((a,b)=>a.passRate-b.passRate);
+    return `<div class="tbl-wrap"><div class="tbl-scroll"><table>
+      <thead><tr><th>Code</th><th>Program Name</th><th class="r">Enrolled</th><th class="r">Passed</th><th class="r">Failed</th><th class="r">Completed</th><th class="r">Pass Rate</th><th class="r">Fail Rate</th><th>Risk</th><th>Pass Bar</th></tr></thead>
+      <tbody>${td.map(g=>`<tr>
+        <td class="mono">${esc(g.key)}</td>
+        <td style="font-size:11px;color:var(--muted)">${esc(PROG_NAMES[g.key]||g.key)}</td>
+        <td class="r">${fmt(g.n)}</td>
+        <td class="r" style="color:var(--pass)">${fmt(g.passed)}</td>
+        <td class="r" style="color:var(--fail)">${fmt(g.failed)}</td>
+        <td class="r">${fmt(g.completed)}</td>
+        <td class="r" style="color:${riskColor(g.passRate)};font-weight:600">${pct(g.passRate)}</td>
+        <td class="r">${pct(g.failRate)}</td>
+        <td>${riskBadge(g.passRate)}</td>
+        <td>${passBarHTML(g.passRate)}</td>
+      </tr>`).join('')}</tbody>
+    </table></div></div>`;
+  });
+}
+
+// ══ GENDER ════════════════════════════════════════════════════
+function renderGender(){
+  const gg=grpCalc(RAW,r=>r['Gender']).filter(g=>g.key==='F'||g.key==='M');
+  const gF=gg.find(g=>g.key==='F')||{n:0,passed:0,failed:0,completed:0,passRate:0,failRate:0};
+  const gM=gg.find(g=>g.key==='M')||{n:0,passed:0,failed:0,completed:0,passRate:0,failRate:0};
+  const all=calc(RAW);
+  const gap=Math.abs(gF.passRate-gM.passRate);
+  const higher=gF.passRate>=gM.passRate?'Female':'Male';
+
+  document.getElementById('gender-kpis').innerHTML=`
+    <div class="kpi-card blue"><div class="kpi-label">Total Enrolled</div><div class="kpi-value">${fmt(all.n)}</div><div class="kpi-sub">All genders, all semesters</div></div>
+    <div class="kpi-card green"><div class="kpi-label">Female Pass Rate</div><div class="kpi-value" style="color:var(--pass)">${pct(gF.passRate)}</div><div class="kpi-sub">${fmt(gF.n)} enrolled · ${fmt(gF.passed)} passed</div></div>
+    <div class="kpi-card blue"><div class="kpi-label">Male Pass Rate</div><div class="kpi-value" style="color:var(--accent)">${pct(gM.passRate)}</div><div class="kpi-sub">${fmt(gM.n)} enrolled · ${fmt(gM.passed)} passed</div></div>
+    <div class="kpi-card gold"><div class="kpi-label">Gender Gap</div><div class="kpi-value" style="color:var(--warn)">${gap.toFixed(1)}pp</div><div class="kpi-sub">${higher} students outperform</div></div>
+    <div class="kpi-card red"><div class="kpi-label">Female Failed</div><div class="kpi-value" style="color:var(--fail)">${fmt(gF.failed)}</div><div class="kpi-sub">${pct(gF.failRate)} fail rate</div></div>
+    <div class="kpi-card red"><div class="kpi-label">Male Failed</div><div class="kpi-value" style="color:var(--fail)">${fmt(gM.failed)}</div><div class="kpi-sub">${pct(gM.failRate)} fail rate</div></div>`;
+
+  // Overall bar
+  destroyChart('ch-gender-bar');
+  new Chart(document.getElementById('ch-gender-bar').getContext('2d'),{
+    type:'bar',
+    data:{labels:['Female','Male'],datasets:[
+      {label:'Pass Rate',data:[+gF.passRate.toFixed(1),+gM.passRate.toFixed(1)],backgroundColor:['rgba(63,185,80,.6)','rgba(88,166,255,.6)'],borderColor:['#3fb950','#58a6ff'],borderWidth:2,borderRadius:6},
+      {label:'Fail Rate',data:[+gF.failRate.toFixed(1),+gM.failRate.toFixed(1)],backgroundColor:['rgba(248,81,73,.4)','rgba(248,81,73,.3)'],borderColor:['#f85149','#f85149'],borderWidth:1,borderRadius:6},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10}}},
+      scales:{x:{grid:{display:false},border:{color:GRID_COLOR}},y:{min:0,max:100,ticks:{callback:v=>v+'%'},grid:{color:GRID_COLOR}}}}
+  });
+
+  // Semester trend lines
+  const semFData=SEM_KEYS.map(k=>{const g=grpCalc(BY_SEM[k]||[],r=>r['Gender']).find(g=>g.key==='F');return g?+g.passRate.toFixed(1):null;});
+  const semMData=SEM_KEYS.map(k=>{const g=grpCalc(BY_SEM[k]||[],r=>r['Gender']).find(g=>g.key==='M');return g?+g.passRate.toFixed(1):null;});
+  destroyChart('ch-gender-trend');
+  new Chart(document.getElementById('ch-gender-trend').getContext('2d'),{
+    type:'line',
+    data:{labels:SEM_LABELS,datasets:[
+      {label:'Female',data:semFData,borderColor:'#3fb950',backgroundColor:'#3fb95022',borderWidth:2.5,pointRadius:6,pointBorderColor:'#161b22',pointBorderWidth:2,pointBackgroundColor:'#3fb950',fill:false,tension:.3},
+      {label:'Male',  data:semMData,borderColor:'#58a6ff',backgroundColor:'#58a6ff22',borderWidth:2.5,pointRadius:6,pointBorderColor:'#161b22',pointBorderWidth:2,pointBackgroundColor:'#58a6ff',fill:false,tension:.3},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10}}},
+      scales:{y:{min:50,max:100,ticks:{callback:v=>v+'%'},grid:{color:GRID_COLOR}},x:{grid:{color:GRID_COLOR}}}}
+  });
+
+  // Enrolled vs Passed grouped
+  destroyChart('ch-gender-enroll');
+  new Chart(document.getElementById('ch-gender-enroll').getContext('2d'),{
+    type:'bar',
+    data:{labels:['Female','Male'],datasets:[
+      {label:'Enrolled',data:[gF.n,gM.n],backgroundColor:'rgba(88,166,255,.25)',borderColor:'#58a6ff',borderWidth:1,borderRadius:3},
+      {label:'Passed',  data:[gF.passed,gM.passed],backgroundColor:['rgba(210,168,20,.7)','rgba(210,168,20,.6)'],borderWidth:0,borderRadius:3},
+      {label:'Failed',  data:[gF.failed,gM.failed],backgroundColor:'rgba(248,81,73,.3)',borderWidth:0,borderRadius:3},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10}}},
+      scales:{x:{grid:{display:false}},y:{grid:{color:GRID_COLOR}}}}
+  });
+
+  // Full table
+  const tblLabels=['All Year',...SEM_LABELS];
+  mkTabs('gender-tbl-tabs','gender-tbl-panels',tblLabels,(si)=>{
+    const rows=si===0?RAW:(BY_SEM[SEM_KEYS[si-1]]||[]);
+    const td=grpCalc(rows,r=>r['Gender']).filter(g=>g.key==='F'||g.key==='M').sort((a,b)=>a.key.localeCompare(b.key));
+    const genderLabel=g=>g.key==='F'?'<span style="color:#f687b3">♀ Female</span>':'<span style="color:#58a6ff">♂ Male</span>';
+    return `<div class="tbl-wrap"><table>
+      <thead><tr><th>Gender</th><th class="r">Enrolled</th><th class="r">Passed</th><th class="r">Failed</th><th class="r">Incomplete</th><th class="r">Completed</th><th class="r">Pass Rate</th><th class="r">Fail Rate</th><th>Pass Bar</th></tr></thead>
+      <tbody>${td.map(g=>`<tr>
+        <td>${genderLabel(g)}</td>
+        <td class="r">${fmt(g.n)}</td>
+        <td class="r" style="color:var(--pass)">${fmt(g.passed)}</td>
+        <td class="r" style="color:var(--fail)">${fmt(g.failed)}</td>
+        <td class="r">${fmt(g.incomplete)}</td>
+        <td class="r">${fmt(g.completed)}</td>
+        <td class="r" style="font-weight:600;color:${riskColor(g.passRate)}">${pct(g.passRate)}</td>
+        <td class="r">${pct(g.failRate)}</td>
+        <td>${passBarHTML(g.passRate)}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>`;
+  });
+}
+
+// ══ HEATMAP ═══════════════════════════════════════════════════
+function renderHeatmap(){
+  const depts = grpCalc(RAW,r=>r['Department Code']).sort((a,b)=>a.passRate-b.passRate);
+  const semByDept = SEM_KEYS.map(k=>grpCalc(BY_SEM[k]||[],r=>r['Department Code']));
+
+  function hmCell(rate,completed){
+    if(completed<1) return '<span class="hm-cell hm-na">—</span>';
+    const cls=rate<60?'hm-critical':rate<70?'hm-watch':'hm-good';
+    return `<span class="hm-cell ${cls}">${pct(rate)}</span>`;
+  }
+
+  let html=`<div class="tbl-wrap"><table class="heatmap-table">
+    <thead><tr>
+      <th>Code</th><th>Department</th>
+      ${SEM_LABELS.map(l=>`<th>${l}</th>`).join('')}
+      <th>All Year</th><th>Risk</th>
+    </tr></thead><tbody>`;
+  depts.forEach(g=>{
+    html+=`<tr>
+      <td class="mono">${esc(g.key)}</td>
+      <td style="font-weight:600;font-size:12px">${esc(DEPT_NAMES[g.key]||g.key)}</td>
+      ${SEM_KEYS.map((_,si)=>{
+        const sd=semByDept[si].find(d=>d.key===g.key);
+        return`<td>${hmCell(sd?sd.passRate:0,sd?sd.completed:0)}</td>`;
+      }).join('')}
+      <td>${hmCell(g.passRate,g.completed)}</td>
+      <td>${riskBadge(g.passRate)}</td>
+    </tr>`;
+  });
+  html+=`</tbody></table></div>`;
+  document.getElementById('heatmap-content').innerHTML=html;
+
+  // Course risk summary — courses by department with risk badges
+  const cg=grpCalc(RAW,r=>r['Course']).filter(g=>g.completed>=10).sort((a,b)=>a.passRate-b.passRate);
+  const critC=cg.filter(g=>g.passRate<60);
+  const watchC=cg.filter(g=>g.passRate>=60&&g.passRate<70);
+  let crHtml=`<p style="font-size:12px;color:var(--muted);margin-bottom:14px;">
+    <span style="color:var(--fail);font-weight:600">${critC.length} Critical</span> courses below 60% · 
+    <span style="color:var(--warn);font-weight:600">${watchC.length} Watch</span> courses 60–70% · 
+    <span style="color:var(--pass);font-weight:600">${cg.filter(g=>g.passRate>=70).length} Good</span> courses at or above 70%
+  </p>`;
+  crHtml+=`<div class="tbl-wrap"><div class="tbl-scroll"><table>
+    <thead><tr><th>Course</th><th class="r">Enrolled</th><th class="r">Passed</th><th class="r">Failed</th><th class="r">Pass Rate</th><th>Risk</th><th>Pass Bar</th></tr></thead>
+    <tbody>${critC.concat(watchC).slice(0,20).map(g=>`<tr>
+      <td class="mono">${esc(g.key)}</td>
+      <td class="r">${fmt(g.n)}</td>
+      <td class="r" style="color:var(--pass)">${fmt(g.passed)}</td>
+      <td class="r" style="color:var(--fail)">${fmt(g.failed)}</td>
+      <td class="r" style="color:${riskColor(g.passRate)};font-weight:600">${pct(g.passRate)}</td>
+      <td>${riskBadge(g.passRate)}</td>
+      <td>${passBarHTML(g.passRate)}</td>
+    </tr>`).join('')}</tbody>
+  </table></div></div>`;
+  document.getElementById('course-risk-content').innerHTML=crHtml;
+}
+
+// ══ INSIGHTS ══════════════════════════════════════════════════
+function renderInsights(){
+  const m=calc(RAW);
+  const dg=grpCalc(RAW,r=>r['Department Code']).sort((a,b)=>b.passRate-a.passRate);
+  const devAll=calc(RAW.filter(r=>(r['Developmental Course']||'').trim()==='Yes'));
+  const stdAll=calc(RAW.filter(r=>(r['Developmental Course']||'').trim()==='No'));
+  const gF=calc(RAW.filter(r=>r['Gender']==='F'));
+  const gM=calc(RAW.filter(r=>r['Gender']==='M'));
+  const cg=grpCalc(RAW,r=>r['Course']).filter(g=>g.completed>=10);
+  const critCourses=cg.filter(g=>g.passRate<60).length;
+  const semData=SEM_KEYS.map(k=>({lbl:sl(k),...calc(BY_SEM[k]||[])}));
+  const bestSem=semData.length?[...semData].sort((a,b)=>b.passRate-a.passRate)[0]:{lbl:'—',passRate:0};
+  const bestDept=dg[0]||{key:'—',passRate:0,n:0};
+  const worstDept=dg[dg.length-1]||{key:'—',passRate:0,n:0};
+
+  const cards=[
+    {num:pct(m.compRate),  title:'Completion Rate',     body:`<strong>${fmt(m.completed)}</strong> of <strong>${fmt(m.n)}</strong> student-course records reached a graded outcome across all semesters.`},
+    {num:pct(m.passRate),  title:'Overall Pass Rate',   body:`<strong>${fmt(m.passed)}</strong> passed · <strong>${fmt(m.failed)}</strong> failed among completed records. Fail rate: <strong>${pct(m.failRate)}</strong>.`},
+    {num:fmt(m.students),  title:'Distinct Students',   body:`<strong>${fmt(m.courses)}</strong> unique courses taught by <strong>${fmt(m.faculty)}</strong> faculty across <strong>${SEM_KEYS.length}</strong> semester(s).`},
+    {num:pct(devAll.passRate),title:'Dev Course Pass Rate',body:`Developmental courses pass at <strong>${pct(devAll.passRate)}</strong> vs <strong>${pct(stdAll.passRate)}</strong> for standard — a <strong>${(stdAll.passRate-devAll.passRate).toFixed(1)}pp</strong> gap.`},
+    {num:pct(bestDept.passRate),title:`Best Dept: ${DEPT_NAMES[bestDept.key]||bestDept.key}`,body:`<strong>${esc(bestDept.key)}</strong> leads all departments with <strong>${pct(bestDept.passRate)}</strong> pass rate across <strong>${fmt(bestDept.n)}</strong> records.`},
+    {num:`${critCourses}`,  title:'Critical Courses',    body:`<strong>${critCourses}</strong> course(s) with ≥10 completions have pass rates below 60%, flagged as Critical risk requiring intervention.`},
+    {num:pct(gF.passRate), title:'Female Pass Rate',    body:`Female students: <strong>${pct(gF.passRate)}</strong> vs Male: <strong>${pct(gM.passRate)}</strong> — a gender gap of <strong>${Math.abs(gF.passRate-gM.passRate).toFixed(1)}pp</strong>.`},
+    {num:pct(bestSem.passRate),title:`Best Semester: ${bestSem.lbl}`,body:`<strong>${bestSem.lbl}</strong> achieved the highest pass rate at <strong>${pct(bestSem.passRate)}</strong> among all semesters in the dataset.`},
+    {num:pct(worstDept.passRate),title:`Lowest Dept: ${DEPT_NAMES[worstDept.key]||worstDept.key}`,body:`<strong>${esc(worstDept.key)}</strong> has the lowest pass rate at <strong>${pct(worstDept.passRate)}</strong>. Targeted support is recommended.`},
+  ];
+
+  document.getElementById('insights-content').innerHTML=`<div class="insights-grid">${cards.map(c=>`
+    <div class="insight-card">
+      <div class="insight-num">${c.num}</div>
+      <div class="insight-title">${c.title}</div>
+      <div class="insight-body">${c.body}</div>
+    </div>`).join('')}</div>`;
+}
+
+// ══ ALERTS ════════════════════════════════════════════════════
+function renderAlerts(){
+  const m=calc(RAW);
+  const dg=grpCalc(RAW,r=>r['Department Code']).sort((a,b)=>a.passRate-b.passRate);
+  const devAll=calc(RAW.filter(r=>(r['Developmental Course']||'').trim()==='Yes'));
+  const stdAll=calc(RAW.filter(r=>(r['Developmental Course']||'').trim()==='No'));
+  const cg=grpCalc(RAW,r=>r['Course']).filter(g=>g.completed>=10);
+  const worst=([...cg].sort((a,b)=>a.passRate-b.passRate)[0])||{};
+  const worstDept=(dg.sort((a,b)=>a.passRate-b.passRate)[0])||{};
+  const gF=calc(RAW.filter(r=>r['Gender']==='F'));
+  const gM=calc(RAW.filter(r=>r['Gender']==='M'));
+
+  const cards=[
+    {cls:'critical',title:'⚠ Developmental Course Crisis',body:`<strong>${pct(devAll.passRate)}</strong> overall pass rate for developmental courses — <strong>${fmt(devAll.failed)}</strong> students failed. This represents a significant equity and readiness gap requiring urgent intervention.`},
+    {cls:'warning', title:'⚠ Department Watch',body:`<strong>${esc(DEPT_NAMES[worstDept.key]||worstDept.key||'')}</strong> has the lowest pass rate at <strong>${pct(worstDept.passRate||0)}</strong>. Immediate review and support allocation recommended.`},
+    {cls:'warning', title:'⚠ High-Risk Course',body:`Course <strong>${esc(worst.key||'')}</strong> has a pass rate of <strong>${pct(worst.passRate||0)}</strong> — the lowest among qualified courses. Targeted pedagogical review recommended.`},
+    {cls:'info',    title:'✦ Developmental Gap',body:`Standard courses outperform developmental courses by <strong>${(stdAll.passRate-devAll.passRate).toFixed(1)}pp</strong> (${pct(stdAll.passRate)} vs ${pct(devAll.passRate)}). Bridge programs and enhanced tutoring may reduce this gap.`},
+    {cls:'info',    title:'✦ Gender Parity',body:`Female students outperform male students by <strong>${Math.abs(gF.passRate-gM.passRate).toFixed(1)}pp</strong> (F: ${pct(gF.passRate)} vs M: ${pct(gM.passRate)}). Both groups show strong completion rates above 98%.`},
+    {cls:'info',    title:'✦ Strong Completion',body:`Overall completion rate of <strong>${pct(m.compRate)}</strong> indicates strong academic engagement. <strong>${fmt(m.completed)}</strong> of ${fmt(m.n)} enrolled student-course records reached a graded outcome.`},
+  ];
+
+  document.getElementById('alerts-content').innerHTML=cards.map(c=>
+    `<div class="alert-card ${c.cls}"><div class="alert-title">${c.title}</div><div class="alert-body">${c.body}</div></div>`
+  ).join('');
+}
+
+
+// ══ RECOMMENDATIONS ═══════════════════════════════════════════
+function renderRecommendations(){
+  const m = calc(RAW);
+  const devRows = RAW.filter(r=>(r['Developmental Course']||'').trim()==='Yes');
+  const devAll = calc(devRows);
+  const stdAll = calc(RAW.filter(r=>(r['Developmental Course']||'').trim()==='No'));
+  const courseGroups = grpCalc(RAW,r=>r['Course']).filter(g=>g.completed>=10).sort((a,b)=>a.passRate-b.passRate);
+  const deptGroups = grpCalc(RAW,r=>r['Department Code']).filter(g=>g.completed>=5).sort((a,b)=>a.passRate-b.passRate);
+  const progGroups = grpCalc(RAW,r=>r['Program Code']).filter(g=>g.completed>=10).sort((a,b)=>a.passRate-b.passRate);
+  const worstCourse = courseGroups[0] || {key:'—',passRate:0,failed:0,n:0};
+  const worstDept = deptGroups[0] || {key:'—',passRate:0,failed:0,n:0};
+  const worstProg = progGroups[0] || {key:'—',passRate:0,failed:0,n:0};
+  const criticalCourses = courseGroups.filter(g=>g.passRate<60).slice(0,5);
+  const devGap = stdAll.completed && devAll.completed ? (stdAll.passRate - devAll.passRate) : 0;
+
+  const recs = [
+    {
+      tag:'Priority 1', cls:'rec-tag-red', color:'var(--fail)',
+      title:'Launch targeted support for developmental courses',
+      desc:`Developmental courses are passing at <strong>${pct(devAll.passRate)}</strong>${devGap ? `, about <strong>${devGap.toFixed(1)} percentage points</strong> below standard courses` : ''}. Prioritize tutoring, attendance outreach, and early alerts for the highest-enrollment developmental sections.`
+    },
+    {
+      tag:'Course Risk', cls:'rec-tag-amber', color:'var(--warn)',
+      title:`Review lowest-performing course: ${esc(worstCourse.key)}`,
+      desc:`${esc(worstCourse.key)} has a pass rate of <strong>${pct(worstCourse.passRate)}</strong> across <strong>${fmt(worstCourse.n)}</strong> records. Review assessment alignment, prerequisite readiness, and section-level patterns.`
+    },
+    {
+      tag:'Department', cls:'rec-tag-blue', color:'var(--accent)',
+      title:`Allocate support to ${esc(DEPT_NAMES[worstDept.key]||worstDept.key)}`,
+      desc:`This department has the lowest qualified department pass rate at <strong>${pct(worstDept.passRate)}</strong>. Pair faculty consultation with student success interventions for gateway courses.`
+    },
+    {
+      tag:'Program', cls:'rec-tag-purple', color:'var(--inc)',
+      title:`Monitor program code ${esc(worstProg.key)}`,
+      desc:`${esc(PROG_NAMES[worstProg.key]||worstProg.key)} shows a pass rate of <strong>${pct(worstProg.passRate)}</strong> among programs with at least 10 completions. Check whether failures cluster in a few required courses.`
+    },
+    {
+      tag:'Data Practice', cls:'rec-tag-green', color:'var(--pass)',
+      title:'Keep using completion and pass-rate thresholds in monthly reviews',
+      desc:`Overall completion is <strong>${pct(m.compRate)}</strong>. Maintain a recurring dashboard review using the Critical &lt;60%, Watch 60–70%, and Good ≥70% categories to track intervention impact.`
+    }
+  ];
+
+  if(criticalCourses.length){
+    recs.splice(1,0,{
+      tag:'Critical List', cls:'rec-tag-red', color:'var(--fail)',
+      title:'Create action plans for critical courses',
+      desc:`Critical courses with ≥10 completions include <strong>${criticalCourses.map(g=>esc(g.key)+' ('+pct(g.passRate)+')').join(', ')}</strong>. Assign owners and timelines for follow-up.`
+    });
+  }
+
+  document.getElementById('rec-content').innerHTML = `<div class="rec-list">${recs.map((r,i)=>`
+    <div class="rec-item" style="border-left-color:${r.color};">
+      <div class="rec-num">${String(i+1).padStart(2,'0')}</div>
+      <div class="rec-body-wrap">
+        <span class="rec-tag ${r.cls}">${r.tag}</span>
+        <div class="rec-title">${r.title}</div>
+        <div class="rec-desc">${r.desc}</div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+
+// ══ DOWNLOAD PDF REPORT ═══════════════════════════════════════
+function loadPdfExportScript(src, checkFn){
+  return new Promise((resolve, reject)=>{
+    try{ if(checkFn && checkFn()){ resolve(); return; } }catch(e){}
+    const existing = [...document.scripts].find(s=>s.src===src);
+    if(existing){ existing.addEventListener('load', resolve, {once:true}); existing.addEventListener('error', reject, {once:true}); return; }
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('Could not load '+src));
+    document.head.appendChild(s);
+  });
+}
+
+async function ensurePdfExportLibraries(){
+  await loadPdfExportScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', ()=>window.html2canvas);
+  await loadPdfExportScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', ()=>window.jspdf && window.jspdf.jsPDF);
+}
+
+function waitForDashboardCharts(){
+  return new Promise(resolve => setTimeout(resolve, 350));
+}
+
+function visibleReportElements(){
+  const elements = [];
+  const header = document.querySelector('#dash .header');
+  const nav = document.querySelector('#dash .nav');
+  if(header) elements.push(header);
+  if(nav) elements.push(nav);
+  document.querySelectorAll('#dash .section').forEach(sec=>elements.push(sec));
+  return elements;
+}
+
+async function addElementToPdf(pdf, el, opts={}){
+  const margin = opts.margin || 24;
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const usableW = pageW - margin*2;
+  const usableH = pageH - margin*2;
+
+  // Temporarily make sticky elements render in normal flow for clean PDF capture.
+  const oldPosition = el.style.position;
+  if(getComputedStyle(el).position === 'sticky') el.style.position = 'static';
+
+  const canvas = await html2canvas(el, {
+    scale: opts.scale || 2,
+    backgroundColor: '#0d1117',
+    useCORS: true,
+    allowTaint: true,
+    logging: false,
+    windowWidth: Math.max(document.documentElement.scrollWidth, el.scrollWidth, 1440)
+  });
+
+  el.style.position = oldPosition;
+
+  if(!canvas.width || !canvas.height) return;
+
+  const sliceHpx = Math.floor(canvas.width * usableH / usableW);
+  let y = 0;
+  let firstSlice = true;
+
+  while(y < canvas.height){
+    const h = Math.min(sliceHpx, canvas.height - y);
+    const slice = document.createElement('canvas');
+    slice.width = canvas.width;
+    slice.height = h;
+    const ctx = slice.getContext('2d');
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0,0,slice.width,slice.height);
+    ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+
+    const img = slice.toDataURL('image/png');
+    const imgHpt = h * usableW / canvas.width;
+    if(!(opts.isFirstPage && firstSlice && pdf.getNumberOfPages()===1 && opts.pageIsBlank)){
+      pdf.addPage();
+    }
+    pdf.addImage(img, 'PNG', margin, margin, usableW, imgHpt, undefined, 'FAST');
+
+    firstSlice = false;
+    y += h;
+  }
+}
+
+async function dlReport(){
+  if(!RAW || !RAW.length){ setMsg('Upload a workbook first.','err'); return; }
+
+  const oldMsg = document.getElementById('upload-msg')?.textContent || '';
+  const buttons = document.querySelectorAll('.header-actions .btn');
+  buttons.forEach(b=>{ b.disabled=true; b.dataset.oldText=b.textContent; });
+
+  try{
+    setLoad(true, 'Preparing PDF export...');
+    await ensurePdfExportLibraries();
+    await waitForDashboardCharts();
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({orientation:'portrait', unit:'pt', format:'letter', compress:true});
+    const elements = visibleReportElements();
+
+    // Start with a blank first page and fill it with the first captured element.
+    let pageIsBlank = true;
+    for(let i=0;i<elements.length;i++){
+      setLoad(true, `Capturing report section ${i+1} of ${elements.length}...`);
+      await addElementToPdf(pdf, elements[i], {isFirstPage:i===0, pageIsBlank, margin:24, scale:2});
+      pageIsBlank = false;
+    }
+
+    // If the initial blank page survived for any reason, remove it.
+    if(pdf.getNumberOfPages() > 1){
+      const firstPageTextless = true;
+      // The first page is used by addElementToPdf only when pageIsBlank is true.
+      // Because addElementToPdf adds a page before every slice except the first blank-use case,
+      // delete page 1 only if no content was placed there. In normal flow, page 1 is filled.
+    }
+
+    const pageCount = pdf.getNumberOfPages();
+    pdf.setProperties({
+      title: 'CMI Student Completion Dashboard - AY 2024-25',
+      subject: 'Dashboard export with charts',
+      author: 'College of the Marshall Islands',
+      creator: 'CMI Student Completion Dashboard'
+    });
+
+    for(let p=1;p<=pageCount;p++){
+      pdf.setPage(p);
+      pdf.setFontSize(8);
+      pdf.setTextColor(125,133,144);
+      pdf.text(`CMI Student Completion Report - ${new Date().toLocaleDateString()} - Page ${p} of ${pageCount}`, 24, pdf.internal.pageSize.getHeight()-10);
+    }
+
+    const safeDate = new Date().toISOString().slice(0,10);
+    pdf.save(`CMI_Student_Completion_Dashboard_${safeDate}.pdf`);
+    setLoad(false);
+    setMsg('PDF report downloaded.','ok');
+    if(oldMsg && oldMsg !== 'PDF report downloaded.') setTimeout(()=>setMsg(oldMsg,''),3000);
+  }catch(err){
+    console.error(err);
+    setLoad(false);
+    setMsg('PDF export error: '+err.message,'err');
+  }finally{
+    buttons.forEach(b=>{ b.disabled=false; if(b.dataset.oldText) b.textContent=b.dataset.oldText; });
+  }
+}
+
+</script>
+</body>
+</html>
