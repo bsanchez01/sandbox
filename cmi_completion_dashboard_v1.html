@@ -39,7 +39,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 @keyframes spin{to{transform:rotate(360deg);}}
 .load-msg{margin-top:1.2rem;color:var(--muted);font-size:.9rem;}
 /* HEADER */
-.header{background:linear-gradient(135deg,#0d1117 0%,#161b22 50%,#1a2235 100%);padding:28px 48px 24px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+.header{background:linear-gradient(135deg,#0d1117 0%,#161b22 50%,#1a2235 100%);padding:28px 48px 24px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--border);position:relative;overflow:visible;z-index:300;}
 .header::before{content:'';position:absolute;top:-60px;right:-80px;width:320px;height:320px;background:radial-gradient(circle,rgba(88,166,255,.07) 0%,transparent 70%);pointer-events:none;}
 .header-eyebrow{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
 .header-left h1{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(22px,3vw,32px);font-weight:400;color:var(--text);line-height:1.2;}
@@ -50,12 +50,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .ay-input:hover,.ay-input:focus{border-bottom-color:var(--accent);background:rgba(88,166,255,.08);border-radius:3px;}
 .upload-ay{margin-top:1rem;color:var(--muted);font-size:.9rem;display:flex;gap:8px;align-items:center;justify-content:center;}
 .upload-ay input{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 10px;width:110px;font:inherit;font-weight:600;text-align:center;}
-.header-right{text-align:right;font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;}
+.header-right{text-align:right;font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;position:relative;z-index:10000;}
 .badge{display:inline-block;background:var(--accent-bg);border:1px solid rgba(88,166,255,.3);color:var(--accent);padding:4px 14px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:.04em;margin-bottom:6px;}
 .header-actions{display:flex;gap:8px;margin-top:8px;justify-content:flex-end;}
 .btn{padding:7px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;font-weight:500;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;white-space:nowrap;}
 .btn:hover{background:var(--accent);color:#0d1117;border-color:var(--accent);}
 .btn-ghost:hover{background:var(--fail-bg);border-color:var(--fail);color:var(--fail);}
+.export-menu-wrap{position:relative;display:inline-block;z-index:10001;}
+.export-menu{display:none;position:absolute;right:0;top:calc(100% + 6px);min-width:165px;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden;z-index:10002;text-align:left;}
+.export-menu.open{display:block;}
+.export-menu button{display:block;width:100%;padding:10px 14px;background:transparent;border:0;border-bottom:1px solid rgba(48,54,61,.55);color:var(--text);font:600 11px 'DM Sans',sans-serif;text-align:left;cursor:pointer;white-space:nowrap;}
+.export-menu button:last-child{border-bottom:0;}
+.export-menu button:hover{background:var(--accent-bg);color:var(--accent);}
 /* NAV */
 .nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 48px;display:flex;overflow-x:auto;position:sticky;top:0;z-index:100;}
 .nav a{display:block;padding:14px 18px;font-size:13px;font-weight:500;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;}
@@ -236,7 +242,13 @@ td.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);font-
       <div class="badge">EXECUTIVE DASHBOARD · FOR INTERNAL USE ONLY</div>
       <div id="hdr-date"></div>
       <div class="header-actions">
-        <button class="btn" onclick="dlReport()">↓ Download Report</button>
+        <div class="export-menu-wrap">
+          <button class="btn" onclick="toggleExportMenu(event)">↓ Export ▾</button>
+          <div class="export-menu" id="export-menu">
+            <button type="button" onclick="dlReportPDF(); closeExportMenu();">PDF report</button>
+            <button type="button" onclick="dlReportHTML(); closeExportMenu();">HTML dashboard</button>
+          </div>
+        </div>
         <button class="btn btn-ghost" onclick="resetApp()">↑ New File</button>
       </div>
     </div>
@@ -1460,6 +1472,135 @@ function renderRecommendations(){
 }
 
 
+
+// ══ EXPORT MENU + CLEAN HTML DASHBOARD EXPORT ═════════════════
+function toggleExportMenu(e){
+  e?.stopPropagation?.();
+  document.getElementById('export-menu')?.classList.toggle('open');
+}
+function closeExportMenu(){
+  document.getElementById('export-menu')?.classList.remove('open');
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest?.('.export-menu-wrap')) closeExportMenu();
+});
+
+function safeScriptJSON(obj){
+  return JSON.stringify(obj).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
+}
+
+function chartSnapshot(canvasId){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return '';
+  try{
+    const chart = Chart.getChart(canvas);
+    if(chart){ chart.resize(); chart.update('none'); return chart.toBase64Image('image/png', 1); }
+    return canvas.toDataURL('image/png');
+  }catch(e){
+    console.warn('Could not snapshot chart', canvasId, e);
+    return '';
+  }
+}
+
+function buildCleanDashboardHTML(){
+  if(!RAW || !RAW.length) throw new Error('Upload a workbook first.');
+
+  // Update visible academic year value before cloning.
+  setAcademicYearLabel(getAcademicYearLabel());
+
+  const dash = document.getElementById('dash').cloneNode(true);
+  dash.removeAttribute('style');
+  dash.classList.add('export-clean-dashboard');
+
+  // Clean exported header: show academic year as text and remove app controls.
+  const ayInput = dash.querySelector('#hdr-ay');
+  if(ayInput){
+    const strong = document.createElement('strong');
+    strong.textContent = getAcademicYearLabel();
+    ayInput.replaceWith(strong);
+  }
+  dash.querySelectorAll('.header-actions').forEach(el=>el.remove());
+  dash.querySelectorAll('[id]').forEach(el=>{
+    // Avoid duplicate IDs if the exported file is embedded elsewhere.
+    if(el.tagName.toLowerCase() !== 'canvas') el.setAttribute('data-export-id', el.id);
+  });
+
+  // Convert visible Chart.js canvases to durable PNG images so charts do not disappear.
+  dash.querySelectorAll('canvas').forEach(canvas=>{
+    const src = chartSnapshot(canvas.id);
+    const img = document.createElement('img');
+    img.className = 'chart-img';
+    img.alt = canvas.id || 'Dashboard chart';
+    img.src = src;
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.objectFit = 'contain';
+    img.style.display = 'block';
+    canvas.replaceWith(img);
+  });
+
+  // Embed all parsed report data and state for audit/reuse without needing the original workbook.
+  const embedded = {
+    exportedAt: new Date().toISOString(),
+    academicYear: getAcademicYearLabel(),
+    sourceFile: FILE_NAME,
+    totalRecords: RAW.length,
+    semesterKeys: SEM_KEYS,
+    semesterLabels: SEM_LABELS,
+    rows: RAW
+  };
+
+  const styleHTML = [...document.querySelectorAll('style')].map(s=>s.outerHTML).join('\n');
+  const fontLink = `<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">`;
+  const exportCSS = `<style>
+    body{background:#0d1117;color:#e6edf3;margin:0;}
+    .export-clean-dashboard{display:block!important;}
+    .export-clean-dashboard .nav{position:static;}
+    .export-clean-dashboard .chart-img{max-width:100%;border:0;}
+    .export-clean-dashboard .tbl-scroll{max-height:none;overflow:visible;}
+    .export-note{max-width:1440px;margin:0 auto 28px;padding:0 48px 28px;color:#7d8590;font:12px 'DM Sans',sans-serif;}
+    @media print{.nav{position:static!important}.section{break-inside:avoid-page}.chart-card,.kpi-card,.dept-stat-card,.alert-card,.rec-item{break-inside:avoid-page}.tbl-scroll{max-height:none!important;overflow:visible!important}}
+  </style>`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMI Student Completion Dashboard — AY ${esc(getAcademicYearLabel())}</title>
+${fontLink}
+${styleHTML}
+${exportCSS}
+</head>
+<body>
+${dash.outerHTML}
+<div class="export-note">Clean HTML export generated ${new Date().toLocaleString()}. Parsed report data is embedded in this file as JSON under <code>#embedded-report-data</code>.</div>
+<script type="application/json" id="embedded-report-data">${safeScriptJSON(embedded)}<\/script>
+</body>
+</html>`;
+}
+
+function dlReportHTML(){
+  try{
+    if(!RAW || !RAW.length){ setMsg('Upload a workbook first.','err'); return; }
+    const html = buildCleanDashboardHTML();
+    const blob = new Blob([html], {type:'text/html'});
+    const a = document.createElement('a');
+    const safeDate = new Date().toISOString().slice(0,10);
+    const ay = getAcademicYearLabel().replace(/[^0-9A-Za-z]+/g,'-');
+    a.href = URL.createObjectURL(blob);
+    a.download = `CMI_Student_Completion_Dashboard_AY_${ay}_${safeDate}.html`;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(a.href);
+    document.body.removeChild(a);
+    setMsg('HTML dashboard downloaded.','ok');
+  }catch(err){
+    console.error(err);
+    setMsg('HTML export error: '+err.message,'err');
+  }
+}
+
 // ══ DOWNLOAD PDF REPORT ═══════════════════════════════════════
 function loadPdfExportScript(src, checkFn){
   return new Promise((resolve, reject)=>{
@@ -1543,7 +1684,7 @@ async function addElementToPdf(pdf, el, opts={}){
   }
 }
 
-async function dlReport(){
+async function dlReportPDF(){
   if(!RAW || !RAW.length){ setMsg('Upload a workbook first.','err'); return; }
 
   const oldMsg = document.getElementById('upload-msg')?.textContent || '';
@@ -1604,6 +1745,9 @@ async function dlReport(){
   }
 }
 
+
+// Backward-compatible default: PDF export.
+function dlReport(){ return dlReportPDF(); }
 </script>
 </body>
 </html>
