@@ -197,6 +197,42 @@ th{
  border-radius:0 0 12px 12px;
 }
 
+.pill-grid{
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+ gap:14px;
+ margin-top:14px;
+}
+
+.pill{
+ background:#eef2ff;
+ border:1px solid #dbeafe;
+ border-radius:14px;
+ padding:16px;
+}
+
+.pill strong{
+ display:block;
+ color:var(--navy);
+ font-size:18px;
+ margin-bottom:6px;
+}
+
+.insight-list{
+ padding-left:20px;
+ line-height:1.8;
+ color:#374151;
+}
+
+.metric-table tr:nth-child(even){
+ background:#f9fafb;
+}
+
+.highlight{
+ color:var(--blue);
+ font-weight:700;
+}
+
 .footer{
  margin-top:40px;
  text-align:center;
@@ -227,6 +263,7 @@ th{
 <h2>CMI Dashboard</h2>
 
 <a href="#summary">Executive Summary</a>
+<a href="#overview">Overview</a>
 <a href="#goals">Strategic Goals</a>
 <a href="#academic">Academic KPIs</a>
 <a href="#financial">Financial KPIs</a>
@@ -266,6 +303,38 @@ th{
 <div class="kpi">
 <h3>Non-Operating Costs</h3>
 <div class="value">$504K</div>
+</div>
+</section>
+
+
+<section class="card" id="overview" style="margin-bottom:30px;">
+<h2>Overview</h2>
+<p style="line-height:1.8; color:#374151;">
+The College of the Marshall Islands 3rd Quarter Report summarizes institutional progress, budget execution, 
+departmental activities, strategic goal implementation, and academic and financial performance measures for FY2023–2024. 
+The dashboard organizes the report into leadership-ready views that connect activities, outcomes, challenges, and resource use.
+</p>
+
+<div class="pill-grid">
+<div class="pill">
+<strong>Institutional Mission</strong>
+Student-centered education, workforce preparation, community enrichment, and sustainable national development.
+</div>
+
+<div class="pill">
+<strong>Reporting Focus</strong>
+Quarterly progress, budget performance, challenges, recommendations, and strategic outcomes.
+</div>
+
+<div class="pill">
+<strong>Strategic Alignment</strong>
+Activities are organized around CMI's five strategic goals and objective areas.
+</div>
+
+<div class="pill">
+<strong>Budget Basis</strong>
+Line-item budget allocations by funding source, personnel cost, other cost, and non-operating category.
+</div>
 </div>
 </section>
 
@@ -310,6 +379,55 @@ th{
 <canvas id="expenseChart"></canvas>
 </div>
 
+
+<div class="card" id="financial-measures">
+<h2>Financial Performance Indicators / Measures</h2>
+<canvas id="liquidityChart"></canvas>
+
+<table class="metric-table" style="margin-top:22px;">
+<thead>
+<tr>
+<th>Indicator</th>
+<th>Latest Reported Value</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Liquidity Ratio</td>
+<td class="highlight">0.87 in FY2015</td>
+<td>Less than $1 of current assets for every $1 of current obligation; continued monitoring recommended.</td>
+</tr>
+<tr>
+<td>Revenue vs. Expenditure</td>
+<td class="highlight">FY2015 Revenue: $8.12M / Expenditure: $8.35M</td>
+<td>Expenditures exceeded revenues in the latest trend year shown in the report.</td>
+</tr>
+<tr>
+<td>Net Revenue / Deficit</td>
+<td class="highlight">-$230,146 in FY2015</td>
+<td>Latest trend year shows a deficit after surpluses in FY2013 and FY2014.</td>
+</tr>
+<tr>
+<td>FY2023–2024 Total Revenue</td>
+<td class="highlight">$11,211,840</td>
+<td>Budgeted revenue balances with total expenditures.</td>
+</tr>
+<tr>
+<td>FY2023–2024 Total Expenditures</td>
+<td class="highlight">$11,211,840</td>
+<td>Personnel, other costs, and non-operating costs total 100% of expenditures.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="card">
+<h2>Net Surplus / Deficit Trends</h2>
+<canvas id="surplusChart"></canvas>
+</div>
+
+
 <div class="card" id="academic">
 <h2>Enrollment Trends</h2>
 <canvas id="enrollmentChart"></canvas>
@@ -320,6 +438,18 @@ th{
 <canvas id="trendChart"></canvas>
 </div>
 
+</div>
+
+
+<div class="card" style="margin-bottom:30px;">
+<h2>Financial Performance Narrative</h2>
+<ul class="insight-list">
+<li><strong>Liquidity:</strong> The report's historical liquidity ratio declined from 1.67 in FY2008 to 0.87 in FY2015, indicating tighter short-term financial capacity.</li>
+<li><strong>Revenue and expenditure trend:</strong> General Fund revenue increased through FY2014 before declining in FY2015, while expenditures remained above revenue in FY2015.</li>
+<li><strong>Net position:</strong> The trend shows deficits in FY2010–FY2012, surpluses in FY2013–FY2014, and a deficit again in FY2015.</li>
+<li><strong>FY2023–2024 budget balance:</strong> Total revenue and total expenditures are both reported at $11,211,840.</li>
+<li><strong>Cost structure:</strong> Personnel costs are the largest expenditure category at 62.78%, followed by other costs at 32.47% and non-operating costs at 4.75%.</li>
+</ul>
 </div>
 
 <div class="card" id="budget">
@@ -479,6 +609,59 @@ const trendChart = new Chart(document.getElementById('trendChart'),{
    borderColor:'#C0392B',
    tension:0.4
   }]
+ }
+});
+
+
+const liquidityChart = new Chart(document.getElementById('liquidityChart'),{
+ type:'line',
+ data:{
+  labels:['FY2008','FY2009','FY2010','FY2011','FY2012','FY2013','FY2014','FY2015'],
+  datasets:[
+  {
+   label:'Current Ratio',
+   data:[1.67,1.07,0.79,0.72,0.53,0.72,0.89,0.87],
+   borderColor:'#1E4E8C',
+   backgroundColor:'rgba(30,78,140,0.15)',
+   fill:true,
+   tension:0.4
+  },
+  {
+   label:'Benchmark: $1 per Obligation',
+   data:[1,1,1,1,1,1,1,1],
+   borderColor:'#E8A317',
+   borderDash:[6,6],
+   tension:0
+  }]
+ },
+ options:{
+  responsive:true,
+  plugins:{legend:{position:'bottom'}},
+  scales:{y:{beginAtZero:true}}
+ }
+});
+
+const surplusChart = new Chart(document.getElementById('surplusChart'),{
+ type:'bar',
+ data:{
+  labels:['FY2010','FY2011','FY2012','FY2013','FY2014','FY2015'],
+  datasets:[{
+   label:'Net Revenue / Deficit',
+   data:[-1078906,-485717,-629399,519130,513082,-230146],
+   backgroundColor:[
+    '#C0392B',
+    '#C0392B',
+    '#C0392B',
+    '#2E8B57',
+    '#2E8B57',
+    '#C0392B'
+   ]
+  }]
+ },
+ options:{
+  responsive:true,
+  plugins:{legend:{position:'bottom'}},
+  scales:{y:{ticks:{callback:value=>'$'+value.toLocaleString()}}}
  }
 });
 
