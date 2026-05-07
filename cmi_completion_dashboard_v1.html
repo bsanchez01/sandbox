@@ -631,6 +631,21 @@ function destroyChart(id) {
   const c = Chart.getChart(id);
   if(c) c.destroy();
 }
+function resizeAllCharts(){
+  try{
+    Object.values(Chart.instances || {}).forEach(ch=>{
+      if(ch && typeof ch.resize === 'function'){
+        ch.resize();
+        ch.update('none');
+      }
+    });
+  }catch(e){ console.warn('Chart resize skipped', e); }
+}
+function chartCanvas(id){
+  const el = document.getElementById(id);
+  if(!el){ console.warn('Missing chart canvas:', id); return null; }
+  return el.getContext('2d');
+}
 function mkTabs(tabsId, panelsId, labels, renderFn) {
   const tabsEl = document.getElementById(tabsId);
   const panelsEl = document.getElementById(panelsId);
@@ -728,14 +743,24 @@ function parse(wb) {
   BY_SEM = {};
   SEM_KEYS.forEach(k=>{ BY_SEM[k]=RAW.filter(r=>r['Source File']===k); });
   setAcademicYearLabel(detectAcademicYear(RAW));
-  renderDash();
+
+  // Show the dashboard before creating Chart.js charts.
+  // Chart.js measures the canvas parent at creation time; if the dashboard is still
+  // display:none, some charts intermittently render as blank cards.
   document.getElementById('upload-screen').style.display='none';
   document.getElementById('dash').style.display='block';
   document.getElementById('hdr-rec').innerHTML=`<strong>${fmt(RAW.length)}</strong> records`;
   document.getElementById('hdr-file').innerHTML=`<strong>${FILE_NAME}</strong>`;
   document.getElementById('hdr-date').textContent=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  setLoad(false);
-  initNavSpy();
+
+  requestAnimationFrame(()=>{
+    renderDash();
+    resizeAllCharts();
+    setTimeout(resizeAllCharts, 150);
+    setTimeout(resizeAllCharts, 500);
+    setLoad(false);
+    initNavSpy();
+  });
 }
 
 function resetApp(){
@@ -776,6 +801,7 @@ function renderDash(){
   renderAnalysisReport();
   renderAlerts();
   renderRecommendations();
+  requestAnimationFrame(resizeAllCharts);
 }
 
 // ══ KPIs ══════════════════════════════════════════════════════
@@ -812,7 +838,7 @@ function renderTrends(){
 
   // Line chart: pass rate by semester
   destroyChart('ch-trend-line');
-  new Chart(document.getElementById('ch-trend-line').getContext('2d'),{
+  new Chart(chartCanvas('ch-trend-line'),{
     type:'line',
     data:{labels:SEM_LABELS,datasets:[{
       data:semData.map(s=>+s.passRate.toFixed(1)),
@@ -826,7 +852,7 @@ function renderTrends(){
 
   // Donut: pass vs fail vs incomplete
   destroyChart('ch-donut');
-  new Chart(document.getElementById('ch-donut').getContext('2d'),{
+  new Chart(chartCanvas('ch-donut'),{
     type:'doughnut',
     data:{labels:['Passed','Failed','Incomplete/W'],datasets:[{data:[all.passed,all.failed,all.incomplete],backgroundColor:['rgba(63,185,80,.7)','rgba(248,81,73,.7)','rgba(227,179,65,.7)'],borderColor:'#161b22',borderWidth:3}]},
     options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'bottom',labels:{boxWidth:10,padding:12,color:'#7d8590'}},tooltip:{callbacks:{label:c=>`${c.label}: ${fmt(c.raw)}`}}}}
@@ -837,7 +863,7 @@ function renderTrends(){
   RAW.forEach(r=>{const g=(r['Grade']||'blank').trim()||'blank';grades[g]=(grades[g]||0)+1;});
   const gSorted=Object.entries(grades).sort((a,b)=>{const ai=GRADE_ORDER.indexOf(a[0]),bi=GRADE_ORDER.indexOf(b[0]);if(ai===-1&&bi===-1)return 0;if(ai===-1)return 1;if(bi===-1)return -1;return ai-bi;});
   destroyChart('ch-grade');
-  new Chart(document.getElementById('ch-grade').getContext('2d'),{
+  new Chart(chartCanvas('ch-grade'),{
     type:'bar',
     data:{labels:gSorted.map(([g])=>g),datasets:[{data:gSorted.map(([,c])=>c),backgroundColor:gSorted.map(([g])=>barColor(PASS_G.has(g.toUpperCase())?80:FAIL_G.has(g.toUpperCase())?30:65)),borderRadius:3}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:GRID_COLOR},border:{color:GRID_COLOR}},x:{grid:{display:false},border:{color:GRID_COLOR}}}}
@@ -845,7 +871,7 @@ function renderTrends(){
 
   // Enrollment vs passed
   destroyChart('ch-enroll');
-  new Chart(document.getElementById('ch-enroll').getContext('2d'),{
+  new Chart(chartCanvas('ch-enroll'),{
     type:'bar',
     data:{labels:SEM_LABELS,datasets:[
       {label:'Enrolled',data:semData.map(s=>s.n),backgroundColor:'rgba(88,166,255,0.3)',borderRadius:4},
@@ -857,7 +883,7 @@ function renderTrends(){
 
   // Completion rate by semester
   destroyChart('ch-comp');
-  new Chart(document.getElementById('ch-comp').getContext('2d'),{
+  new Chart(chartCanvas('ch-comp'),{
     type:'bar',
     data:{labels:SEM_LABELS,datasets:[{data:semData.map(s=>+s.compRate.toFixed(1)),backgroundColor:semData.map(s=>s.compRate>99?'rgba(63,185,80,.7)':'rgba(88,166,255,.6)'),borderRadius:4}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw}%`}}},
