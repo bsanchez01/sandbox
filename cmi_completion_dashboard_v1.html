@@ -39,7 +39,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 @keyframes spin{to{transform:rotate(360deg);}}
 .load-msg{margin-top:1.2rem;color:var(--muted);font-size:.9rem;}
 /* HEADER */
-.header{background:linear-gradient(135deg,#0d1117 0%,#161b22 50%,#1a2235 100%);padding:28px 48px 24px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+.header{background:linear-gradient(135deg,#0d1117 0%,#161b22 50%,#1a2235 100%);padding:28px 48px 24px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--border);position:relative;overflow:visible;z-index:300;}
 .header::before{content:'';position:absolute;top:-60px;right:-80px;width:320px;height:320px;background:radial-gradient(circle,rgba(88,166,255,.07) 0%,transparent 70%);pointer-events:none;}
 .header-eyebrow{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
 .header-left h1{font-family:'DM Serif Display',Georgia,serif;font-size:clamp(22px,3vw,32px);font-weight:400;color:var(--text);line-height:1.2;}
@@ -50,12 +50,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .ay-input:hover,.ay-input:focus{border-bottom-color:var(--accent);background:rgba(88,166,255,.08);border-radius:3px;}
 .upload-ay{margin-top:1rem;color:var(--muted);font-size:.9rem;display:flex;gap:8px;align-items:center;justify-content:center;}
 .upload-ay input{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 10px;width:110px;font:inherit;font-weight:600;text-align:center;}
-.header-right{text-align:right;font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;}
+.header-right{text-align:right;font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;position:relative;z-index:10000;}
 .badge{display:inline-block;background:var(--accent-bg);border:1px solid rgba(88,166,255,.3);color:var(--accent);padding:4px 14px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:.04em;margin-bottom:6px;}
 .header-actions{display:flex;gap:8px;margin-top:8px;justify-content:flex-end;}
 .btn{padding:7px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;font-weight:500;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;white-space:nowrap;}
 .btn:hover{background:var(--accent);color:#0d1117;border-color:var(--accent);}
 .btn-ghost:hover{background:var(--fail-bg);border-color:var(--fail);color:var(--fail);}
+.export-menu-wrap{position:relative;display:inline-block;z-index:10001;}
+.export-menu{display:none;position:absolute;right:0;top:calc(100% + 6px);min-width:165px;background:var(--surface);border:1px solid var(--border);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden;z-index:10002;text-align:left;}
+.export-menu.open{display:block;}
+.export-menu button{display:block;width:100%;padding:10px 14px;background:transparent;border:0;border-bottom:1px solid rgba(48,54,61,.55);color:var(--text);font:600 11px 'DM Sans',sans-serif;text-align:left;cursor:pointer;white-space:nowrap;}
+.export-menu button:last-child{border-bottom:0;}
+.export-menu button:hover{background:var(--accent-bg);color:var(--accent);}
 /* NAV */
 .nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 48px;display:flex;overflow-x:auto;position:sticky;top:0;z-index:100;}
 .nav a{display:block;padding:14px 18px;font-size:13px;font-weight:500;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;}
@@ -190,6 +196,21 @@ td.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);font-
 .insight-title{font-weight:600;font-size:13px;margin-bottom:6px;color:var(--text);}
 .insight-body{font-size:12px;color:var(--muted);line-height:1.6;}
 .insight-body strong{color:var(--text);}
+
+/* GRADE NOTES + ANALYSIS REPORT */
+.note-type-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:20px;}
+.note-type-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;border-top:3px solid var(--accent);}
+.note-type-title{font-weight:700;font-size:12px;color:var(--text);margin-bottom:6px;line-height:1.35;}
+.note-type-meta{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;}
+.note-chip{display:inline-block;padding:3px 8px;border-radius:4px;background:var(--surface2);color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+.analysis-report{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.analysis-panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;}
+.analysis-panel h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);margin-bottom:10px;}
+.analysis-panel p,.analysis-panel li{font-size:12px;color:var(--muted);line-height:1.75;}
+.analysis-panel strong{color:var(--text);}
+.analysis-panel ul{padding-left:18px;display:flex;flex-direction:column;gap:8px;}
+@media(max-width:900px){.analysis-report{grid-template-columns:1fr;}.note-type-grid{grid-template-columns:1fr;}}
+
 @media(max-width:900px){.insights-grid{grid-template-columns:1fr 1fr;}}
 @media(max-width:1200px){.kpi-grid-6{grid-template-columns:repeat(3,1fr);}.kpi-grid-7{grid-template-columns:repeat(4,1fr);}}
 @media(max-width:900px){.g2,.g3,.g21,.g12{grid-template-columns:1fr;}.kpi-grid-6,.kpi-grid-7{grid-template-columns:repeat(2,1fr);}.dept-grid{grid-template-columns:1fr 1fr;}.alerts-grid{grid-template-columns:1fr;}}
@@ -236,7 +257,13 @@ td.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);font-
       <div class="badge">EXECUTIVE DASHBOARD · FOR INTERNAL USE ONLY</div>
       <div id="hdr-date"></div>
       <div class="header-actions">
-        <button class="btn" onclick="dlReport()">↓ Download Report</button>
+        <div class="export-menu-wrap">
+          <button class="btn" onclick="toggleExportMenu(event)">↓ Export ▾</button>
+          <div class="export-menu" id="export-menu">
+            <button type="button" onclick="dlReportPDF(); closeExportMenu();">PDF report</button>
+            <button type="button" onclick="dlReportHTML(); closeExportMenu();">HTML dashboard</button>
+          </div>
+        </div>
         <button class="btn btn-ghost" onclick="resetApp()">↑ New File</button>
       </div>
     </div>
@@ -251,10 +278,10 @@ td.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);font-
     <a href="#faculty">Faculty</a>
     <a href="#programs">Programs</a>
     <a href="#gender">Gender</a>
-    <a href="#heatmap">Heatmap</a>
     <a href="#grade-notes">Grade Notes</a>
-    <a href="#analysis-report">Analysis Report</a>
+    <a href="#heatmap">Heatmap</a>
     <a href="#insights">Insights</a>
+    <a href="#analysis-report">Analysis Report</a>
     <a href="#alerts">Alerts</a>
     <a href="#recommendations">Recommendations</a>
   </nav>
@@ -406,6 +433,29 @@ td.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);font-
       </div>
     </section>
 
+
+
+    <!-- ══ GRADE NOTES ══ -->
+    <section class="section" id="grade-notes">
+      <div class="section-title">Grade Notes</div>
+      <div class="section-desc">Focused review of records with a Grade Note / Grade Notes field. This section highlights note volume, note patterns, affected students, courses, faculty, and outcomes.</div>
+      <div class="kpi-grid-6" id="grade-note-kpis" style="margin-bottom:24px;"></div>
+      <div class="g2" style="margin-bottom:20px;">
+        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>GRADE NOTES BY CATEGORY</div><div class="chart-wrap" style="height:280px;"><canvas id="ch-note-category"></canvas></div></div>
+        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--warn)"></span>OUTCOMES FOR RECORDS WITH NOTES</div><div class="chart-wrap" style="height:280px;"><canvas id="ch-note-result"></canvas></div></div>
+      </div>
+      <div class="note-type-grid" id="grade-note-type-cards"></div>
+      <div class="chart-card" style="margin-bottom:20px;">
+        <div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>GRADE NOTES SUMMARY TABLES</div>
+        <div class="tabs" id="grade-note-tabs"></div>
+        <div id="grade-note-panels"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>GRADE NOTE DETAIL RECORDS</div>
+        <div id="grade-note-detail"></div>
+      </div>
+    </section>
+
     <!-- ══ HEATMAP ══ -->
     <section class="section" id="heatmap">
       <div class="section-title">Department × Semester Heatmap</div>
@@ -417,40 +467,20 @@ td.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);font-
       </div>
     </section>
 
-
-    <!-- ══ GRADE NOTES ══ -->
-    <section class="section" id="grade-notes">
-      <div class="section-title">Grade Notes</div>
-      <div class="section-desc">Separate analysis tab for grade-note entries. This section summarizes note volume, recurring note types, affected courses, departments, faculty, and individual student-course records with notes.</div>
-      <div class="kpi-grid-6" id="grade-note-kpis" style="margin-bottom:24px;"></div>
-      <div class="g2" style="margin-bottom:20px;">
-        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>GRADE NOTES BY SEMESTER</div><div class="chart-wrap" style="height:260px;"><canvas id="ch-note-sem"></canvas></div></div>
-        <div class="chart-card"><div class="chart-title"><span class="dot" style="--dt:var(--warn)"></span>TOP GRADE NOTE CATEGORIES</div><div class="chart-wrap" style="height:260px;"><canvas id="ch-note-top"></canvas></div></div>
-      </div>
-      <div class="chart-card" style="margin-bottom:20px;">
-        <div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>GRADE NOTE SUMMARY TABLES</div>
-        <div class="tabs" id="note-summary-tabs"></div>
-        <div id="note-summary-panels"></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>GRADE NOTE DETAIL RECORDS</div>
-        <div class="tabs" id="note-detail-tabs"></div>
-        <div id="note-detail-panels"></div>
-      </div>
-    </section>
-
-    <!-- ══ ANALYSIS REPORT ══ -->
-    <section class="section" id="analysis-report">
-      <div class="section-title">Analysis Report</div>
-      <div class="section-desc">Narrative report generated from the uploaded workbook, designed for leadership review and follow-up planning.</div>
-      <div id="analysis-report-content"></div>
-    </section>
-
     <!-- ══ INSIGHTS ══ -->
     <section class="section" id="insights">
       <div class="section-title">Executive Insights</div>
       <div class="section-desc">Auto-identified patterns and key metrics</div>
       <div id="insights-content"></div>
+    </section>
+
+
+
+    <!-- ══ ANALYSIS REPORT ══ -->
+    <section class="section" id="analysis-report">
+      <div class="section-title">Analysis Report</div>
+      <div class="section-desc">Narrative interpretation for leadership review, combining completion outcomes, course risk, department patterns, equity signals, developmental-course performance, and grade-note trends.</div>
+      <div id="analysis-report-content"></div>
     </section>
 
     <!-- ══ ALERTS ══ -->
@@ -740,10 +770,10 @@ function renderDash(){
   renderFaculty();
   renderPrograms();
   renderGender();
-  renderHeatmap();
   renderGradeNotes();
-  renderAnalysisReport();
+  renderHeatmap();
   renderInsights();
+  renderAnalysisReport();
   renderAlerts();
   renderRecommendations();
 }
@@ -1368,175 +1398,6 @@ function renderHeatmap(){
   document.getElementById('course-risk-content').innerHTML=crHtml;
 }
 
-
-// ══ GRADE NOTES ══════════════════════════════════════════════
-function gradeNoteText(r){
-  return (r['Grade Note'] || r['Grade Notes'] || r['Note'] || r['Notes'] || r['Comment'] || r['Comments'] || '').toString().trim();
-}
-function rowsWithGradeNotes(rows){
-  return rows.filter(r => gradeNoteText(r));
-}
-function groupNoteRows(rows, keyFn){
-  const m = new Map();
-  rows.forEach(r => {
-    const k = keyFn(r) || 'Unknown';
-    if(!m.has(k)) m.set(k, []);
-    m.get(k).push(r);
-  });
-  return [...m.entries()].map(([key, rws]) => ({key, rows:rws, ...calc(rws)}));
-}
-function renderGradeNotes(){
-  const noteRows = rowsWithGradeNotes(RAW);
-  const all = calc(RAW);
-  const notesMetric = calc(noteRows);
-  const noteGroups = groupNoteRows(noteRows, r=>gradeNoteText(r)).sort((a,b)=>b.n-a.n || a.key.localeCompare(b.key));
-  const courseGroups = groupNoteRows(noteRows, r=>r['Course']).sort((a,b)=>b.n-a.n || a.key.localeCompare(b.key));
-  const deptGroups = groupNoteRows(noteRows, r=>r['Department Code']).sort((a,b)=>b.n-a.n || a.key.localeCompare(b.key));
-  const facultyGroups = groupNoteRows(noteRows, r=>r['Faculty']).sort((a,b)=>b.n-a.n || a.key.localeCompare(b.key));
-  const commonNote = noteGroups[0] || {key:'None', n:0};
-  const notePct = all.n ? noteRows.length / all.n * 100 : 0;
-  const failNoteCount = noteRows.filter(isF).length;
-  const passNoteCount = noteRows.filter(isP).length;
-  const incNoteCount = noteRows.filter(r=>getR(r)==='Incomplete').length;
-
-  document.getElementById('grade-note-kpis').innerHTML = `
-    <div class="kpi-card blue"><div class="kpi-label">Records with Notes</div><div class="kpi-value">${fmt(noteRows.length)}</div><div class="kpi-sub">${pct(notePct)} of all records</div></div>
-    <div class="kpi-card purple"><div class="kpi-label">Unique Note Types</div><div class="kpi-value">${fmt(noteGroups.length)}</div><div class="kpi-sub">Distinct note text values</div></div>
-    <div class="kpi-card red"><div class="kpi-label">Fail + Notes</div><div class="kpi-value" style="color:var(--fail)">${fmt(failNoteCount)}</div><div class="kpi-sub">Needs review first</div></div>
-    <div class="kpi-card green"><div class="kpi-label">Pass + Notes</div><div class="kpi-value" style="color:var(--pass)">${fmt(passNoteCount)}</div><div class="kpi-sub">Passed with note</div></div>
-    <div class="kpi-card gold"><div class="kpi-label">Incomplete + Notes</div><div class="kpi-value" style="color:var(--warn)">${fmt(incNoteCount)}</div><div class="kpi-sub">Incomplete or withdrawal</div></div>
-    <div class="kpi-card blue"><div class="kpi-label">Most Common Note</div><div class="kpi-value" style="font-size:18px;line-height:1.2">${esc(commonNote.key)}</div><div class="kpi-sub">${fmt(commonNote.n)} record(s)</div></div>`;
-
-  const semNoteCounts = SEM_KEYS.map(k => rowsWithGradeNotes(BY_SEM[k]||[]).length);
-  const semNoteRates = SEM_KEYS.map(k => {
-    const rows = BY_SEM[k] || [];
-    return rows.length ? rowsWithGradeNotes(rows).length / rows.length * 100 : 0;
-  });
-  destroyChart('ch-note-sem');
-  new Chart(document.getElementById('ch-note-sem').getContext('2d'),{
-    type:'bar',
-    data:{labels:SEM_LABELS,datasets:[
-      {label:'Note Records',data:semNoteCounts,backgroundColor:'rgba(88,166,255,.6)',borderRadius:4},
-      {label:'Note Rate %',data:semNoteRates.map(v=>+v.toFixed(1)),backgroundColor:'rgba(227,179,65,.6)',borderRadius:4,yAxisID:'y1'}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10}}},
-      scales:{y:{beginAtZero:true,grid:{color:GRID_COLOR}},y1:{beginAtZero:true,position:'right',ticks:{callback:v=>v+'%'},grid:{drawOnChartArea:false}},x:{grid:{display:false}}}}
-  });
-
-  const topNotes = noteGroups.slice(0,10).reverse();
-  destroyChart('ch-note-top');
-  new Chart(document.getElementById('ch-note-top').getContext('2d'),{
-    type:'bar',indexAxis:'y',
-    data:{labels:topNotes.map(g=>g.key.length>36 ? g.key.slice(0,36)+'…' : g.key),datasets:[{data:topNotes.map(g=>g.n),backgroundColor:'rgba(163,113,247,.65)',borderRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmt(c.raw)} record(s)`}}},scales:{x:{beginAtZero:true,grid:{color:GRID_COLOR}},y:{grid:{display:false},ticks:{font:{size:10}}}}}
-  });
-
-  function noteSummaryTable(groups, labelName){
-    return `<div class="tbl-wrap"><div class="tbl-scroll"><table>
-      <thead><tr><th>${labelName}</th><th class="r">Note Records</th><th class="r">Passed</th><th class="r">Failed</th><th class="r">Incomplete</th><th class="r">Pass Rate</th><th class="r">Fail Rate</th><th>Risk</th></tr></thead>
-      <tbody>${groups.map(g=>`<tr>
-        <td style="font-weight:600;max-width:420px">${esc(g.key)}</td>
-        <td class="r">${fmt(g.n)}</td>
-        <td class="r" style="color:var(--pass)">${fmt(g.passed)}</td>
-        <td class="r" style="color:var(--fail)">${fmt(g.failed)}</td>
-        <td class="r">${fmt(g.incomplete)}</td>
-        <td class="r" style="color:${riskColor(g.passRate)};font-weight:600">${pct(g.passRate)}</td>
-        <td class="r">${pct(g.failRate)}</td>
-        <td>${riskBadge(g.passRate)}</td>
-      </tr>`).join('')}</tbody></table></div></div>`;
-  }
-
-  mkTabs('note-summary-tabs','note-summary-panels',['By Note','By Course','By Department','By Faculty'],(i)=>{
-    if(i===0) return noteSummaryTable(noteGroups, 'Grade Note');
-    if(i===1) return noteSummaryTable(courseGroups, 'Course');
-    if(i===2) return noteSummaryTable(deptGroups.map(g=>({...g,key:`${g.key} — ${DEPT_NAMES[g.key]||g.key}`})), 'Department');
-    return noteSummaryTable(facultyGroups, 'Faculty');
-  });
-
-  const detailLabels = ['All Notes', ...SEM_LABELS];
-  mkTabs('note-detail-tabs','note-detail-panels',detailLabels,(si)=>{
-    const rows = si===0 ? noteRows : rowsWithGradeNotes(BY_SEM[SEM_KEYS[si-1]]||[]);
-    const sorted = [...rows].sort((a,b)=>gradeNoteText(a).localeCompare(gradeNoteText(b)) || (a['Course']||'').localeCompare(b['Course']||''));
-    return `<div class="tbl-wrap"><div class="tbl-scroll"><table>
-      <thead><tr><th>Semester</th><th>Course</th><th>Faculty</th><th>Student ID</th><th>Student Name</th><th>Grade</th><th>Result</th><th>Grade Note</th></tr></thead>
-      <tbody>${sorted.map(r=>`<tr>
-        <td>${esc(sl(r['Source File']||''))}</td>
-        <td class="mono">${esc(r['Course']||'')}</td>
-        <td>${esc(r['Faculty']||'')}</td>
-        <td class="mono">${esc(r['Stud. ID']||'')}</td>
-        <td>${esc(r['Student Name']||'')}</td>
-        <td class="mono">${esc(r['Grade']||'')}</td>
-        <td><span class="pill ${getR(r)==='Pass'?'pill-pass':getR(r)==='Fail'?'pill-fail':'pill-warn'}">${esc(getR(r))}</span></td>
-        <td style="max-width:420px">${esc(gradeNoteText(r))}</td>
-      </tr>`).join('')}</tbody></table></div></div>`;
-  });
-}
-
-// ══ ANALYSIS REPORT ══════════════════════════════════════════
-function renderAnalysisReport(){
-  const m = calc(RAW);
-  const noteRows = rowsWithGradeNotes(RAW);
-  const devAll = calc(RAW.filter(r=>(r['Developmental Course']||'').trim()==='Yes'));
-  const stdAll = calc(RAW.filter(r=>(r['Developmental Course']||'').trim()==='No'));
-  const deptGroups = grpCalc(RAW,r=>r['Department Code']).filter(g=>g.completed>=5).sort((a,b)=>a.passRate-b.passRate);
-  const courseGroups = grpCalc(RAW,r=>r['Course']).filter(g=>g.completed>=10).sort((a,b)=>a.passRate-b.passRate);
-  const progGroups = grpCalc(RAW,r=>r['Program Code']).filter(g=>g.completed>=10).sort((a,b)=>a.passRate-b.passRate);
-  const facultyGroups = grpCalc(RAW,r=>r['Faculty']).filter(g=>g.n>=10).sort((a,b)=>a.passRate-b.passRate);
-  const semData = SEM_KEYS.map(k=>({key:k,label:sl(k),...calc(BY_SEM[k]||[])}));
-  const bestSem = semData.length ? [...semData].sort((a,b)=>b.passRate-a.passRate)[0] : null;
-  const worstSem = semData.length ? [...semData].sort((a,b)=>a.passRate-b.passRate)[0] : null;
-  const worstDept = deptGroups[0] || {key:'—',passRate:0,n:0,failed:0};
-  const bestDept = [...deptGroups].sort((a,b)=>b.passRate-a.passRate)[0] || {key:'—',passRate:0,n:0};
-  const worstCourse = courseGroups[0] || {key:'—',passRate:0,n:0,failed:0};
-  const criticalCourses = courseGroups.filter(g=>g.passRate<60);
-  const watchCourses = courseGroups.filter(g=>g.passRate>=60 && g.passRate<70);
-  const worstProg = progGroups[0] || {key:'—',passRate:0,n:0};
-  const worstFaculty = facultyGroups[0] || {key:'—',passRate:0,n:0};
-  const devGap = stdAll.completed && devAll.completed ? stdAll.passRate - devAll.passRate : 0;
-  const noteRate = m.n ? noteRows.length / m.n * 100 : 0;
-  const failNoteRows = noteRows.filter(isF).length;
-
-  document.getElementById('analysis-report-content').innerHTML = `
-    <div class="chart-card" style="margin-bottom:20px;">
-      <div class="chart-title"><span class="dot" style="--dt:var(--accent)"></span>EXECUTIVE SUMMARY</div>
-      <div class="alert-body" style="font-size:13px;color:var(--text);line-height:1.8;">
-        <p>The uploaded workbook contains <strong>${fmt(m.n)}</strong> student-course records for Academic Year <strong>${esc(getAcademicYearLabel())}</strong>. Overall completion is <strong>${pct(m.compRate)}</strong>, with <strong>${fmt(m.passed)}</strong> passing outcomes and <strong>${fmt(m.failed)}</strong> failing outcomes among completed records. The overall pass rate is <strong>${pct(m.passRate)}</strong>, while the fail rate is <strong>${pct(m.failRate)}</strong>.</p>
-        <p style="margin-top:10px;">The strongest semester is <strong>${bestSem?esc(bestSem.label):'—'}</strong> at <strong>${bestSem?pct(bestSem.passRate):'—'}</strong> pass rate. The lowest semester is <strong>${worstSem?esc(worstSem.label):'—'}</strong> at <strong>${worstSem?pct(worstSem.passRate):'—'}</strong>. The top qualified department is <strong>${esc(DEPT_NAMES[bestDept.key]||bestDept.key)}</strong> at <strong>${pct(bestDept.passRate)}</strong>; the lowest qualified department is <strong>${esc(DEPT_NAMES[worstDept.key]||worstDept.key)}</strong> at <strong>${pct(worstDept.passRate)}</strong>.</p>
-        <p style="margin-top:10px;">Developmental courses remain a key priority: their pass rate is <strong>${pct(devAll.passRate)}</strong>, compared with <strong>${pct(stdAll.passRate)}</strong> for standard courses${devGap ? `, a gap of <strong>${devGap.toFixed(1)} percentage points</strong>` : ''}. Grade notes appear on <strong>${fmt(noteRows.length)}</strong> records (<strong>${pct(noteRate)}</strong> of all records), including <strong>${fmt(failNoteRows)}</strong> failed records with notes.</p>
-      </div>
-    </div>
-    <div class="g2" style="margin-bottom:20px;">
-      <div class="chart-card">
-        <div class="chart-title"><span class="dot" style="--dt:var(--fail)"></span>KEY RISKS</div>
-        <div class="rec-list">
-          <div class="rec-item" style="border-left-color:var(--fail);"><div class="rec-num">01</div><div><span class="rec-tag rec-tag-red">Course</span><div class="rec-title">Lowest qualified course: ${esc(worstCourse.key)}</div><div class="rec-desc">Pass rate is <strong>${pct(worstCourse.passRate)}</strong> across <strong>${fmt(worstCourse.n)}</strong> records with <strong>${fmt(worstCourse.failed)}</strong> failures.</div></div></div>
-          <div class="rec-item" style="border-left-color:var(--warn);"><div class="rec-num">02</div><div><span class="rec-tag rec-tag-amber">Department</span><div class="rec-title">Lowest qualified department: ${esc(DEPT_NAMES[worstDept.key]||worstDept.key)}</div><div class="rec-desc">Pass rate is <strong>${pct(worstDept.passRate)}</strong> across <strong>${fmt(worstDept.n)}</strong> records.</div></div></div>
-          <div class="rec-item" style="border-left-color:var(--inc);"><div class="rec-num">03</div><div><span class="rec-tag rec-tag-purple">Program/Faculty</span><div class="rec-title">Monitor ${esc(worstProg.key)} and ${esc(worstFaculty.key)}</div><div class="rec-desc">The lowest qualified program is <strong>${esc(worstProg.key)}</strong> at <strong>${pct(worstProg.passRate)}</strong>; the lowest faculty group is <strong>${esc(worstFaculty.key)}</strong> at <strong>${pct(worstFaculty.passRate)}</strong>.</div></div></div>
-        </div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title"><span class="dot" style="--dt:var(--pass)"></span>RECOMMENDED ACTION PLAN</div>
-        <div class="rec-list">
-          <div class="rec-item" style="border-left-color:var(--fail);"><div class="rec-num">01</div><div><span class="rec-tag rec-tag-red">Immediate</span><div class="rec-title">Review critical courses below 60%</div><div class="rec-desc"><strong>${fmt(criticalCourses.length)}</strong> qualified course(s) fall below 60% pass rate. Create course-level action plans for the highest-enrollment risks first.</div></div></div>
-          <div class="rec-item" style="border-left-color:var(--warn);"><div class="rec-num">02</div><div><span class="rec-tag rec-tag-amber">Near-term</span><div class="rec-title">Track watch-list courses from 60–70%</div><div class="rec-desc"><strong>${fmt(watchCourses.length)}</strong> qualified course(s) are in the watch range. Monitor midterm indicators, tutoring use, and attendance.</div></div></div>
-          <div class="rec-item" style="border-left-color:var(--accent);"><div class="rec-num">03</div><div><span class="rec-tag rec-tag-blue">Data Quality</span><div class="rec-title">Use grade notes for case review</div><div class="rec-desc">Prioritize failed and incomplete records with grade notes because they often contain the clearest explanation for barriers, exceptions, or required follow-up.</div></div></div>
-        </div>
-      </div>
-    </div>
-    <div class="chart-card">
-      <div class="chart-title"><span class="dot" style="--dt:var(--warn)"></span>FOLLOW-UP LIST</div>
-      <div class="tbl-wrap"><table>
-        <thead><tr><th>Area</th><th>Finding</th><th>Recommended Follow-up</th></tr></thead>
-        <tbody>
-          <tr><td class="mono">Developmental</td><td>${pct(devAll.passRate)} pass rate; ${fmt(devAll.failed)} failures</td><td>Strengthen tutoring, early alert, placement review, and attendance outreach.</td></tr>
-          <tr><td class="mono">Courses</td><td>${fmt(criticalCourses.length)} critical and ${fmt(watchCourses.length)} watch-list courses</td><td>Assign owners for course review and compare by semester and instructor.</td></tr>
-          <tr><td class="mono">Departments</td><td>${esc(DEPT_NAMES[worstDept.key]||worstDept.key)} is lowest qualified department</td><td>Review gateway courses, support needs, and section-level outcomes.</td></tr>
-          <tr><td class="mono">Grade Notes</td><td>${fmt(noteRows.length)} records have notes; ${fmt(failNoteRows)} are failed outcomes</td><td>Use the Grade Notes tab as a case-management worklist.</td></tr>
-        </tbody>
-      </table></div>
-    </div>`;
-}
-
 // ══ INSIGHTS ══════════════════════════════════════════════════
 function renderInsights(){
   const m=calc(RAW);
@@ -1571,6 +1432,170 @@ function renderInsights(){
       <div class="insight-body">${c.body}</div>
     </div>`).join('')}</div>`;
 }
+
+
+
+// ══ GRADE NOTES ═══════════════════════════════════════════════
+function gradeNoteValue(r){
+  const keys = ['Grade Note','Grade Notes','GradeNote','GradeNotes','Notes','Note'];
+  for(const k of keys){
+    if(r[k] !== undefined && String(r[k]).trim()) return String(r[k]).trim();
+  }
+  return '';
+}
+function rowsWithGradeNotes(){ return RAW.filter(r=>gradeNoteValue(r)); }
+function noteCategory(note){
+  const n = (note||'').toLowerCase();
+  if(/never|no show|noshow|did not attend|attendance|absen/.test(n)) return 'Attendance / No Show';
+  if(/withdraw|\bw\b|dropped|drop/.test(n)) return 'Withdrawn / Dropped';
+  if(/incomplete|\bi\b|missing|not submit|no final|pending/.test(n)) return 'Incomplete / Missing Work';
+  if(/transfer|credit|rpl|prior learning|equivalen/.test(n)) return 'Transfer / Prior Credit';
+  if(/change|correct|correction|updated|override|manual/.test(n)) return 'Grade Change / Correction';
+  if(/medical|health|family|emergency|military|excused/.test(n)) return 'Documented Exception';
+  if(/fail|failed|poor|low|deficien|unsatisf/.test(n)) return 'Academic Performance Concern';
+  if(/pass|passed|complete|satisf/.test(n)) return 'Completion Note';
+  return 'Other Notes';
+}
+function noteRowsEnriched(){
+  return rowsWithGradeNotes().map(r=>({...r, __note:gradeNoteValue(r), __noteCat:noteCategory(gradeNoteValue(r)), __result:getR(r)}));
+}
+function groupByCount(rows, keyFn){
+  const m = new Map();
+  rows.forEach(r=>{const k=keyFn(r)||'Unknown'; m.set(k,(m.get(k)||0)+1);});
+  return [...m.entries()].map(([key,count])=>({key,count})).sort((a,b)=>b.count-a.count || String(a.key).localeCompare(String(b.key)));
+}
+function noteTable(rows, columns){
+  if(!rows.length) return '<div class="alert-card blue"><div class="alert-title">No grade notes found</div><div class="alert-body">The uploaded workbook does not contain populated Grade Note records, or the note column is not named Grade Note / Grade Notes / Notes.</div></div>';
+  return `<div class="tbl-wrap"><div class="tbl-scroll"><table><thead><tr>${columns.map(c=>`<th${c.r?' class="r"':''}>${c.label}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${columns.map(c=>`<td${c.r?' class="r"':''}${c.mono?' class="mono"':''}>${c.render?c.render(r):esc(r[c.key]||'')}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+}
+function renderGradeNotes(){
+  const noteRows = noteRowsEnriched();
+  const all = calc(RAW);
+  const noted = calc(noteRows);
+  const noteRate = RAW.length ? noteRows.length / RAW.length * 100 : 0;
+  const categories = groupByCount(noteRows, r=>r.__noteCat);
+  const courses = groupByCount(noteRows, r=>r['Course']).slice(0,10);
+  const faculty = groupByCount(noteRows, r=>r['Faculty']).slice(0,10);
+  const students = new Set(noteRows.map(r=>(r['Stud. ID']||'').trim()).filter(Boolean)).size;
+  const topCat = categories[0] || {key:'None',count:0};
+
+  const kpiEl = document.getElementById('grade-note-kpis');
+  if(kpiEl) kpiEl.innerHTML = `
+    <div class="kpi-card blue"><div class="kpi-label">Records With Notes</div><div class="kpi-value">${fmt(noteRows.length)}</div><div class="kpi-sub">${pct(noteRate)} of all records</div></div>
+    <div class="kpi-card gold"><div class="kpi-label">Students With Notes</div><div class="kpi-value">${fmt(students)}</div><div class="kpi-sub">Unique student IDs</div></div>
+    <div class="kpi-card green"><div class="kpi-label">Pass Rate With Notes</div><div class="kpi-value">${pct(noted.passRate)}</div><div class="kpi-sub">Overall: ${pct(all.passRate)}</div></div>
+    <div class="kpi-card red"><div class="kpi-label">Fail Rate With Notes</div><div class="kpi-value">${pct(noted.failRate)}</div><div class="kpi-sub">${fmt(noted.failed)} failed with notes</div></div>
+    <div class="kpi-card purple"><div class="kpi-label">Note Categories</div><div class="kpi-value">${fmt(categories.length)}</div><div class="kpi-sub">Top: ${esc(topCat.key)}</div></div>
+    <div class="kpi-card blue"><div class="kpi-label">Courses With Notes</div><div class="kpi-value">${fmt(new Set(noteRows.map(r=>r['Course']).filter(Boolean)).size)}</div><div class="kpi-sub">Faculty: ${fmt(new Set(noteRows.map(r=>r['Faculty']).filter(Boolean)).size)}</div></div>`;
+
+  destroyChart('ch-note-category');
+  const catCanvas = document.getElementById('ch-note-category');
+  if(catCanvas){
+    new Chart(catCanvas.getContext('2d'),{
+      type:'bar', indexAxis:'y',
+      data:{labels:categories.map(g=>g.key),datasets:[{data:categories.map(g=>g.count),backgroundColor:'rgba(88,166,255,.65)',borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:GRID_COLOR}},y:{grid:{display:false}}}}
+    });
+  }
+  const resultGroups = ['Pass','Fail','Incomplete','Other'].map(k=>({key:k,count:noteRows.filter(r=>r.__result===k).length})).filter(g=>g.count>0);
+  destroyChart('ch-note-result');
+  const resCanvas = document.getElementById('ch-note-result');
+  if(resCanvas){
+    new Chart(resCanvas.getContext('2d'),{
+      type:'doughnut',
+      data:{labels:resultGroups.map(g=>g.key),datasets:[{data:resultGroups.map(g=>g.count),backgroundColor:['rgba(63,185,80,.75)','rgba(248,81,73,.75)','rgba(227,179,65,.75)','rgba(163,113,247,.75)'],borderColor:'#161b22',borderWidth:3}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{position:'bottom',labels:{boxWidth:10}}}}
+    });
+  }
+  const cards = document.getElementById('grade-note-type-cards');
+  if(cards){
+    cards.innerHTML = categories.slice(0,8).map(g=>{
+      const rows = noteRows.filter(r=>r.__noteCat===g.key);
+      const m = calc(rows);
+      return `<div class="note-type-card"><div class="note-type-title">${esc(g.key)}</div><div class="note-type-meta">${fmt(g.count)} records · ${pct(m.passRate)} pass · ${fmt(m.failed)} failed</div></div>`;
+    }).join('') || '<div class="alert-card blue"><div class="alert-title">No populated grade-note records</div><div class="alert-body">No populated notes were detected in the uploaded workbook.</div></div>';
+  }
+
+  const labels = ['By Category','By Course','By Faculty','By Semester'];
+  mkTabs('grade-note-tabs','grade-note-panels',labels,(idx)=>{
+    if(idx===0){
+      const rows = categories.map(g=>{const rws=noteRows.filter(r=>r.__noteCat===g.key);return {key:g.key,count:g.count,...calc(rws)};});
+      return noteTable(rows,[
+        {label:'Category',render:r=>esc(r.key)}, {label:'Records',r:true,render:r=>fmt(r.count)}, {label:'Passed',r:true,render:r=>fmt(r.passed)}, {label:'Failed',r:true,render:r=>fmt(r.failed)}, {label:'Incomplete',r:true,render:r=>fmt(r.incomplete)}, {label:'Pass Rate',r:true,render:r=>pct(r.passRate)}, {label:'Fail Rate',r:true,render:r=>pct(r.failRate)}
+      ]);
+    }
+    if(idx===1){
+      const rows = courses.map(g=>{const rws=noteRows.filter(r=>r['Course']===g.key);return {key:g.key,count:g.count,...calc(rws)};});
+      return noteTable(rows,[
+        {label:'Course',render:r=>`<span class="mono">${esc(r.key)}</span>`}, {label:'Note Records',r:true,render:r=>fmt(r.count)}, {label:'Passed',r:true,render:r=>fmt(r.passed)}, {label:'Failed',r:true,render:r=>fmt(r.failed)}, {label:'Pass Rate',r:true,render:r=>pct(r.passRate)}, {label:'Risk',render:r=>riskBadge(r.passRate)}
+      ]);
+    }
+    if(idx===2){
+      const rows = faculty.map(g=>{const rws=noteRows.filter(r=>r['Faculty']===g.key);return {key:g.key,count:g.count,...calc(rws)};});
+      return noteTable(rows,[
+        {label:'Faculty',render:r=>esc(r.key)}, {label:'Note Records',r:true,render:r=>fmt(r.count)}, {label:'Passed',r:true,render:r=>fmt(r.passed)}, {label:'Failed',r:true,render:r=>fmt(r.failed)}, {label:'Pass Rate',r:true,render:r=>pct(r.passRate)}, {label:'Risk',render:r=>riskBadge(r.passRate)}
+      ]);
+    }
+    const rows = SEM_KEYS.map((k,i)=>{const rws=noteRows.filter(r=>r['Source File']===k);return {key:SEM_LABELS[i],count:rws.length,...calc(rws)};}).filter(r=>r.count>0);
+    return noteTable(rows,[
+      {label:'Semester / Source',render:r=>esc(r.key)}, {label:'Note Records',r:true,render:r=>fmt(r.count)}, {label:'Passed',r:true,render:r=>fmt(r.passed)}, {label:'Failed',r:true,render:r=>fmt(r.failed)}, {label:'Incomplete',r:true,render:r=>fmt(r.incomplete)}, {label:'Pass Rate',r:true,render:r=>pct(r.passRate)}
+    ]);
+  });
+
+  const detail = document.getElementById('grade-note-detail');
+  if(detail){
+    const rows = noteRows.slice().sort((a,b)=>String(a.__noteCat).localeCompare(String(b.__noteCat)) || String(a['Course']).localeCompare(String(b['Course']))).slice(0,300);
+    detail.innerHTML = noteTable(rows,[
+      {label:'Category',render:r=>`<span class="note-chip">${esc(r.__noteCat)}</span>`},
+      {label:'Student ID',render:r=>esc(r['Stud. ID'])},
+      {label:'Student',render:r=>esc(r['Student Name']||'')},
+      {label:'Course',render:r=>`<span class="mono">${esc(r['Course'])}</span>`},
+      {label:'Faculty',render:r=>esc(r['Faculty'])},
+      {label:'Grade',render:r=>esc(r['Grade'])},
+      {label:'Result',render:r=>esc(r.__result)},
+      {label:'Grade Note',render:r=>esc(r.__note)}
+    ]);
+  }
+}
+
+// ══ ANALYSIS REPORT ═══════════════════════════════════════════
+function renderAnalysisReport(){
+  const m = calc(RAW);
+  const devAll = calc(RAW.filter(r=>(r['Developmental Course']||'').trim()==='Yes'));
+  const stdAll = calc(RAW.filter(r=>(r['Developmental Course']||'').trim()==='No'));
+  const deptGroups = grpCalc(RAW,r=>r['Department Code']).filter(g=>g.completed>=5).sort((a,b)=>a.passRate-b.passRate);
+  const courseGroups = grpCalc(RAW,r=>r['Course']).filter(g=>g.completed>=10).sort((a,b)=>a.passRate-b.passRate);
+  const facultyGroups = grpCalc(RAW,r=>r['Faculty']).filter(g=>g.n>=10).sort((a,b)=>a.passRate-b.passRate);
+  const noteRows = noteRowsEnriched();
+  const noteCalc = calc(noteRows);
+  const noteRate = RAW.length ? noteRows.length / RAW.length * 100 : 0;
+  const noteCats = groupByCount(noteRows,r=>r.__noteCat);
+  const worstDept = deptGroups[0] || {key:'—',passRate:0,n:0,failed:0};
+  const bestDept = [...deptGroups].sort((a,b)=>b.passRate-a.passRate)[0] || {key:'—',passRate:0,n:0};
+  const worstCourse = courseGroups[0] || {key:'—',passRate:0,n:0,failed:0};
+  const bestSem = SEM_KEYS.map((k,i)=>({label:SEM_LABELS[i],...calc(BY_SEM[k]||[])})).sort((a,b)=>b.passRate-a.passRate)[0] || {label:'—',passRate:0};
+  const criticalCourses = courseGroups.filter(g=>g.passRate<60);
+  const watchCourses = courseGroups.filter(g=>g.passRate>=60&&g.passRate<70);
+  const devGap = stdAll.completed && devAll.completed ? stdAll.passRate-devAll.passRate : 0;
+  const topNote = noteCats[0] || {key:'None',count:0};
+  const content = document.getElementById('analysis-report-content');
+  if(!content) return;
+  content.innerHTML = `
+    <div class="analysis-report">
+      <div class="analysis-panel"><h3>Executive Summary</h3><p>The uploaded dataset contains <strong>${fmt(m.n)}</strong> student-course records, with <strong>${fmt(m.completed)}</strong> completed outcomes and an overall pass rate of <strong>${pct(m.passRate)}</strong>. The completion rate is <strong>${pct(m.compRate)}</strong>, indicating that most enrolled records reached a final graded status. The strongest semester/source is <strong>${esc(bestSem.label)}</strong> at <strong>${pct(bestSem.passRate)}</strong>.</p></div>
+      <div class="analysis-panel"><h3>Academic Risk</h3><p><strong>${criticalCourses.length}</strong> qualified course(s) are in the Critical band below 60% pass rate, and <strong>${watchCourses.length}</strong> are in the Watch band between 60% and 70%. The lowest qualified course is <strong>${esc(worstCourse.key)}</strong> at <strong>${pct(worstCourse.passRate)}</strong> across <strong>${fmt(worstCourse.n)}</strong> records.</p></div>
+      <div class="analysis-panel"><h3>Department Pattern</h3><p>The lowest qualified department is <strong>${esc(DEPT_NAMES[worstDept.key]||worstDept.key)}</strong> at <strong>${pct(worstDept.passRate)}</strong>, while the strongest qualified department is <strong>${esc(DEPT_NAMES[bestDept.key]||bestDept.key)}</strong> at <strong>${pct(bestDept.passRate)}</strong>. This spread suggests that intervention planning should combine college-wide support with department-specific review.</p></div>
+      <div class="analysis-panel"><h3>Developmental Course Finding</h3><p>Developmental courses have a pass rate of <strong>${pct(devAll.passRate)}</strong> compared with <strong>${pct(stdAll.passRate)}</strong> for non-developmental courses. The developmental gap is <strong>${devGap.toFixed(1)} percentage points</strong>, making developmental-course support a high-priority retention and completion strategy.</p></div>
+      <div class="analysis-panel"><h3>Grade Notes Finding</h3><p><strong>${fmt(noteRows.length)}</strong> records contain grade notes, representing <strong>${pct(noteRate)}</strong> of all records. Among records with notes, the pass rate is <strong>${pct(noteCalc.passRate)}</strong> and the fail rate is <strong>${pct(noteCalc.failRate)}</strong>. The most common note category is <strong>${esc(topNote.key)}</strong> with <strong>${fmt(topNote.count)}</strong> record(s).</p></div>
+      <div class="analysis-panel"><h3>Recommended Actions</h3><ul>
+        <li>Prioritize the Critical and Watch course lists for faculty consultation, tutoring alignment, and early-alert follow-up.</li>
+        <li>Review developmental courses separately from standard courses because their pass-rate gap may mask readiness barriers.</li>
+        <li>Use the Grade Notes tab to identify whether attendance, missing work, withdrawals, or grade corrections are driving outcomes.</li>
+        <li>Track the same metrics each semester to evaluate whether interventions improve pass rates and reduce failure concentration.</li>
+      </ul></div>
+    </div>`;
+}
+
 
 // ══ ALERTS ════════════════════════════════════════════════════
 function renderAlerts(){
@@ -1662,6 +1687,135 @@ function renderRecommendations(){
 }
 
 
+
+// ══ EXPORT MENU + CLEAN HTML DASHBOARD EXPORT ═════════════════
+function toggleExportMenu(e){
+  e?.stopPropagation?.();
+  document.getElementById('export-menu')?.classList.toggle('open');
+}
+function closeExportMenu(){
+  document.getElementById('export-menu')?.classList.remove('open');
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest?.('.export-menu-wrap')) closeExportMenu();
+});
+
+function safeScriptJSON(obj){
+  return JSON.stringify(obj).replace(/</g,'\\u003c').replace(/>/g,'\\u003e').replace(/&/g,'\\u0026');
+}
+
+function chartSnapshot(canvasId){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return '';
+  try{
+    const chart = Chart.getChart(canvas);
+    if(chart){ chart.resize(); chart.update('none'); return chart.toBase64Image('image/png', 1); }
+    return canvas.toDataURL('image/png');
+  }catch(e){
+    console.warn('Could not snapshot chart', canvasId, e);
+    return '';
+  }
+}
+
+function buildCleanDashboardHTML(){
+  if(!RAW || !RAW.length) throw new Error('Upload a workbook first.');
+
+  // Update visible academic year value before cloning.
+  setAcademicYearLabel(getAcademicYearLabel());
+
+  const dash = document.getElementById('dash').cloneNode(true);
+  dash.removeAttribute('style');
+  dash.classList.add('export-clean-dashboard');
+
+  // Clean exported header: show academic year as text and remove app controls.
+  const ayInput = dash.querySelector('#hdr-ay');
+  if(ayInput){
+    const strong = document.createElement('strong');
+    strong.textContent = getAcademicYearLabel();
+    ayInput.replaceWith(strong);
+  }
+  dash.querySelectorAll('.header-actions').forEach(el=>el.remove());
+  dash.querySelectorAll('[id]').forEach(el=>{
+    // Avoid duplicate IDs if the exported file is embedded elsewhere.
+    if(el.tagName.toLowerCase() !== 'canvas') el.setAttribute('data-export-id', el.id);
+  });
+
+  // Convert visible Chart.js canvases to durable PNG images so charts do not disappear.
+  dash.querySelectorAll('canvas').forEach(canvas=>{
+    const src = chartSnapshot(canvas.id);
+    const img = document.createElement('img');
+    img.className = 'chart-img';
+    img.alt = canvas.id || 'Dashboard chart';
+    img.src = src;
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.objectFit = 'contain';
+    img.style.display = 'block';
+    canvas.replaceWith(img);
+  });
+
+  // Embed all parsed report data and state for audit/reuse without needing the original workbook.
+  const embedded = {
+    exportedAt: new Date().toISOString(),
+    academicYear: getAcademicYearLabel(),
+    sourceFile: FILE_NAME,
+    totalRecords: RAW.length,
+    semesterKeys: SEM_KEYS,
+    semesterLabels: SEM_LABELS,
+    rows: RAW
+  };
+
+  const styleHTML = [...document.querySelectorAll('style')].map(s=>s.outerHTML).join('\n');
+  const fontLink = `<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">`;
+  const exportCSS = `<style>
+    body{background:#0d1117;color:#e6edf3;margin:0;}
+    .export-clean-dashboard{display:block!important;}
+    .export-clean-dashboard .nav{position:static;}
+    .export-clean-dashboard .chart-img{max-width:100%;border:0;}
+    .export-clean-dashboard .tbl-scroll{max-height:none;overflow:visible;}
+    .export-note{max-width:1440px;margin:0 auto 28px;padding:0 48px 28px;color:#7d8590;font:12px 'DM Sans',sans-serif;}
+    @media print{.nav{position:static!important}.section{break-inside:avoid-page}.chart-card,.kpi-card,.dept-stat-card,.alert-card,.rec-item{break-inside:avoid-page}.tbl-scroll{max-height:none!important;overflow:visible!important}}
+  </style>`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMI Student Completion Dashboard — AY ${esc(getAcademicYearLabel())}</title>
+${fontLink}
+${styleHTML}
+${exportCSS}
+</head>
+<body>
+${dash.outerHTML}
+<div class="export-note">Clean HTML export generated ${new Date().toLocaleString()}. Parsed report data is embedded in this file as JSON under <code>#embedded-report-data</code>.</div>
+<script type="application/json" id="embedded-report-data">${safeScriptJSON(embedded)}<\/script>
+</body>
+</html>`;
+}
+
+function dlReportHTML(){
+  try{
+    if(!RAW || !RAW.length){ setMsg('Upload a workbook first.','err'); return; }
+    const html = buildCleanDashboardHTML();
+    const blob = new Blob([html], {type:'text/html'});
+    const a = document.createElement('a');
+    const safeDate = new Date().toISOString().slice(0,10);
+    const ay = getAcademicYearLabel().replace(/[^0-9A-Za-z]+/g,'-');
+    a.href = URL.createObjectURL(blob);
+    a.download = `CMI_Student_Completion_Dashboard_AY_${ay}_${safeDate}.html`;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(a.href);
+    document.body.removeChild(a);
+    setMsg('HTML dashboard downloaded.','ok');
+  }catch(err){
+    console.error(err);
+    setMsg('HTML export error: '+err.message,'err');
+  }
+}
+
 // ══ DOWNLOAD PDF REPORT ═══════════════════════════════════════
 function loadPdfExportScript(src, checkFn){
   return new Promise((resolve, reject)=>{
@@ -1745,7 +1899,7 @@ async function addElementToPdf(pdf, el, opts={}){
   }
 }
 
-async function dlReport(){
+async function dlReportPDF(){
   if(!RAW || !RAW.length){ setMsg('Upload a workbook first.','err'); return; }
 
   const oldMsg = document.getElementById('upload-msg')?.textContent || '';
@@ -1806,6 +1960,9 @@ async function dlReport(){
   }
 }
 
+
+// Backward-compatible default: PDF export.
+function dlReport(){ return dlReportPDF(); }
 </script>
 </body>
 </html>
