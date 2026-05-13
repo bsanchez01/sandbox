@@ -1,0 +1,2489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMI FY2025-2026 Quarterly Summary Report</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f0ebe0;
+  --surface: #ffffff;
+  --surface2: #f7f3ec;
+  --border: #ddd6c8;
+  --navy: #0f1e3d;
+  --sidebar: #0f1e3d;
+  --teal: #1a8a8a;
+  --teal2: #147474;
+  --orange: #c07a28;
+  --green: #2d8a5e;
+  --red: #b03030;
+  --yellow: #b8860b;
+  --purple: #6d4c9e;
+  --text: #0f1e3d;
+  --text2: #4a5778;
+  --text3: #8a95a8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;display:flex;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{width:220px;min-width:220px;background:var(--sidebar);min-height:100vh;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;z-index:200;}
+.sidebar-logo{padding:26px 22px 20px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.si-eyebrow{font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:8px;}
+.si-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;line-height:1.3;color:#fff;}
+.si-title em{color:#c07a28;font-style:italic;}
+.si-sub{font-size:10px;color:rgba(255,255,255,0.3);margin-top:5px;letter-spacing:0.06em;}
+.sidebar-meta{padding:14px 22px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.sm-label{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.35);}
+.sm-val{font-size:13px;font-weight:600;color:#fff;margin-top:2px;}
+.sidebar-nav{flex:1;padding:10px 0;}
+.nav-item{display:flex;align-items:center;justify-content:space-between;padding:11px 22px;cursor:pointer;color:rgba(255,255,255,0.5);font-size:13px;font-weight:500;border:none;background:none;width:100%;text-align:left;border-left:3px solid transparent;transition:all 0.15s;}
+.nav-item:hover{color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.05);}
+.nav-item.active{color:#fff;background:rgba(192,122,40,0.18);border-left-color:#c07a28;font-weight:600;}
+.nav-num{font-size:10px;font-weight:700;color:rgba(255,255,255,0.2);letter-spacing:0.06em;}
+.nav-item.active .nav-num{color:rgba(192,122,40,0.7);}
+
+/* PAGE */
+.page-wrap{flex:1;min-width:0;display:flex;flex-direction:column;}
+.hero{background:var(--surface);border-bottom:1px solid var(--border);padding:36px 48px 30px;position:relative;}
+.hero-eyebrow{font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--teal);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.hero-eyebrow::before{content:'';display:block;width:20px;height:2px;background:var(--teal);}
+.hero h1{font-family:'Playfair Display',serif;font-size:38px;font-weight:700;line-height:1.15;color:var(--navy);max-width:600px;}
+.hero h1 em{color:var(--teal);font-style:italic;}
+.hero-sub{font-size:13px;color:var(--text2);margin-top:10px;max-width:500px;line-height:1.6;}
+.hero-badge{position:absolute;right:48px;top:36px;border:1px solid var(--border);padding:10px 16px;text-align:center;}
+.hb-main{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--navy);}
+.hb-sub{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;margin-top:2px;}
+.hb-tag{font-size:10px;font-weight:700;color:var(--orange);margin-top:4px;}
+
+main{padding:30px 44px 64px;}
+.section{display:none;animation:fi 0.25s ease;}
+.section.active{display:block;}
+@keyframes fi{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* SECTION HEADER */
+.sec-head{margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--border);}
+.sec-num{font-size:10px;font-weight:700;color:var(--teal);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px;}
+.sec-head h2{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--navy);}
+.sec-head p{font-size:13px;color:var(--text2);margin-top:5px;}
+
+/* GRIDS */
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+.row{display:flex;gap:14px;}
+.row>*{flex:1;min-width:0;}
+.mb{margin-bottom:18px;}
+@media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr);}.g3{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:680px){.g4,.g3,.g2,.row{grid-template-columns:1fr;flex-direction:column;}}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,0.04);transition:box-shadow 0.2s;}
+.card:hover{box-shadow:0 4px 18px rgba(15,30,61,0.09);}
+.card-title{font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--text3);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;}
+.ct-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.ct-teal{background:var(--teal);}
+.ct-orange{background:var(--orange);}
+.ct-green{background:var(--green);}
+.ct-red{background:var(--red);}
+.ct-yellow{background:var(--yellow);}
+.ct-purple{background:var(--purple);}
+.chart-wrap{position:relative;width:100%;}
+
+/* KPI */
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:20px 18px;display:flex;flex-direction:column;gap:3px;position:relative;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.04);transition:transform 0.18s,box-shadow 0.18s;}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(15,30,61,0.1);}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.kpi.k-teal::before{background:var(--teal);}
+.kpi.k-orange::before{background:var(--orange);}
+.kpi.k-green::before{background:var(--green);}
+.kpi.k-red::before{background:var(--red);}
+.kpi.k-yellow::before{background:var(--yellow);}
+.kpi.k-purple::before{background:var(--purple);}
+.kpi-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;}
+.kpi-val{font-family:'Playfair Display',serif;font-size:38px;font-weight:700;line-height:1;}
+.kpi.k-teal .kpi-val{color:var(--teal);}
+.kpi.k-orange .kpi-val{color:var(--orange);}
+.kpi.k-green .kpi-val{color:var(--green);}
+.kpi.k-red .kpi-val{color:var(--red);}
+.kpi.k-yellow .kpi-val{color:var(--yellow);}
+.kpi.k-purple .kpi-val{color:var(--purple);}
+.kpi-sub{font-size:11px;color:var(--text2);margin-top:2px;}
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:2px;margin-top:7px;width:fit-content;letter-spacing:0.04em;}
+.b-up{background:rgba(45,138,94,0.12);color:var(--green);}
+.b-down{background:rgba(176,48,48,0.1);color:var(--red);}
+
+/* STAT BARS */
+.stat-row{display:flex;flex-direction:column;gap:9px;}
+.stat-item{display:flex;flex-direction:column;gap:3px;}
+.stat-lr{display:flex;justify-content:space-between;align-items:center;}
+.stat-name{font-size:12px;color:var(--text2);font-weight:500;}
+.stat-pct{font-size:12px;font-weight:700;color:var(--navy);}
+.bar-track{height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;}
+.f-teal{background:var(--teal);}
+.f-orange{background:var(--orange);}
+.f-green{background:var(--green);}
+.f-red{background:var(--red);}
+.f-yellow{background:var(--yellow);}
+.f-purple{background:var(--purple);}
+.f-navy{background:var(--navy);}
+
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.tbl thead tr{border-bottom:2px solid var(--navy);}
+.tbl th{padding:8px 10px;text-align:left;font-size:10px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.09em;}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text2);}
+.tbl td:first-child{color:var(--navy);font-weight:500;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:#faf7f2;}
+.td-hi{font-weight:700;color:var(--teal)!important;}
+.td-num{font-weight:600;color:var(--navy)!important;font-variant-numeric:tabular-nums;}
+.td-red{font-weight:700;color:var(--red)!important;}
+.td-green{font-weight:700;color:var(--green)!important;}
+
+/* CALLOUT */
+.callout{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--teal);border-radius:2px;padding:13px 16px;display:flex;gap:11px;align-items:flex-start;}
+.callout-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
+.callout h4{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:3px;}
+.callout p{font-size:12px;color:var(--text2);line-height:1.6;}
+.callout.c-orange{border-left-color:var(--orange);background:#fdf8f2;}
+.callout.c-red{border-left-color:var(--red);background:#fdf4f4;}
+.callout.c-green{border-left-color:var(--green);}
+
+/* TIMELINE */
+.tl{display:flex;flex-direction:column;gap:12px;}
+.tl-item{display:flex;gap:12px;align-items:flex-start;}
+.tl-dot-col{display:flex;flex-direction:column;align-items:center;}
+.tl-dot{width:9px;height:9px;border-radius:50%;background:var(--teal);flex-shrink:0;margin-top:3px;}
+.tl-line{width:1px;flex:1;background:var(--border);margin-top:3px;min-height:16px;}
+.tl-period{font-size:10px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:2px;}
+.tl-text{font-size:12px;color:var(--text2);line-height:1.6;padding-bottom:2px;}
+.tl-text strong{color:var(--navy);font-weight:700;}
+
+/* HIGHLIGHT CARD */
+.hl-card{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:16px;border-left:3px solid var(--teal);}
+.hl-tag{font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:5px;}
+.hl-card h3{font-family:'Playfair Display',serif;font-size:16px;color:var(--navy);margin-bottom:5px;}
+.hl-card p{font-size:12px;color:var(--text2);line-height:1.6;}
+
+/* DEPT CARD */
+.dept-card{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+.dept-label{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:4px;}
+.dept-num{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--teal);line-height:1;}
+.dept-row{display:flex;gap:14px;margin-top:8px;}
+.dept-stat-val{font-size:14px;font-weight:700;color:var(--navy);}
+.dept-stat-lbl{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;}
+.dept-meta{font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5;}
+
+/* PROGRESS BAR (budget usage) */
+.prog-wrap{display:flex;flex-direction:column;gap:12px;}
+.prog-item{display:flex;flex-direction:column;gap:4px;}
+.prog-top{display:flex;justify-content:space-between;font-size:12px;}
+.prog-name{font-weight:600;color:var(--navy);}
+.prog-nums{color:var(--text2);font-size:11px;display:flex;gap:10px;}
+.prog-track{height:8px;background:rgba(15,30,61,0.07);border-radius:4px;overflow:hidden;position:relative;}
+.prog-bar{height:100%;border-radius:4px;transition:width 0.8s ease;}
+.prog-over{position:absolute;right:0;top:0;bottom:0;background:rgba(176,48,48,0.25);border-radius:0 4px 4px 0;}
+
+/* DONUT LEGEND */
+.dleg{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;}
+.dleg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);}
+.dleg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+
+/* GOAL CARD */
+.goal-card{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:18px;display:flex;gap:14px;align-items:flex-start;}
+.goal-num{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--teal);flex-shrink:0;line-height:1;}
+.goal-body h3{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:4px;}
+.goal-body p{font-size:12px;color:var(--text2);line-height:1.6;}
+.goal-pill{display:inline-block;padding:2px 8px;border-radius:2px;font-size:10px;font-weight:700;margin-bottom:6px;letter-spacing:0.04em;}
+.gp-teal{background:rgba(26,138,138,0.1);color:var(--teal);}
+.gp-orange{background:rgba(192,122,40,0.1);color:var(--orange);}
+.gp-red{background:rgba(176,48,48,0.1);color:var(--red);}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:#c8bfb0;border-radius:2px;}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="si-eyebrow">FY 2025–2026 Quarterly Summary Report</div>
+    <div class="si-title">College <em>of the</em><br>Marshall Islands</div>
+    <div class="si-sub">Institutional Research &amp; Assessment</div>
+  </div>
+  <div class="sidebar-meta">
+    <div class="sm-label">Academic Year</div>
+    <div class="sm-val">2025–2026 · Spring 2026</div>
+  </div>
+  <div class="sidebar-meta">
+    <div class="sm-label">Financial Period</div>
+    <div class="sm-val">FY 2026 · YTD</div>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="nav-item active" onclick="showTab('overview',this)"><span>Overview</span><span class="nav-num">01</span></button>
+    <button class="nav-item" onclick="showTab('academic',this)"><span>Academic</span><span class="nav-num">02</span></button>
+    <button class="nav-item" onclick="showTab('financial',this)"><span>Financial / Budget</span><span class="nav-num">03</span></button>
+    <button class="nav-item" onclick="showTab('strategic',this)"><span>Strategic Goals</span><span class="nav-num">04</span></button>
+    <button class="nav-item" onclick="showTab('highlights',this)"><span>Highlights</span><span class="nav-num">05</span></button>
+  </nav>
+</aside>
+
+<div class="page-wrap">
+<div class="hero">
+  <div class="hero-eyebrow">College of the Marshall Islands · AY 2025–2026</div>
+  <h1>CMI <em>FY2025–2026</em><br>Quarterly Summary Report</h1>
+  <div class="hero-sub">Spring 2026 enrollment, academic outcomes, FY26 budget performance, strategic progress, and institutional highlights — all in one place.</div>
+  <div class="hero-badge">
+    <div class="hb-main">1,033</div>
+    <div class="hb-sub">SP26 Students</div>
+    <div class="hb-tag">▲ +6% from SP25</div>
+  </div>
+</div>
+
+<main>
+
+<!-- ===== OVERVIEW ===== -->
+<div class="section active" id="tab-overview">
+  <div class="sec-head">
+    <div class="sec-num">01 · Overview</div>
+    <h2>Official Postsecondary Enrollment — 2026 Spring</h2>
+    <p>Official postsecondary enrollment · February 16, 2026 · Source: Institutional Research &amp; Assessment</p>
+  </div>
+
+  <div class="g4 mb">
+    <div class="kpi k-teal"><div class="kpi-label">Total Enrollment</div><div class="kpi-val">1,033</div><div class="kpi-sub">Unduplicated headcount</div><span class="badge b-up">▲ +6% from SP25</span></div>
+    <div class="kpi k-orange"><div class="kpi-label">Full-Time Equivalent</div><div class="kpi-val">695</div><div class="kpi-sub">Credit hours ÷ 15</div><span class="badge b-up">▲ +10% from SP25</span></div>
+    <div class="kpi k-green"><div class="kpi-label">Average Age</div><div class="kpi-val">24.10</div><div class="kpi-sub">All enrolled students</div></div>
+    <div class="kpi k-navy" style="--kpi-c:var(--navy);"><div class="kpi-label">Avg Credits Earned</div><div class="kpi-val" style="color:var(--navy);">36.91</div><div class="kpi-sub">Per student, cumulative</div></div>
+  </div>
+
+  <div class="row mb">
+    <div class="card" style="flex:2.2;">
+      <div class="card-title"><span class="ct-dot ct-teal"></span>Enrollment Trend — Spring Semesters 2021–2026</div>
+      <div class="chart-wrap" style="height:220px;"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="card" style="flex:1;">
+      <div class="card-title"><span class="ct-dot ct-orange"></span>Gender Split — SP26</div>
+      <div class="chart-wrap" style="height:160px;"><canvas id="genderChart"></canvas></div>
+      <div class="dleg">
+        <div class="dleg-item"><div class="dleg-dot" style="background:var(--teal)"></div>Female 583 (56%)</div>
+        <div class="dleg-item"><div class="dleg-dot" style="background:var(--orange)"></div>Male 450 (44%)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g3 mb">
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-teal"></span>Registration Status</div>
+      <div class="stat-row">
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">Continuing</span><span class="stat-pct">79.19%</span></div><div class="bar-track"><div class="bar-fill f-teal" style="width:79.19%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">First-Time</span><span class="stat-pct">9.49%</span></div><div class="bar-track"><div class="bar-fill f-orange" style="width:9.49%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">Re-Admitted</span><span class="stat-pct">6.58%</span></div><div class="bar-track"><div class="bar-fill f-green" style="width:6.58%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">Returning</span><span class="stat-pct">4.45%</span></div><div class="bar-track"><div class="bar-fill f-yellow" style="width:4.45%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">Transferee</span><span class="stat-pct">0.29%</span></div><div class="bar-track"><div class="bar-fill f-purple" style="width:0.29%"></div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-orange"></span>Financial Aid Standing</div>
+      <div class="stat-row">
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">Satisfactory</span><span class="stat-pct">64%</span></div><div class="bar-track"><div class="bar-fill f-green" style="width:64%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">Warning</span><span class="stat-pct">20%</span></div><div class="bar-track"><div class="bar-fill f-yellow" style="width:20%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">Suspension</span><span class="stat-pct">6%</span></div><div class="bar-track"><div class="bar-fill f-red" style="width:6%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">Probation</span><span class="stat-pct">6%</span></div><div class="bar-track"><div class="bar-fill f-orange" style="width:6%"></div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-green"></span>Credit Load &amp; 15-to-Finish</div>
+      <div class="stat-row">
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">Full-Time</span><span class="stat-pct">67%</span></div><div class="bar-track"><div class="bar-fill f-teal" style="width:67%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">Part-Time</span><span class="stat-pct">33%</span></div><div class="bar-track"><div class="bar-fill f-orange" style="width:33%"></div></div></div>
+      </div>
+      <div style="height:12px;"></div>
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">15-to-Finish Status</div>
+      <div class="stat-row">
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">Below 15 Credits (at risk)</span><span class="stat-pct">76%</span></div><div class="bar-track"><div class="bar-fill f-red" style="width:76%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">At or Above 15 Credits</span><span class="stat-pct">24%</span></div><div class="bar-track"><div class="bar-fill f-green" style="width:24%"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb">
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-teal"></span>Enrollment by Location</div>
+      <div class="chart-wrap" style="height:180px;"><canvas id="locationChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-orange"></span>Citizenship</div>
+      <div class="stat-row">
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">Marshall Islands</span><span class="stat-pct">90.32%</span></div><div class="bar-track"><div class="bar-fill f-teal" style="width:90.32%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">Unknown</span><span class="stat-pct">7.07%</span></div><div class="bar-track"><div class="bar-fill f-orange" style="width:7.07%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">FSM</span><span class="stat-pct">1.26%</span></div><div class="bar-track"><div class="bar-fill f-green" style="width:1.26%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">United States</span><span class="stat-pct">0.39%</span></div><div class="bar-track"><div class="bar-fill f-yellow" style="width:0.39%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">China / Other</span><span class="stat-pct">0.29%</span></div><div class="bar-track"><div class="bar-fill f-purple" style="width:0.29%"></div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-yellow"></span>High School Type</div>
+      <div class="stat-row">
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">RMI Public</span><span class="stat-pct">64.18%</span></div><div class="bar-track"><div class="bar-fill f-teal" style="width:64.18%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">RMI Private</span><span class="stat-pct">17.13%</span></div><div class="bar-track"><div class="bar-fill f-orange" style="width:17.13%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">RMI HS Equivalent</span><span class="stat-pct">9.49%</span></div><div class="bar-track"><div class="bar-fill f-green" style="width:9.49%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">Non-RMI</span><span class="stat-pct">8.91%</span></div><div class="bar-track"><div class="bar-fill f-yellow" style="width:8.91%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">Unknown</span><span class="stat-pct">0.29%</span></div><div class="bar-track"><div class="bar-fill f-purple" style="width:0.29%"></div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ACADEMIC ===== -->
+<div class="section" id="tab-academic">
+  <div class="sec-head">
+    <div class="sec-num">02 · Academic</div>
+    <h2>Academic Programs — Spring 2026</h2>
+    <p>Department enrollment, placement, and developmental course trends</p>
+  </div>
+
+  <div class="card mb">
+    <div class="card-title"><span class="ct-dot ct-teal"></span>Department Enrollment — Spring 2026 Headcount</div>
+    <div class="chart-wrap" style="height:240px;"><canvas id="deptBar"></canvas></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;" class="mb">
+    <div class="dept-card"><div class="dept-label">Liberal Arts Studies</div><div class="dept-num">353</div><div class="dept-row"><div><div class="dept-stat-val">228</div><div class="dept-stat-lbl">FTE</div></div><div><div class="dept-stat-val">22.73</div><div class="dept-stat-lbl">Avg Age</div></div><div><div class="dept-stat-val">29.43</div><div class="dept-stat-lbl">Avg Credits</div></div></div><div class="dept-meta">AA-LBA 100% · 58% Female · 92% Special Programs</div></div>
+    <div class="dept-card"><div class="dept-label">Business Studies</div><div class="dept-num" style="color:var(--orange)">244</div><div class="dept-row"><div><div class="dept-stat-val">160</div><div class="dept-stat-lbl">FTE</div></div><div><div class="dept-stat-val">22.02</div><div class="dept-stat-lbl">Avg Age</div></div><div><div class="dept-stat-val">25.68</div><div class="dept-stat-lbl">Avg Credits</div></div></div><div class="dept-meta">AA-BUS 99.18% · 54% Male · 95% Special Programs</div></div>
+    <div class="dept-card"><div class="dept-label">Elementary Education</div><div class="dept-num" style="color:var(--green)">263</div><div class="dept-row"><div><div class="dept-stat-val">183</div><div class="dept-stat-lbl">FTE</div></div><div><div class="dept-stat-val">28.65</div><div class="dept-stat-lbl">Avg Age</div></div><div><div class="dept-stat-val">59.92</div><div class="dept-stat-lbl">Avg Credits</div></div></div><div class="dept-meta">AS-EEDU 64.64% | BA-EEDU 30.80% · 64% Female</div></div>
+    <div class="dept-card"><div class="dept-label">Nursing &amp; Allied Health</div><div class="dept-num" style="color:var(--yellow)">111</div><div class="dept-row"><div><div class="dept-stat-val">76</div><div class="dept-stat-lbl">FTE</div></div><div><div class="dept-stat-val">23.44</div><div class="dept-stat-lbl">Avg Age</div></div><div><div class="dept-stat-val">40.30</div><div class="dept-stat-lbl">Avg Credits</div></div></div><div class="dept-meta">AS-NURS 83.78% · 75% Female · 78% Special Programs</div></div>
+    <div class="dept-card"><div class="dept-label">WAVES Program</div><div class="dept-num" style="color:var(--purple)">36</div><div class="dept-row"><div><div class="dept-stat-val">31</div><div class="dept-stat-lbl">FTE</div></div><div><div class="dept-stat-val">21.97</div><div class="dept-stat-lbl">Avg Age</div></div><div><div class="dept-stat-val">21.78</div><div class="dept-stat-lbl">Avg Credits</div></div></div><div class="dept-meta">CC-RFPNW 52.78% | CC-RFPERW 22.22% · 83% Male</div></div>
+    <div class="dept-card"><div class="dept-label">Marine Science &amp; IT</div><div class="dept-num" style="color:var(--red)">12</div><div class="dept-row"><div><div class="dept-stat-val">11</div><div class="dept-stat-lbl">FTE</div></div><div><div class="dept-stat-val">23.33</div><div class="dept-stat-lbl">Avg Age</div></div><div><div class="dept-stat-val">33.75</div><div class="dept-stat-lbl">Avg Credits</div></div></div><div class="dept-meta">CC-MSCI 83.33% | CC-ITSL1 16.67% · 92% Male</div></div>
+  </div>
+
+  <div class="row mb">
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-teal"></span>English Placement — All Students</div>
+      <div class="chart-wrap" style="height:180px;"><canvas id="engChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-orange"></span>Math Placement — All Students</div>
+      <div class="chart-wrap" style="height:180px;"><canvas id="mathChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-green"></span>Top Degree Programs (First Choice)</div>
+      <div class="stat-row">
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">AA – Liberal Arts</span><span class="stat-pct">34.17%</span></div><div class="bar-track"><div class="bar-fill f-teal" style="width:100%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">AA – Business Studies</span><span class="stat-pct">23.43%</span></div><div class="bar-track"><div class="bar-fill f-orange" style="width:68.6%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">AS – Elementary Ed.</span><span class="stat-pct">16.46%</span></div><div class="bar-track"><div class="bar-fill f-green" style="width:48.1%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">AS – Nursing</span><span class="stat-pct">9.00%</span></div><div class="bar-track"><div class="bar-fill f-yellow" style="width:26.3%"></div></div></div>
+        <div class="stat-item"><div class="stat-lr"><span class="stat-name">BA – Education</span><span class="stat-pct">5.80%</span></div><div class="bar-track"><div class="bar-fill f-purple" style="width:17%"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mb">
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-red"></span>Developmental English — SP Trend</div>
+      <div class="chart-wrap" style="height:160px;"><canvas id="devEngChart"></canvas></div>
+      <div style="display:flex;gap:16px;margin-top:10px;">
+        <div><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;">SP26 Count</div><div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--red);">293</div></div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;">FTE</div><div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--navy);">185</div></div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;">Avg Age</div><div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--navy);">22.12</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-yellow"></span>Developmental Math — SP Trend</div>
+      <div class="chart-wrap" style="height:160px;"><canvas id="devMathChart"></canvas></div>
+      <div style="display:flex;gap:16px;margin-top:10px;">
+        <div><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;">SP26 Count</div><div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--yellow);">412</div></div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;">FTE</div><div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--navy);">281</div></div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;">Avg Age</div><div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--navy);">22.26</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-orange"></span>First-Time Students — SP Trend</div>
+      <div class="chart-wrap" style="height:160px;"><canvas id="firstTimeChart"></canvas></div>
+      <div style="display:flex;gap:16px;margin-top:10px;">
+        <div><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;">SP26 Count</div><div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--orange);">98</div><span class="badge b-down" style="font-size:10px;">▼ −38%</span></div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;">FTE</div><div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--navy);">79</div></div>
+        <div><div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;">Avg Age</div><div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--navy);">21.90</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-teal"></span>Center Summary — Spring 2026</div>
+      <table class="tbl">
+        <thead><tr><th>Center</th><th>Count</th><th>FTE</th><th>Avg Age</th><th>Avg Credits</th></tr></thead>
+        <tbody>
+          <tr><td>Uliga Campus (Main)</td><td class="td-num">944</td><td class="td-num">~647</td><td>24.10</td><td>36.91</td></tr>
+          <tr><td>Jaluit Center</td><td class="td-num">44</td><td class="td-num">27</td><td>24.23</td><td>30.43</td></tr>
+          <tr><td>Wotje Center</td><td class="td-num">23</td><td class="td-num">17</td><td>27.30</td><td>31.26</td></tr>
+          <tr><td>Kwajalein Center</td><td class="td-num">12</td><td class="td-num">4</td><td>26.42</td><td>36.92</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-orange"></span>May 2025 Graduation Awards</div>
+      <div class="chart-wrap" style="height:180px;"><canvas id="gradChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FINANCIAL ===== -->
+<div class="section" id="tab-financial">
+  <div class="sec-head">
+    <div class="sec-num">03 · Financial / Budget</div>
+    <h2>FY 2026 — Budget &amp; Expenditures</h2>
+    <p>Restricted and Unrestricted funds · Year-to-date actuals vs. original budget</p>
+  </div>
+
+  <div class="g4 mb">
+    <div class="kpi k-teal"><div class="kpi-label">Restricted Budget</div><div class="kpi-val" style="font-size:30px;">$8.77M</div><div class="kpi-sub">Total original budget</div></div>
+    <div class="kpi k-orange"><div class="kpi-label">Restricted YTD Actual</div><div class="kpi-val" style="font-size:30px;">$8.30M</div><div class="kpi-sub">94.6% of budget used</div></div>
+    <div class="kpi k-green"><div class="kpi-label">Unrestricted Budget</div><div class="kpi-val" style="font-size:30px;">$9.37M</div><div class="kpi-sub">Total original budget</div></div>
+    <div class="kpi k-yellow"><div class="kpi-label">Unrestricted YTD Actual</div><div class="kpi-val" style="font-size:30px;">$3.44M</div><div class="kpi-sub">36.7% of budget used</div></div>
+  </div>
+
+  <!-- COMBINED BUDGET vs ACTUAL -->
+  <div class="row mb">
+    <div class="card" style="flex:2;">
+      <div class="card-title"><span class="ct-dot ct-teal"></span>Total Budget vs. YTD Actuals — Both Funds Combined</div>
+      <div class="chart-wrap" style="height:240px;"><canvas id="combinedBudgetChart"></canvas></div>
+    </div>
+    <div class="card" style="flex:1;">
+      <div class="card-title"><span class="ct-dot ct-orange"></span>Budget Utilization Rate</div>
+      <div class="chart-wrap" style="height:180px;"><canvas id="utilChart"></canvas></div>
+      <div class="dleg" style="margin-top:10px;">
+        <div class="dleg-item"><div class="dleg-dot" style="background:var(--teal)"></div>Restricted 94.6%</div>
+        <div class="dleg-item"><div class="dleg-dot" style="background:var(--orange)"></div>Unrestricted 36.7%</div>
+        <div class="dleg-item"><div class="dleg-dot" style="background:var(--green)"></div>Combined 64.7%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESTRICTED DETAIL -->
+  <div class="sec-head" style="margin-top:10px;">
+    <div class="sec-num">Restricted Fund</div>
+    <h2 style="font-size:22px;">Restricted Budget — Category Breakdown</h2>
+    <p>Grants, federal programs, and restricted allocations · Total Budget: $8,773,166</p>
+  </div>
+
+  <div class="row mb">
+    <div class="card" style="flex:1.4;">
+      <div class="card-title"><span class="ct-dot ct-teal"></span>Restricted — Budget vs. YTD Actual by Category</div>
+      <div class="chart-wrap" style="height:280px;"><canvas id="restrictedCatChart"></canvas></div>
+    </div>
+    <div class="card" style="flex:1;">
+      <div class="card-title"><span class="ct-dot ct-orange"></span>Restricted — Budget Utilization by Category</div>
+      <div class="prog-wrap">
+        <div class="prog-item">
+          <div class="prog-top"><span class="prog-name">Personnel / Wages</span></div>
+          <div class="prog-nums"><span>Budget: $4,075,122</span><span>Actual: $1,835,915</span></div>
+          <div class="prog-track"><div class="prog-bar" style="width:45%;background:var(--teal);"></div></div>
+        </div>
+        <div class="prog-item">
+          <div class="prog-top"><span class="prog-name">Travel</span></div>
+          <div class="prog-nums"><span>Budget: $798,510</span><span>Actual: $319,585</span></div>
+          <div class="prog-track"><div class="prog-bar" style="width:40%;background:var(--orange);"></div></div>
+        </div>
+        <div class="prog-item">
+          <div class="prog-top"><span class="prog-name">Contractual Services</span></div>
+          <div class="prog-nums"><span>Budget: $1,306,587</span><span>Actual: $702,715</span></div>
+          <div class="prog-track"><div class="prog-bar" style="width:54%;background:var(--green);"></div></div>
+        </div>
+        <div class="prog-item">
+          <div class="prog-top"><span class="prog-name">Student Aid &amp; Wages</span></div>
+          <div class="prog-nums"><span>Budget: $225,102</span><span style="color:var(--red);font-weight:700;">Actual: $5,083,788 ⚠</span></div>
+          <div class="prog-track"><div class="prog-bar" style="width:100%;background:var(--red);"></div></div>
+        </div>
+        <div class="prog-item">
+          <div class="prog-top"><span class="prog-name">Materials &amp; Supplies</span></div>
+          <div class="prog-nums"><span>Budget: $419,610</span><span>Actual: $57,315</span></div>
+          <div class="prog-track"><div class="prog-bar" style="width:14%;background:var(--yellow);"></div></div>
+        </div>
+        <div class="prog-item">
+          <div class="prog-top"><span class="prog-name">Housing &amp; HR</span></div>
+          <div class="prog-nums"><span>Budget: $424,604</span><span>Actual: $204,883</span></div>
+          <div class="prog-track"><div class="prog-bar" style="width:48%;background:var(--purple);"></div></div>
+        </div>
+        <div class="prog-item">
+          <div class="prog-top"><span class="prog-name">Facilities / Maintenance</span></div>
+          <div class="prog-nums"><span>Budget: $319,587</span><span>Actual: $25,646</span></div>
+          <div class="prog-track"><div class="prog-bar" style="width:8%;background:var(--navy);"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);">
+      <div class="card-title" style="border:none;padding:0;margin:0;"><span class="ct-dot ct-teal"></span>Restricted Fund — All 50 Budget Line Items</div>
+      <div style="display:flex;gap:20px;font-size:11px;">
+        <span style="color:var(--text3);">Total Budget: <strong style="color:var(--navy);">$8,773,166</strong></span>
+        <span style="color:var(--text3);">YTD Actual: <strong style="color:var(--teal);">$8,302,909</strong></span>
+        <span style="color:var(--text3);">Available: <strong style="color:var(--green);">$470,257</strong></span>
+      </div>
+    </div>
+    <div style="overflow-x:auto;max-height:520px;overflow-y:auto;">
+      <table class="tbl" style="font-size:12px;">
+        <thead style="position:sticky;top:0;background:var(--surface);z-index:1;">
+          <tr>
+            <th style="width:54px;">Code</th>
+            <th>Account Title</th>
+            <th style="width:120px;">Budget</th>
+            <th style="width:120px;">YTD Actual</th>
+            <th style="width:120px;">Available</th>
+            <th style="width:140px;">% Used</th>
+          </tr>
+        </thead>
+        <tbody>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5001</td>
+          <td style="font-weight:500;color:var(--navy);">Salaries & Wages - Regular</td>
+          <td class="td-num">$3,569,285</td>
+          <td class="td-num">$1,180,780</td>
+          <td class="td-green">$2,388,505</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:33%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">33.1%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5002</td>
+          <td style="font-weight:500;color:var(--navy);">Salaries & Wages - Overtime</td>
+          <td class="td-num">$450</td>
+          <td class="td-num">$435</td>
+          <td class="td-green">$15</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:97%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">96.6%</span>
+            </div>
+          </td>
+        </tr>
+<tr style="background:#fff8f8;">
+          <td style="color:var(--text3);font-size:11px;">5003</td>
+          <td style="font-weight:500;color:var(--navy);">Salaries & Wages - Overload</td>
+          <td class="td-num">$12,375</td>
+          <td class="td-num">$288,075</td>
+          <td class="td-red">−$275,700</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:100%;background:#b03030;border-radius:3px;"></div>
+              </div>
+              <span class="td-red" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">2327.9%</span>
+            </div>
+          </td>
+        </tr>
+<tr style="background:#fff8f8;">
+          <td style="color:var(--text3);font-size:11px;">5004</td>
+          <td style="font-weight:500;color:var(--navy);">Salaries & Wages - Adjunct</td>
+          <td class="td-num">$58,500</td>
+          <td class="td-num">$181,612</td>
+          <td class="td-red">−$123,112</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:100%;background:#b03030;border-radius:3px;"></div>
+              </div>
+              <span class="td-red" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">310.4%</span>
+            </div>
+          </td>
+        </tr>
+<tr style="background:#fff8f8;">
+          <td style="color:var(--text3);font-size:11px;">5005</td>
+          <td style="font-weight:500;color:var(--navy);">Incentive/Bonus</td>
+          <td class="td-num">$0</td>
+          <td class="td-num">$1,769</td>
+          <td class="td-red">−$1,769</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#b03030;border-radius:3px;"></div>
+              </div>
+              <span class="td-red" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">N/A</span>
+            </div>
+          </td>
+        </tr>
+<tr style="background:#fff8f8;">
+          <td style="color:var(--text3);font-size:11px;">5007</td>
+          <td style="font-weight:500;color:var(--navy);">Additional Duties</td>
+          <td class="td-num">$0</td>
+          <td class="td-num">$7,350</td>
+          <td class="td-red">−$7,350</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#b03030;border-radius:3px;"></div>
+              </div>
+              <span class="td-red" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">N/A</span>
+            </div>
+          </td>
+        </tr>
+<tr style="background:#fff8f8;">
+          <td style="color:var(--text3);font-size:11px;">5009</td>
+          <td style="font-weight:500;color:var(--navy);">Hardship Differential</td>
+          <td class="td-num">$0</td>
+          <td class="td-num">$3,720</td>
+          <td class="td-red">−$3,720</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#b03030;border-radius:3px;"></div>
+              </div>
+              <span class="td-red" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">N/A</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5011</td>
+          <td style="font-weight:500;color:var(--navy);">Social Security Tax</td>
+          <td class="td-num">$291,394</td>
+          <td class="td-num">$132,037</td>
+          <td class="td-green">$159,356</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:45%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">45.3%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5012</td>
+          <td style="font-weight:500;color:var(--navy);">Social Security Health Fund</td>
+          <td class="td-num">$143,118</td>
+          <td class="td-num">$40,137</td>
+          <td class="td-green">$102,981</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:28%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">28.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5021</td>
+          <td style="font-weight:500;color:var(--navy);">Staff/Faculty Housing</td>
+          <td class="td-num">$415,804</td>
+          <td class="td-num">$204,883</td>
+          <td class="td-green">$210,921</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:49%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">49.3%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5025</td>
+          <td style="font-weight:500;color:var(--navy);">Staff Development</td>
+          <td class="td-num">$4,800</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$4,800</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5027</td>
+          <td style="font-weight:500;color:var(--navy);">Faculty Development</td>
+          <td class="td-num">$4,000</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$4,000</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5031</td>
+          <td style="font-weight:500;color:var(--navy);">Travel</td>
+          <td class="td-num">$798,510</td>
+          <td class="td-num">$319,585</td>
+          <td class="td-green">$478,925</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:40%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">40.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5101</td>
+          <td style="font-weight:500;color:var(--navy);">Contractual Services</td>
+          <td class="td-num">$1,302,587</td>
+          <td class="td-num">$702,715</td>
+          <td class="td-green">$599,873</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:54%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">53.9%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5111</td>
+          <td style="font-weight:500;color:var(--navy);">Consultancy/Professional Fees</td>
+          <td class="td-num">$4,000</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$4,000</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr style="background:#fff8f8;">
+          <td style="color:var(--text3);font-size:11px;">5121</td>
+          <td style="font-weight:500;color:var(--navy);">Sitting Fee</td>
+          <td class="td-num">$0</td>
+          <td class="td-num">$1,000</td>
+          <td class="td-red">−$1,000</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#b03030;border-radius:3px;"></div>
+              </div>
+              <span class="td-red" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">N/A</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5201</td>
+          <td style="font-weight:500;color:var(--navy);">Materials/Supplies</td>
+          <td class="td-num">$325,724</td>
+          <td class="td-num">$49,301</td>
+          <td class="td-green">$276,423</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:15%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">15.1%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5206</td>
+          <td style="font-weight:500;color:var(--navy);">Instructional Supplies</td>
+          <td class="td-num">$53,716</td>
+          <td class="td-num">$8,014</td>
+          <td class="td-green">$45,702</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:15%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">14.9%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5211</td>
+          <td style="font-weight:500;color:var(--navy);">Books/Reference Materials</td>
+          <td class="td-num">$22,900</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$22,900</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5213</td>
+          <td style="font-weight:500;color:var(--navy);">Subscriptions/Periodicals</td>
+          <td class="td-num">$9,771</td>
+          <td class="td-num">$4,868</td>
+          <td class="td-green">$4,903</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:50%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">49.8%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5215</td>
+          <td style="font-weight:500;color:var(--navy);">Audiovisuals</td>
+          <td class="td-num">$1,500</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$1,500</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5221</td>
+          <td style="font-weight:500;color:var(--navy);">Printing & Reproduction</td>
+          <td class="td-num">$4,500</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$4,500</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5225</td>
+          <td style="font-weight:500;color:var(--navy);">Advertising</td>
+          <td class="td-num">$1,500</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$1,500</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5231</td>
+          <td style="font-weight:500;color:var(--navy);">Telephone & Fax</td>
+          <td class="td-num">$8,000</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$8,000</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5232</td>
+          <td style="font-weight:500;color:var(--navy);">Import Tax</td>
+          <td class="td-num">$9,500</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$9,500</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5233</td>
+          <td style="font-weight:500;color:var(--navy);">Postage & Shipping</td>
+          <td class="td-num">$3,308</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$3,308</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5245</td>
+          <td style="font-weight:500;color:var(--navy);">Representation & Entertainment</td>
+          <td class="td-num">$40,695</td>
+          <td class="td-num">$6,490</td>
+          <td class="td-green">$34,205</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:16%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">15.9%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5251</td>
+          <td style="font-weight:500;color:var(--navy);">Insurance-Vehicle</td>
+          <td class="td-num">$6,500</td>
+          <td class="td-num">$2,961</td>
+          <td class="td-green">$3,539</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:46%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">45.6%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5255</td>
+          <td style="font-weight:500;color:var(--navy);">Membership Dues</td>
+          <td class="td-num">$15,300</td>
+          <td class="td-num">$6,249</td>
+          <td class="td-green">$9,051</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:41%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">40.8%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5261</td>
+          <td style="font-weight:500;color:var(--navy);">Others</td>
+          <td class="td-num">$194,852</td>
+          <td class="td-num">$17,583</td>
+          <td class="td-green">$177,268</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:9%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">9.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5271</td>
+          <td style="font-weight:500;color:var(--navy);">Indirect Cost</td>
+          <td class="td-num">$318,318</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$318,318</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5311</td>
+          <td style="font-weight:500;color:var(--navy);">POL-Gasoline and Lubricants</td>
+          <td class="td-num">$23,500</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$23,500</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5321</td>
+          <td style="font-weight:500;color:var(--navy);">Cleaning/Maintenance Supplies</td>
+          <td class="td-num">$70,257</td>
+          <td class="td-num">$2,054</td>
+          <td class="td-green">$68,203</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:3%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">2.9%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5331</td>
+          <td style="font-weight:500;color:var(--navy);">Repair-Vehicles/Equipments</td>
+          <td class="td-num">$56,000</td>
+          <td class="td-num">$19,631</td>
+          <td class="td-green">$36,369</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:35%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">35.1%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5341</td>
+          <td style="font-weight:500;color:var(--navy);">Minor Repairs & Maintenance-CMI Bldg.</td>
+          <td class="td-num">$71,850</td>
+          <td class="td-num">$3,961</td>
+          <td class="td-green">$67,889</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:6%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">5.5%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5351</td>
+          <td style="font-weight:500;color:var(--navy);">Major Renov./Rep. & Maint./Improvements</td>
+          <td class="td-num">$17,980</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$17,980</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5361</td>
+          <td style="font-weight:500;color:var(--navy);">Utilities (Water and Electricty)</td>
+          <td class="td-num">$80,000</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$80,000</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5431</td>
+          <td style="font-weight:500;color:var(--navy);">Student Workshop Meals</td>
+          <td class="td-num">$700</td>
+          <td class="td-num">$123</td>
+          <td class="td-green">$577</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:18%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">17.6%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5432</td>
+          <td style="font-weight:500;color:var(--navy);">Student Housing Expenses</td>
+          <td class="td-num">$19,000</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$19,000</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5501</td>
+          <td style="font-weight:500;color:var(--navy);">Student Activities</td>
+          <td class="td-num">$36,000</td>
+          <td class="td-num">$1,500</td>
+          <td class="td-green">$34,500</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:4%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">4.2%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5521</td>
+          <td style="font-weight:500;color:var(--navy);">Students/Participants Travel</td>
+          <td class="td-num">$12,275</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$12,275</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr style="background:#fff8f8;">
+          <td style="color:var(--text3);font-size:11px;">5531</td>
+          <td style="font-weight:500;color:var(--navy);">Student Aid</td>
+          <td class="td-num">$0</td>
+          <td class="td-num">$4,926,870</td>
+          <td class="td-red">−$4,926,870</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#b03030;border-radius:3px;"></div>
+              </div>
+              <span class="td-red" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">N/A</span>
+            </div>
+          </td>
+        </tr>
+<tr style="background:#fff8f8;">
+          <td style="color:var(--text3);font-size:11px;">5541</td>
+          <td style="font-weight:500;color:var(--navy);">Student Wages</td>
+          <td class="td-num">$11,200</td>
+          <td class="td-num">$146,175</td>
+          <td class="td-red">−$134,975</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:100%;background:#b03030;border-radius:3px;"></div>
+              </div>
+              <span class="td-red" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">1305.1%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5551</td>
+          <td style="font-weight:500;color:var(--navy);">Scholarship & Grants</td>
+          <td class="td-num">$90,018</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$90,018</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5561</td>
+          <td style="font-weight:500;color:var(--navy);">International Testing</td>
+          <td class="td-num">$4,410</td>
+          <td class="td-num">$30</td>
+          <td class="td-green">$4,380</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:1%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.7%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5571</td>
+          <td style="font-weight:500;color:var(--navy);">Stipends</td>
+          <td class="td-num">$51,500</td>
+          <td class="td-num">$9,090</td>
+          <td class="td-green">$42,410</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:18%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">17.7%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5600</td>
+          <td style="font-weight:500;color:var(--navy);">Transfer Out - Maintenance Investment Fu</td>
+          <td class="td-num">$202,190</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$202,190</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5900</td>
+          <td style="font-weight:500;color:var(--navy);">Small Tools</td>
+          <td class="td-num">$172,880</td>
+          <td class="td-num">$7,914</td>
+          <td class="td-green">$164,966</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:5%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">4.6%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5901</td>
+          <td style="font-weight:500;color:var(--navy);">Furniture/Equipment</td>
+          <td class="td-num">$197,000</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$197,000</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5905</td>
+          <td style="font-weight:500;color:var(--navy);">Vehicles</td>
+          <td class="td-num">$35,500</td>
+          <td class="td-num">$25,995</td>
+          <td class="td-green">$9,505</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:73%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">73.2%</span>
+            </div>
+          </td>
+        </tr>
+          <tr style="background:var(--surface2);font-weight:700;border-top:2px solid var(--navy);">
+            <td colspan="2" style="color:var(--navy);font-weight:700;">TOTAL — RESTRICTED</td>
+            <td class="td-num">$8,773,166</td>
+            <td class="td-num" style="color:var(--teal);">$8,302,909</td>
+            <td class="td-green">$470,257</td>
+            <td class="td-hi">94.6%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- UNRESTRICTED DETAIL -->
+  <div class="sec-head" style="margin-top:10px;">
+    <div class="sec-num">Unrestricted Fund</div>
+    <h2 style="font-size:22px;">Unrestricted Budget — Category Breakdown</h2>
+    <p>Operating funds, tuition revenue, RMI subsidy · Total Budget: $9,368,652</p>
+  </div>
+
+  <div class="row mb">
+    <div class="card" style="flex:1.4;">
+      <div class="card-title"><span class="ct-dot ct-green"></span>Unrestricted — Budget vs. YTD Actual by Category</div>
+      <div class="chart-wrap" style="height:280px;"><canvas id="unrestrictedCatChart"></canvas></div>
+    </div>
+    <div class="card" style="flex:1;">
+      <div class="card-title"><span class="ct-dot ct-yellow"></span>Unrestricted — Budget Utilization by Category</div>
+      <div class="prog-wrap">
+        <div class="prog-item">
+          <div class="prog-top"><span class="prog-name">Personnel / Wages</span></div>
+          <div class="prog-nums"><span>Budget: $3,902,678</span><span>Actual: $1,868,431</span></div>
+          <div class="prog-track"><div class="prog-bar" style="width:47.9%;background:var(--teal);"></div></div>
+        </div>
+        <div class="prog-item">
+          <div class="prog-top"><span class="prog-name">Utilities (Water &amp; Electricity)</span></div>
+          <div class="prog-nums"><span>Budget: $812,600</span><span>Actual: $404,667</span></div>
+          <div class="prog-track"><div class="prog-bar" style="width:49.8%;background:var(--orange);"></div></div>
+        </div>
+        <div class="prog-item">
+          <div class="prog-top"><span class="prog-name">Subscriptions / Periodicals</span></div>
+          <div class="prog-nums"><span>Budget: $644,496</span><span>Actual: $276,167</span></div>
+          <div class="prog-track"><div class="prog-bar" style="width:42.8%;background:var(--green);"></div></div>
+        </div>
+        <div class="prog-item">
+          <div class="prog-top"><span class="prog-name">Travel &amp; Recruitment</span></div>
+          <div class="prog-nums"><span>Budget: $448,201</span><span>Actual: $95,292</span></div>
+          <div class="prog-track"><div class="prog-bar" style="width:21.3%;background:var(--yellow);"></div></div>
+        </div>
+        <div class="prog-item">
+          <div class="prog-top"><span class="prog-name">Facilities &amp; Lease</span></div>
+          <div class="prog-nums"><span>Budget: $1,174,925</span><span>Actual: $525,278</span></div>
+          <div class="prog-track"><div class="prog-bar" style="width:44.7%;background:var(--purple);"></div></div>
+        </div>
+        <div class="prog-item">
+          <div class="prog-top"><span class="prog-name">Scholarship &amp; Student Services</span></div>
+          <div class="prog-nums"><span>Budget: $842,866</span><span>Actual: $142,062</span></div>
+          <div class="prog-track"><div class="prog-bar" style="width:16.9%;background:var(--red);"></div></div>
+        </div>
+        <div class="prog-item">
+          <div class="prog-top"><span class="prog-name">Telephone / Communications</span></div>
+          <div class="prog-nums"><span>Budget: $528,388</span><span>Actual: $86,844</span></div>
+          <div class="prog-track"><div class="prog-bar" style="width:16.4%;background:var(--navy);"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);">
+      <div class="card-title" style="border:none;padding:0;margin:0;"><span class="ct-dot ct-green"></span>Unrestricted Fund — All 58 Budget Line Items</div>
+      <div style="display:flex;gap:20px;font-size:11px;">
+        <span style="color:var(--text3);">Total Budget: <strong style="color:var(--navy);">$9,368,652</strong></span>
+        <span style="color:var(--text3);">YTD Actual: <strong style="color:var(--orange);">$3,440,190</strong></span>
+        <span style="color:var(--text3);">Available: <strong style="color:var(--green);">$5,928,462</strong></span>
+      </div>
+    </div>
+    <div style="overflow-x:auto;max-height:520px;overflow-y:auto;">
+      <table class="tbl" style="font-size:12px;">
+        <thead style="position:sticky;top:0;background:var(--surface);z-index:1;">
+          <tr>
+            <th style="width:54px;">Code</th>
+            <th>Account Title</th>
+            <th style="width:120px;">Budget</th>
+            <th style="width:120px;">YTD Actual</th>
+            <th style="width:120px;">Available</th>
+            <th style="width:140px;">% Used</th>
+          </tr>
+        </thead>
+        <tbody>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5001</td>
+          <td style="font-weight:500;color:var(--navy);">Salaries & Wages - Regular</td>
+          <td class="td-num">$2,614,210</td>
+          <td class="td-num">$1,444,881</td>
+          <td class="td-green">$1,169,329</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:55%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">55.3%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5002</td>
+          <td style="font-weight:500;color:var(--navy);">Salaries & Wages - Overtime</td>
+          <td class="td-num">$43,755</td>
+          <td class="td-num">$6,428</td>
+          <td class="td-green">$37,327</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:15%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">14.7%</span>
+            </div>
+          </td>
+        </tr>
+<tr style="background:#fff8f8;">
+          <td style="color:var(--text3);font-size:11px;">5003</td>
+          <td style="font-weight:500;color:var(--navy);">Salaries & Wages - Overload</td>
+          <td class="td-num">$0</td>
+          <td class="td-num">$3,038</td>
+          <td class="td-red">−$3,038</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#b03030;border-radius:3px;"></div>
+              </div>
+              <span class="td-red" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">N/A</span>
+            </div>
+          </td>
+        </tr>
+<tr style="background:#fff8f8;">
+          <td style="color:var(--text3);font-size:11px;">5004</td>
+          <td style="font-weight:500;color:var(--navy);">Salaries & Wages - Adjunct</td>
+          <td class="td-num">$30,300</td>
+          <td class="td-num">$65,462</td>
+          <td class="td-red">−$35,162</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:100%;background:#b03030;border-radius:3px;"></div>
+              </div>
+              <span class="td-red" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">216.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr style="background:#fff8f8;">
+          <td style="color:var(--text3);font-size:11px;">5005</td>
+          <td style="font-weight:500;color:var(--navy);">Incentive/Bonus</td>
+          <td class="td-num">$0</td>
+          <td class="td-num">$3,264</td>
+          <td class="td-red">−$3,264</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#b03030;border-radius:3px;"></div>
+              </div>
+              <span class="td-red" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">N/A</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5007</td>
+          <td style="font-weight:500;color:var(--navy);">Additional Duties</td>
+          <td class="td-num">$41,399</td>
+          <td class="td-num">$25,435</td>
+          <td class="td-green">$15,964</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:61%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">61.4%</span>
+            </div>
+          </td>
+        </tr>
+<tr style="background:#fff8f8;">
+          <td style="color:var(--text3);font-size:11px;">5009</td>
+          <td style="font-weight:500;color:var(--navy);">Hardship Differential</td>
+          <td class="td-num">$0</td>
+          <td class="td-num">$6,374</td>
+          <td class="td-red">−$6,374</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#b03030;border-radius:3px;"></div>
+              </div>
+              <span class="td-red" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">N/A</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5011</td>
+          <td style="font-weight:500;color:var(--navy);">Social Security Tax</td>
+          <td class="td-num">$226,406</td>
+          <td class="td-num">$120,879</td>
+          <td class="td-green">$105,528</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:53%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">53.4%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5012</td>
+          <td style="font-weight:500;color:var(--navy);">Social Security Health Fund</td>
+          <td class="td-num">$100,618</td>
+          <td class="td-num">$43,454</td>
+          <td class="td-green">$57,164</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:43%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">43.2%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5013</td>
+          <td style="font-weight:500;color:var(--navy);">Insurance - Group Life Insurance</td>
+          <td class="td-num">$295,000</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$295,000</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5014</td>
+          <td style="font-weight:500;color:var(--navy);">Insurance - Supplemental</td>
+          <td class="td-num">$125,000</td>
+          <td class="td-num">$28,020</td>
+          <td class="td-green">$96,980</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:22%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">22.4%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5015</td>
+          <td style="font-weight:500;color:var(--navy);">Employee Benefits - Tuition Reimbursemen</td>
+          <td class="td-num">$85,000</td>
+          <td class="td-num">$24,232</td>
+          <td class="td-green">$60,768</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:29%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">28.5%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5016</td>
+          <td style="font-weight:500;color:var(--navy);">Insurance - General/Workmens Comp./Fire</td>
+          <td class="td-num">$112,110</td>
+          <td class="td-num">$28,857</td>
+          <td class="td-green">$83,253</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:26%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">25.7%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5017</td>
+          <td style="font-weight:500;color:var(--navy);">ASC-401K</td>
+          <td class="td-num">$150,000</td>
+          <td class="td-num">$62,471</td>
+          <td class="td-green">$87,529</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:42%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">41.6%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5018</td>
+          <td style="font-weight:500;color:var(--navy);">Non Resident Income Tax</td>
+          <td class="td-num">$2,880</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$2,880</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5019</td>
+          <td style="font-weight:500;color:var(--navy);">Employee Benefits - Tuition Waiver</td>
+          <td class="td-num">$75,000</td>
+          <td class="td-num">$5,636</td>
+          <td class="td-green">$69,364</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:8%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">7.5%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5021</td>
+          <td style="font-weight:500;color:var(--navy);">Staff/Faculty Housing</td>
+          <td class="td-num">$103,150</td>
+          <td class="td-num">$71,877</td>
+          <td class="td-green">$31,273</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:70%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">69.7%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5025</td>
+          <td style="font-weight:500;color:var(--navy);">Staff Development</td>
+          <td class="td-num">$93,031</td>
+          <td class="td-num">$16,506</td>
+          <td class="td-green">$76,525</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:18%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">17.7%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5027</td>
+          <td style="font-weight:500;color:var(--navy);">Faculty Development</td>
+          <td class="td-num">$52,500</td>
+          <td class="td-num">$7,622</td>
+          <td class="td-green">$44,878</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:15%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">14.5%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5031</td>
+          <td style="font-weight:500;color:var(--navy);">Travel</td>
+          <td class="td-num">$207,536</td>
+          <td class="td-num">$21,559</td>
+          <td class="td-green">$185,977</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:10%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">10.4%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5032</td>
+          <td style="font-weight:500;color:var(--navy);">Charter</td>
+          <td class="td-num">$19,000</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$19,000</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5041</td>
+          <td style="font-weight:500;color:var(--navy);">Recruitment & Expatriation</td>
+          <td class="td-num">$221,665</td>
+          <td class="td-num">$73,733</td>
+          <td class="td-green">$147,932</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:33%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">33.3%</span>
+            </div>
+          </td>
+        </tr>
+<tr style="background:#fff8f8;">
+          <td style="color:var(--text3);font-size:11px;">5101</td>
+          <td style="font-weight:500;color:var(--navy);">Contractual Services</td>
+          <td class="td-num">$377,413</td>
+          <td class="td-num">$8,858</td>
+          <td class="td-green">$386,271</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#b03030;border-radius:3px;"></div>
+              </div>
+              <span class="td-red" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">-2.3%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5111</td>
+          <td style="font-weight:500;color:var(--navy);">Consultancy/Professional Fees</td>
+          <td class="td-num">$56,195</td>
+          <td class="td-num">$23,077</td>
+          <td class="td-green">$33,118</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:41%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">41.1%</span>
+            </div>
+          </td>
+        </tr>
+<tr style="background:#fff8f8;">
+          <td style="color:var(--text3);font-size:11px;">5121</td>
+          <td style="font-weight:500;color:var(--navy);">Sitting Fee</td>
+          <td class="td-num">$6,000</td>
+          <td class="td-num">$9,900</td>
+          <td class="td-red">−$3,900</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:100%;background:#b03030;border-radius:3px;"></div>
+              </div>
+              <span class="td-red" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">165.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5201</td>
+          <td style="font-weight:500;color:var(--navy);">Materials/Supplies</td>
+          <td class="td-num">$243,685</td>
+          <td class="td-num">$31,302</td>
+          <td class="td-green">$212,383</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:13%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">12.8%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5206</td>
+          <td style="font-weight:500;color:var(--navy);">Instructional Supplies</td>
+          <td class="td-num">$16,500</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$16,500</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5211</td>
+          <td style="font-weight:500;color:var(--navy);">Books/Reference Materials</td>
+          <td class="td-num">$12,000</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$12,000</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5213</td>
+          <td style="font-weight:500;color:var(--navy);">Subscriptions/Periodicals</td>
+          <td class="td-num">$644,496</td>
+          <td class="td-num">$276,167</td>
+          <td class="td-green">$368,329</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:43%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">42.9%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5221</td>
+          <td style="font-weight:500;color:var(--navy);">Printing & Reproduction</td>
+          <td class="td-num">$1,265</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$1,265</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5225</td>
+          <td style="font-weight:500;color:var(--navy);">Advertising</td>
+          <td class="td-num">$8,200</td>
+          <td class="td-num">$110</td>
+          <td class="td-green">$8,090</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:1%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">1.3%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5231</td>
+          <td style="font-weight:500;color:var(--navy);">Telephone & Fax</td>
+          <td class="td-num">$528,388</td>
+          <td class="td-num">$86,844</td>
+          <td class="td-green">$441,544</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:16%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">16.4%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5232</td>
+          <td style="font-weight:500;color:var(--navy);">Import Tax</td>
+          <td class="td-num">$44,000</td>
+          <td class="td-num">$7,368</td>
+          <td class="td-green">$36,632</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:17%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">16.7%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5233</td>
+          <td style="font-weight:500;color:var(--navy);">Postage & Shipping</td>
+          <td class="td-num">$28,527</td>
+          <td class="td-num">$9,787</td>
+          <td class="td-green">$18,740</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:34%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">34.3%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5245</td>
+          <td style="font-weight:500;color:var(--navy);">Representation & Entertainment</td>
+          <td class="td-num">$107,835</td>
+          <td class="td-num">$22,337</td>
+          <td class="td-green">$85,498</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:21%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">20.7%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5251</td>
+          <td style="font-weight:500;color:var(--navy);">Insurance-Vehicle</td>
+          <td class="td-num">$33,000</td>
+          <td class="td-num">$29,234</td>
+          <td class="td-green">$3,766</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:89%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">88.6%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5255</td>
+          <td style="font-weight:500;color:var(--navy);">Membership Dues</td>
+          <td class="td-num">$26,449</td>
+          <td class="td-num">$6,694</td>
+          <td class="td-green">$19,755</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:25%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">25.3%</span>
+            </div>
+          </td>
+        </tr>
+<tr style="background:#fff8f8;">
+          <td style="color:var(--text3);font-size:11px;">5261</td>
+          <td style="font-weight:500;color:var(--navy);">Others</td>
+          <td class="td-num">$131,825</td>
+          <td class="td-num">$189,213</td>
+          <td class="td-red">−$57,388</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:100%;background:#b03030;border-radius:3px;"></div>
+              </div>
+              <span class="td-red" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">143.5%</span>
+            </div>
+          </td>
+        </tr>
+<tr style="background:#fff8f8;">
+          <td style="color:var(--text3);font-size:11px;">5262</td>
+          <td style="font-weight:500;color:var(--navy);">Bank Charges</td>
+          <td class="td-num">$0</td>
+          <td class="td-num">$3,504</td>
+          <td class="td-red">−$3,504</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#b03030;border-radius:3px;"></div>
+              </div>
+              <span class="td-red" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">N/A</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5271</td>
+          <td style="font-weight:500;color:var(--navy);">Indirect Cost</td>
+          <td class="td-num">$9,470</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$9,470</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5310</td>
+          <td style="font-weight:500;color:var(--navy);">Fuel - Generator Tank</td>
+          <td class="td-num">$75,000</td>
+          <td class="td-num">$29,186</td>
+          <td class="td-green">$45,814</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:39%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">38.9%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5311</td>
+          <td style="font-weight:500;color:var(--navy);">POL-Gasoline and Lubricants</td>
+          <td class="td-num">$117,650</td>
+          <td class="td-num">$4,501</td>
+          <td class="td-green">$113,149</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:4%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">3.8%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5321</td>
+          <td style="font-weight:500;color:var(--navy);">Cleaning/Maintenance Supplies</td>
+          <td class="td-num">$8,200</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$8,200</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5331</td>
+          <td style="font-weight:500;color:var(--navy);">Repair-Vehicles/Equipments</td>
+          <td class="td-num">$55,535</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$55,535</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5341</td>
+          <td style="font-weight:500;color:var(--navy);">Minor Repairs & Maintenance-CMI Bldg.</td>
+          <td class="td-num">$5,000</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$5,000</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5352</td>
+          <td style="font-weight:500;color:var(--navy);">Lease - Land/Equipment/Others</td>
+          <td class="td-num">$100,940</td>
+          <td class="td-num">$86,924</td>
+          <td class="td-green">$14,016</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:86%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">86.1%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5361</td>
+          <td style="font-weight:500;color:var(--navy);">Utilities (Water and Electricty)</td>
+          <td class="td-num">$812,600</td>
+          <td class="td-num">$404,667</td>
+          <td class="td-green">$407,933</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:50%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">49.8%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5401</td>
+          <td style="font-weight:500;color:var(--navy);">Purchases - Books</td>
+          <td class="td-num">$325,000</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$325,000</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5402</td>
+          <td style="font-weight:500;color:var(--navy);">Purchases - Supplies</td>
+          <td class="td-num">$100,000</td>
+          <td class="td-num">$30,506</td>
+          <td class="td-green">$69,494</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:31%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">30.5%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5431</td>
+          <td style="font-weight:500;color:var(--navy);">Student Workshop Meals</td>
+          <td class="td-num">$9,400</td>
+          <td class="td-num">$4,275</td>
+          <td class="td-green">$5,125</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:45%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">45.5%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5501</td>
+          <td style="font-weight:500;color:var(--navy);">Student Activities</td>
+          <td class="td-num">$60,566</td>
+          <td class="td-num">$17,105</td>
+          <td class="td-green">$43,461</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:28%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">28.2%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5541</td>
+          <td style="font-weight:500;color:var(--navy);">Student Wages</td>
+          <td class="td-num">$142,400</td>
+          <td class="td-num">$33,262</td>
+          <td class="td-green">$109,138</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:23%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">23.4%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5551</td>
+          <td style="font-weight:500;color:var(--navy);">Scholarship & Grants</td>
+          <td class="td-num">$187,000</td>
+          <td class="td-num">$57,454</td>
+          <td class="td-green">$129,546</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:31%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">30.7%</span>
+            </div>
+          </td>
+        </tr>
+<tr style="background:#fff8f8;">
+          <td style="color:var(--text3);font-size:11px;">5571</td>
+          <td style="font-weight:500;color:var(--navy);">Stipends</td>
+          <td class="td-num">$18,500</td>
+          <td class="td-num">$540</td>
+          <td class="td-green">$19,040</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#b03030;border-radius:3px;"></div>
+              </div>
+              <span class="td-red" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">-2.9%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5601</td>
+          <td style="font-weight:500;color:var(--navy);">Reserve for Contingency</td>
+          <td class="td-num">$150,000</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$150,000</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5900</td>
+          <td style="font-weight:500;color:var(--navy);">Small Tools</td>
+          <td class="td-num">$160,552</td>
+          <td class="td-num">$25,075</td>
+          <td class="td-green">$135,477</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:16%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">15.6%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5901</td>
+          <td style="font-weight:500;color:var(--navy);">Furniture/Equipment</td>
+          <td class="td-num">$56,000</td>
+          <td class="td-num">$1,365</td>
+          <td class="td-green">$54,635</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:2%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">2.4%</span>
+            </div>
+          </td>
+        </tr>
+<tr>
+          <td style="color:var(--text3);font-size:11px;">5991</td>
+          <td style="font-weight:500;color:var(--navy);">Depreciation Expense</td>
+          <td class="td-num">$110,500</td>
+          <td class="td-num">$0</td>
+          <td class="td-green">$110,500</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:5px;background:rgba(15,30,61,0.08);border-radius:3px;overflow:hidden;min-width:40px;">
+                <div style="height:100%;width:0%;background:#1a8a8a;border-radius:3px;"></div>
+              </div>
+              <span class="td-hi" style="font-size:11px;font-weight:700;min-width:38px;text-align:right;">0.0%</span>
+            </div>
+          </td>
+        </tr>
+          <tr style="background:var(--surface2);font-weight:700;border-top:2px solid var(--navy);">
+            <td colspan="2" style="color:var(--navy);font-weight:700;">TOTAL — UNRESTRICTED</td>
+            <td class="td-num">$9,368,652</td>
+            <td class="td-num" style="color:var(--orange);">$3,440,190</td>
+            <td class="td-green">$5,928,462</td>
+            <td class="td-hi">36.7%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-teal"></span>Unrestricted — Personnel Sub-Categories (YTD Actual)</div>
+      <div class="chart-wrap" style="height:220px;"><canvas id="personnelChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-orange"></span>Unrestricted — Operating Costs Breakdown (YTD Actual)</div>
+      <div class="chart-wrap" style="height:220px;"><canvas id="opsChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== STRATEGIC GOALS ===== -->
+<div class="section" id="tab-strategic">
+  <div class="sec-head">
+    <div class="sec-num">04 · Strategic Goals</div>
+    <h2>Strategic Goals — Progress &amp; Status</h2>
+    <p>CMI's five strategic pillars and current progress indicators · AY 2025–2026</p>
+  </div>
+
+  <!-- MISSION STATEMENT -->
+  <div style="background:var(--navy);border-radius:3px;padding:28px 36px;margin-bottom:18px;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:0;left:0;bottom:0;width:4px;background:var(--orange);"></div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:10px;">Mission Statement</div>
+    <p style="font-family:'Playfair Display',serif;font-size:17px;font-weight:400;font-style:italic;color:#ffffff;line-height:1.75;max-width:860px;">
+      "The College of the Marshall Islands shall prioritize student success through access to education, cultural resources, research, and career guidance to prepare students to navigate their communities as global citizens."
+    </p>
+    <div style="margin-top:14px;display:flex;align-items:center;gap:10px;">
+      <div style="width:24px;height:1px;background:rgba(255,255,255,0.3);"></div>
+      <span style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.4);">College of the Marshall Islands</span>
+    </div>
+  </div>
+
+  <div class="g2 mb">
+    <div class="goal-card"><div class="goal-num">01</div><div class="goal-body"><div class="goal-pill gp-teal">Academic Quality</div><h3>Strengthen Academic Programs &amp; Student Learning</h3><p>AA in Marshallese Studies launched (world's first). Full CC in IT Support Level 1 launch. English Bridge Program achieved 24% direct credit placement. AS Nursing curriculum under comprehensive review. ASEN accreditation candidacy application in progress.</p></div></div>
+    <div class="goal-card"><div class="goal-num">02</div><div class="goal-body"><div class="goal-pill gp-teal">Enrollment &amp; Access</div><h3>Expand Access &amp; Increase Enrollment</h3><p>SP26 enrollment reached 1,033 (+6%). ABE serving 300+ learners across Uliga, Kwajalein, Wotje, Jaluit, and Kili. New sub-centers in Likiep and Ejit in development. Summer 2026 target: 500 students. First-Time student enrollment declined 38% — pipeline needs attention.</p></div></div>
+    <div class="goal-card"><div class="goal-num">03</div><div class="goal-body"><div class="goal-pill gp-orange">Workforce</div><h3>Advance Workforce Development</h3><p>TVET Boot Camp: 76 participants, 97% completion, 92% employment rate (2025). Maritime program graduated first CC-RFPNW/CC-RFPERW students — 100% workforce entry. New TVET building at Arrak opened April 15, 2026. Carpentry students building community water-catchment systems.</p></div></div>
+    <div class="goal-card"><div class="goal-num">04</div><div class="goal-body"><div class="goal-pill gp-red">Accreditation</div><h3>Maintain &amp; Strengthen Accreditation</h3><p>ACCJC Warning issued — 2022, 2023, 2024 audits required by November 1, 2026. ISER due August 1, 2027. Four committees formed (Mission &amp; Effectiveness, Student Success, Infrastructure &amp; Resources, Governance). Land Grant confirmed $100K for accreditation support. All-college retreat held April 15, 2026.</p></div></div>
+    <div class="goal-card"><div class="goal-num">05</div><div class="goal-body"><div class="goal-pill gp-orange">Financial Health</div><h3>Ensure Financial Sustainability</h3><p>Combined FY26 budget: $18.14M (Restricted $8.77M + Unrestricted $9.37M). Unrestricted utilization at 36.7% — significant budget available. Restricted student aid variance reflects federal pass-through activity. Pursuing Educational Talent Search Grant ($250K/yr) and other federal funding.</p></div></div>
+    <div class="goal-card" style="border-left-color:var(--purple);"><div class="goal-num" style="color:var(--purple);">06</div><div class="goal-body"><div class="goal-pill" style="background:rgba(109,76,158,0.1);color:var(--purple);">Leadership</div><h3>Strengthen Institutional Leadership &amp; Governance</h3><p>Presidential hire and VPBAA search posted. Interim President in place. CMI Retreat held to align all-college priorities. Four ISER committees co-chaired by faculty and staff. ACCJC liaison visit conducted. Dean of WAVES position being filled for fall 2026.</p></div></div>
+  </div>
+
+  <div class="card mb">
+    <div class="card-title"><span class="ct-dot ct-teal"></span>Current Goals — Near-Term Action Items</div>
+    <div class="g2">
+      <div class="tl">
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot"></div><div class="tl-line"></div></div><div><div class="tl-period">Summer 2026</div><div class="tl-text">Reach headcount enrollment of <strong>500 students</strong> for Summer semester.</div></div></div>
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--orange)"></div><div class="tl-line"></div></div><div><div class="tl-period">May 2026</div><div class="tl-text">May 21 Main Graduation (first CC-IT Level 1 graduates) · May 20 ABE Ceremony · May 26 Ebeye Ceremony.</div></div></div>
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--green)"></div><div class="tl-line"></div></div><div><div class="tl-period">Spring–Fall 2026</div><div class="tl-text">Complete <strong>ASN curriculum review</strong> for fall implementation. Submit initial <strong>ASEN accreditation application</strong>.</div></div></div>
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--purple)"></div></div><div><div class="tl-period">Grant Pursuit</div><div class="tl-text">Submit <strong>Educational Talent Search Grant</strong> application ($250K/yr for grades 6–12 college access activities).</div></div></div>
+      </div>
+      <div class="tl">
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--red)"></div><div class="tl-line"></div></div><div><div class="tl-period">Nov 1, 2026 — Deadline</div><div class="tl-text">Submit FY2022, FY2023, FY2024 <strong>audits + ACCJC Special Report</strong> to resolve Warning status.</div></div></div>
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--orange)"></div><div class="tl-line"></div></div><div><div class="tl-period">Fall 2026</div><div class="tl-text">Complete <strong>English Bridge Program</strong> second round assessments for 12th grade PSS students.</div></div></div>
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--teal)"></div><div class="tl-line"></div></div><div><div class="tl-period">Hiring</div><div class="tl-text">Complete hiring of <strong>Dean of WAVES</strong>, President, VPBAA, and nursing faculty needed for fall semester.</div></div></div>
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--navy)"></div></div><div><div class="tl-period">Aug 1, 2027</div><div class="tl-text"><strong>Institutional Self Evaluation Report (ISER)</strong> due to ACCJC — four committees already formed.</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HIGHLIGHTS ===== -->
+<div class="section" id="tab-highlights">
+  <div class="sec-head">
+    <div class="sec-num">05 · Highlights</div>
+    <h2>Institutional Highlights — AY 2025–2026</h2>
+    <p>Key milestones, new programs, workforce outcomes, and accreditation updates</p>
+  </div>
+
+  <div class="g4 mb">
+    <div class="kpi k-teal"><div class="kpi-label">Bachelor's Degrees (May 2025)</div><div class="kpi-val">38</div><div class="kpi-sub">4-year degrees awarded</div></div>
+    <div class="kpi k-orange"><div class="kpi-label">Associate Degrees (May 2025)</div><div class="kpi-val">150</div><div class="kpi-sub">2-year degrees awarded</div></div>
+    <div class="kpi k-green"><div class="kpi-label">Certificates (May 2025)</div><div class="kpi-val">84</div><div class="kpi-sub">Program certificates</div></div>
+    <div class="kpi k-yellow"><div class="kpi-label">HS Equivalency (May 2025)</div><div class="kpi-val">78</div><div class="kpi-sub">HiSET diplomas</div></div>
+  </div>
+
+  <div class="g2 mb">
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-orange"></span>Quarterly Timeline — AY 2025–2026</div>
+      <div class="tl">
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot"></div><div class="tl-line"></div></div><div><div class="tl-period">Oct – Dec 2025</div><div class="tl-text">Interim President started. First fully online certificate launched (CC in Special Education). <strong>CC in IT Support Level 1 fully launched.</strong> English Bridge Program first cohort: <strong>24% qualified for credit courses.</strong> URP stakeholder engagement event. IQBE Grant final-year site visits.</div></div></div>
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--teal)"></div><div class="tl-line"></div></div><div><div class="tl-period">Jan – Mar 2026</div><div class="tl-text">Spring enrollment: <strong>1,033 (+6%).</strong> <strong>AA in Marshallese Studies launched</strong> — world's first degree in the field. Marine science students at "I Rikesan i Tasi" Festival in Guam. CNA/LPN program planning with MOHHS. Maritime instructors at FFA 7th Maritime College Seminar (Solomon Islands).</div></div></div>
+        <div class="tl-item"><div class="tl-dot-col"><div class="tl-dot" style="background:var(--green)"></div></div><div><div class="tl-period">Apr – May 2026</div><div class="tl-text">Presidential &amp; VPBAA ads posted. <strong>TVET building at Arrak blessed and opened April 15.</strong> Land Grant $100K confirmed for accreditation. May 2026 Graduation: three ceremonies across Majuro, Wotje, Jaluit, Kili, and Ebeye.</div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-red"></span>ACCJC Accreditation Status</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="callout c-red"><div class="callout-icon">⚠️</div><div><h4>Warning Status — Deadline: November 1, 2026</h4><p>CMI placed on Warning. Must submit FY2022, FY2023, and FY2024 audits plus a Special Report to ACCJC. Midterm Report was accepted in June 2025; delayed audits triggered Warning.</p></div></div>
+        <div class="callout"><div class="callout-icon">📋</div><div><h4>ISER Preparation — Due August 1, 2027</h4><p>Four committees formed, each co-chaired by a faculty and staff member, covering: Mission &amp; Effectiveness, Student Success, Infrastructure &amp; Resources, and Governance &amp; Decision-Making.</p></div></div>
+        <div class="callout c-green"><div class="callout-icon">💰</div><div><h4>Land Grant — $100K Confirmed</h4><p>Contribution from the Land Grant Endowment Fund confirmed during the week of April 20, 2026 to assist with accreditation work.</p></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="g3 mb">
+    <div class="hl-card"><div class="hl-tag">🌍 World's First</div><h3>AA in Marshallese Studies</h3><p>Launched Spring 2026 — the first academic degree program in Marshallese language, culture, and studies anywhere in the world.</p></div>
+    <div class="hl-card" style="border-left-color:var(--orange);"><div class="hl-tag" style="color:var(--orange);">💻 New Program</div><h3>CC in IT Support Level 1</h3><p>Fully launched Fall 2025. First graduates expected May 2026. Maritime counterpart programs saw 100% workforce entry — featured in ACCJC white paper.</p></div>
+    <div class="hl-card" style="border-left-color:var(--green);"><div class="hl-tag" style="color:var(--green);">🏫 Pipeline</div><h3>English Bridge Program</h3><p>For 12th grade PSS students — 24% of first cohort completers qualified to enter credit-level courses directly. Second round assessments planned for fall 2026.</p></div>
+  </div>
+
+  <div class="g2">
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-teal"></span>TVET Boot Camp — 6-Year Outcomes</div>
+      <div class="chart-wrap" style="height:200px;"><canvas id="tvetChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="ct-dot ct-orange"></span>May 2026 Graduation — Three Ceremonies</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">
+        <div class="callout"><div class="callout-icon">🎓</div><div><h4>Main Ceremony — May 21, 4:00 PM</h4><p>CMI Basketball Court · First CC in Information Technology Level 1 graduates included.</p></div></div>
+        <div class="callout c-orange"><div class="callout-icon">📜</div><div><h4>ABE Ceremony — May 20, 10:00 AM</h4><p>CMI Basketball Court · Graduates from Wotje, Jaluit, and Kili centers.</p></div></div>
+        <div class="callout c-green"><div class="callout-icon">🏝️</div><div><h4>Ebeye Ceremony — May 26</h4><p>Kwajalein / Ebeye · Graduates from the Santo sub-center.</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div><!-- end page-wrap -->
+
+<script>
+const SP = ['SP21','SP22','SP23','SP24','SP25','SP26'];
+const gc = 'rgba(15,30,61,0.07)';
+const tc = '#8a95a8';
+const bf = {family:"'DM Sans',sans-serif",size:11};
+const legCol = '#4a5778';
+
+function baseOpts(extra={}){
+  return {responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:legCol,font:bf,boxWidth:9,padding:10}}},
+    scales:{x:{grid:{color:gc},ticks:{color:tc,font:bf}},y:{grid:{color:gc},ticks:{color:tc,font:bf}}},
+    ...extra};
+}
+function noLeg(o){o.plugins.legend={display:false};return o;}
+
+/* 1. ENROLLMENT TREND */
+new Chart(document.getElementById('trendChart'),{type:'line',data:{labels:SP,datasets:[
+  {label:'All Students',data:[1169,1218,1208,1009,978,1033],borderColor:'#1a8a8a',backgroundColor:'rgba(26,138,138,0.07)',borderWidth:2.5,pointBackgroundColor:'#1a8a8a',pointRadius:5,tension:0.35,fill:true},
+  {label:'Female',data:[625,647,658,539,517,583],borderColor:'#2d8a5e',borderWidth:2,pointBackgroundColor:'#2d8a5e',pointRadius:4,tension:0.35,fill:false},
+  {label:'Male',data:[544,571,550,470,461,450],borderColor:'#c07a28',borderWidth:2,pointBackgroundColor:'#c07a28',pointRadius:4,tension:0.35,fill:false}
+]},options:baseOpts()});
+
+/* 2. GENDER DONUT */
+new Chart(document.getElementById('genderChart'),{type:'doughnut',data:{labels:['Female 583','Male 450'],datasets:[{data:[583,450],backgroundColor:['#1a8a8a','#c07a28'],borderWidth:0,hoverOffset:5}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false}}}});
+
+/* 3. LOCATION */
+new Chart(document.getElementById('locationChart'),{type:'bar',data:{labels:['Uliga Campus','Jaluit Center','Wotje Center','Kwajalein Center'],datasets:[{label:'Share (%)',data:[91.38,4.26,2.23,1.16],backgroundColor:['#1a8a8a','#c07a28','#2d8a5e','#b8860b'],borderRadius:3,borderSkipped:false}]},options:{...noLeg(baseOpts()),indexAxis:'y',scales:{x:{grid:{color:gc},ticks:{color:tc,font:bf,callback:v=>v+'%'}},y:{grid:{color:'transparent'},ticks:{color:tc,font:bf}}}}});
+
+/* 4. DEPT BAR */
+new Chart(document.getElementById('deptBar'),{type:'bar',data:{labels:['Liberal Arts','Business Studies','Elem. Education','Dev. Math','Dev. English','Nursing','WAVES','Marine/IT'],datasets:[{label:'SP26 Enrollment',data:[353,244,263,412,293,111,36,12],backgroundColor:['#1a8a8a','#c07a28','#2d8a5e','#b8860b','#b03030','#22a0a0','#6d4c9e','#9d7bc4'],borderRadius:4,borderSkipped:false}]},options:{...noLeg(baseOpts())}});
+
+/* 5. ENGLISH PLACEMENT */
+new Chart(document.getElementById('engChart'),{type:'doughnut',data:{labels:['Credit 71%','Level 3 17%','Level 2 11%','Audit 1%'],datasets:[{data:[71,17,11,1],backgroundColor:['#1a8a8a','#2d8a5e','#c07a28','#8a95a8'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'right',labels:{color:legCol,font:{size:10},boxWidth:8,padding:7}}}}});
+
+/* 6. MATH PLACEMENT */
+new Chart(document.getElementById('mathChart'),{type:'doughnut',data:{labels:['Credit 60%','Level 2 28%','Level 3 12%','Audit 0%'],datasets:[{data:[60,28,12,0.5],backgroundColor:['#b8860b','#c07a28','#b03030','#8a95a8'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'right',labels:{color:legCol,font:{size:10},boxWidth:8,padding:7}}}}});
+
+/* 7. DEV ENGLISH */
+new Chart(document.getElementById('devEngChart'),{type:'line',data:{labels:SP,datasets:[{label:'Dev English',data:[366,434,421,404,624,293],borderColor:'#b03030',backgroundColor:'rgba(176,48,48,0.06)',borderWidth:2.5,pointBackgroundColor:'#b03030',pointRadius:5,tension:0.35,fill:true}]},options:{...noLeg(baseOpts())}});
+
+/* 8. DEV MATH */
+new Chart(document.getElementById('devMathChart'),{type:'line',data:{labels:SP,datasets:[{label:'Dev Math',data:[512,542,511,445,657,412],borderColor:'#b8860b',backgroundColor:'rgba(184,134,11,0.06)',borderWidth:2.5,pointBackgroundColor:'#b8860b',pointRadius:5,tension:0.35,fill:true}]},options:{...noLeg(baseOpts())}});
+
+/* 9. FIRST-TIME */
+new Chart(document.getElementById('firstTimeChart'),{type:'line',data:{labels:SP,datasets:[{label:'First-Time',data:[141,115,111,143,158,98],borderColor:'#c07a28',backgroundColor:'rgba(192,122,40,0.06)',borderWidth:2.5,pointBackgroundColor:'#c07a28',pointRadius:5,tension:0.35,fill:true}]},options:{...noLeg(baseOpts())}});
+
+/* 10. GRADUATION */
+new Chart(document.getElementById('gradChart'),{type:'bar',data:{labels:["Bachelor's","Associate","Certificates","HS Equiv."],datasets:[{label:'May 2025 Awards',data:[38,150,84,78],backgroundColor:['#1a8a8a','#2d8a5e','#b8860b','#c07a28'],borderRadius:4,borderSkipped:false}]},options:{...noLeg(baseOpts())}});
+
+/* 11. COMBINED BUDGET vs ACTUAL */
+new Chart(document.getElementById('combinedBudgetChart'),{type:'bar',data:{
+  labels:['Personnel','Travel & Recruit.','Contractual','Materials','Utilities','Subscriptions','Facilities','Student Services','Equip. & Other'],
+  datasets:[
+    {label:'Restricted Budget',data:[4075122,798510,1306587,419610,80000,9771,319587,225102,607570],backgroundColor:'rgba(26,138,138,0.3)',borderColor:'#1a8a8a',borderWidth:1.5,borderRadius:3},
+    {label:'Restricted Actual',data:[1835915,319585,702715,57315,0,4868,25646,5083788,33909],backgroundColor:'rgba(26,138,138,0.7)',borderColor:'#1a8a8a',borderWidth:0,borderRadius:3},
+    {label:'Unrestricted Budget',data:[3902678,448201,433608,926146,812600,644496,1174925,842866,477053],backgroundColor:'rgba(192,122,40,0.3)',borderColor:'#c07a28',borderWidth:1.5,borderRadius:3},
+    {label:'Unrestricted Actual',data:[1868431,95292,14219,307579,404667,276167,525278,142062,26440],backgroundColor:'rgba(192,122,40,0.7)',borderColor:'#c07a28',borderWidth:0,borderRadius:3},
+  ]},options:{...baseOpts(),scales:{x:{grid:{color:gc},ticks:{color:tc,font:{...bf,size:9},maxRotation:25}},y:{grid:{color:gc},ticks:{color:tc,font:bf,callback:v=>'$'+(v/1000).toFixed(0)+'K'}}}}});
+
+/* 12. UTILIZATION DONUT */
+new Chart(document.getElementById('utilChart'),{type:'doughnut',data:{labels:['Restricted Used','Restricted Available'],datasets:[{data:[8302909,470257],backgroundColor:['#1a8a8a','#ddd6c8'],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false}}}});
+
+/* 13. RESTRICTED CATEGORIES */
+new Chart(document.getElementById('restrictedCatChart'),{type:'bar',data:{
+  labels:['Personnel','Travel','Contractual','Materials','Housing & HR','Facilities','Equip/Tools','Student Svcs*','Indirect'],
+  datasets:[
+    {label:'Budget',data:[4075122,798510,1306587,419610,424604,319587,607570,225102,318318],backgroundColor:'rgba(26,138,138,0.25)',borderColor:'#1a8a8a',borderWidth:1.5,borderRadius:3,borderSkipped:false},
+    {label:'YTD Actual',data:[1835915,319585,702715,57315,204883,25646,33909,5083788,0],backgroundColor:['#1a8a8a','#1a8a8a','#1a8a8a','#1a8a8a','#1a8a8a','#1a8a8a','#1a8a8a','#b03030','#1a8a8a'],borderRadius:3,borderSkipped:false}
+  ]},options:{...baseOpts(),scales:{x:{grid:{color:gc},ticks:{color:tc,font:{...bf,size:9},maxRotation:30}},y:{grid:{color:gc},ticks:{color:tc,font:bf,callback:v=>'$'+(v/1000).toFixed(0)+'K'}}}}});
+
+/* 14. UNRESTRICTED CATEGORIES */
+new Chart(document.getElementById('unrestrictedCatChart'),{type:'bar',data:{
+  labels:['Personnel','Utilities','Subscriptions','Facilities & Lease','Travel & Recruit.','Communications','Student Svcs','Materials','Equip & Reserve'],
+  datasets:[
+    {label:'Budget',data:[3902678,812600,644496,1174925,448201,528388,842866,926146,477053],backgroundColor:'rgba(192,122,40,0.25)',borderColor:'#c07a28',borderWidth:1.5,borderRadius:3,borderSkipped:false},
+    {label:'YTD Actual',data:[1868431,404667,276167,525278,95292,86844,142062,307579,26440],backgroundColor:'#c07a28',borderRadius:3,borderSkipped:false}
+  ]},options:{...baseOpts(),scales:{x:{grid:{color:gc},ticks:{color:tc,font:{...bf,size:9},maxRotation:30}},y:{grid:{color:gc},ticks:{color:tc,font:bf,callback:v=>'$'+(v/1000).toFixed(0)+'K'}}}}});
+
+/* 15. PERSONNEL BREAKDOWN */
+new Chart(document.getElementById('personnelChart'),{type:'doughnut',data:{
+  labels:['Salaries Regular $1,444K','Soc. Security Tax $121K','Soc. Security Health $43K','ASC-401K $62K','Adjunct $65K','Additional Duties $25K','Other Benefits $107K'],
+  datasets:[{data:[1444881,120879,43454,62471,65463,25435,106779],backgroundColor:['#1a8a8a','#c07a28','#2d8a5e','#b8860b','#6d4c9e','#b03030','#22a0a0'],borderWidth:1,borderColor:'#fff',hoverOffset:5}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{position:'right',labels:{color:legCol,font:{size:10},boxWidth:9,padding:7}}}}});
+
+/* 16. OPERATING COSTS */
+new Chart(document.getElementById('opsChart'),{type:'bar',data:{
+  labels:['Utilities','Subscriptions','Lease/Land','Telephone','Contractual','Recruit./Expat.','Scholarships','Others','Fuel/POL'],
+  datasets:[{label:'YTD Actual ($)',data:[404667,276167,86924,86844,14219,73733,57454,189213,33687],backgroundColor:['#1a8a8a','#c07a28','#2d8a5e','#b8860b','#b03030','#6d4c9e','#22a0a0','#8a95a8','#0f1e3d'],borderRadius:3,borderSkipped:false}]},
+  options:{...noLeg(baseOpts()),scales:{x:{grid:{color:'transparent'},ticks:{color:tc,font:{...bf,size:9},maxRotation:35}},y:{grid:{color:gc},ticks:{color:tc,font:bf,callback:v=>'$'+(v/1000).toFixed(0)+'K'}}}}});
+
+/* 17. TVET */
+new Chart(document.getElementById('tvetChart'),{type:'bar',data:{labels:['2020','2021','2022','2023','2024','2025'],datasets:[
+  {label:'Participants',data:[78,49,58,31,75,76],backgroundColor:'rgba(26,138,138,0.3)',borderColor:'#1a8a8a',borderWidth:1.5,borderRadius:3},
+  {label:'Completers',data:[70,46,49,29,75,74],backgroundColor:'rgba(45,138,94,0.5)',borderColor:'#2d8a5e',borderWidth:1.5,borderRadius:3},
+  {type:'line',label:'Employment %',data:[81,75,67,78,100,92],borderColor:'#c07a28',backgroundColor:'rgba(192,122,40,0.06)',borderWidth:2.5,pointBackgroundColor:'#c07a28',pointRadius:5,tension:0.35,fill:false,yAxisID:'y2'}
+]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:legCol,font:bf,boxWidth:9,padding:10}}},scales:{x:{grid:{color:gc},ticks:{color:tc,font:bf}},y:{grid:{color:gc},ticks:{color:tc,font:bf},title:{display:true,text:'Headcount',color:tc,font:{size:10}}},y2:{position:'right',grid:{drawOnChartArea:false},ticks:{color:'#c07a28',callback:v=>v+'%'},title:{display:true,text:'Employment %',color:'#c07a28',font:{size:10}}}}}});
+
+function showTab(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+</script>
+</body>
+</html>

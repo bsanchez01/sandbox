@@ -1,0 +1,677 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMI 3rd Quarter Report Dashboard</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root{
+ --navy:#0B1F3A;
+ --blue:#1E4E8C;
+ --muted:#4F81BD;
+ --light:#F5F7FA;
+ --card:#ffffff;
+ --text:#1f2937;
+ --gray:#6b7280;
+ --green:#2E8B57;
+ --orange:#E8A317;
+ --red:#C0392B;
+}
+
+*{
+ box-sizing:border-box;
+ margin:0;
+ padding:0;
+}
+
+body{
+ font-family:'Inter',sans-serif;
+ background:var(--light);
+ color:var(--text);
+ display:flex;
+}
+
+.sidebar{
+ width:260px;
+ background:var(--navy);
+ color:white;
+ min-height:100vh;
+ position:fixed;
+ padding:24px;
+ overflow:auto;
+}
+
+.sidebar h2{
+ font-family:'Poppins',sans-serif;
+ margin-bottom:30px;
+ font-size:24px;
+}
+
+.sidebar a{
+ display:block;
+ color:#dbeafe;
+ text-decoration:none;
+ padding:12px;
+ border-radius:10px;
+ margin-bottom:8px;
+ transition:0.3s;
+}
+
+.sidebar a:hover{
+ background:rgba(255,255,255,0.1);
+ transform:translateX(4px);
+}
+
+.main{
+ margin-left:260px;
+ width:calc(100% - 260px);
+ padding:24px;
+}
+
+.header{
+ background:linear-gradient(135deg,var(--navy),var(--blue));
+ color:white;
+ padding:32px;
+ border-radius:20px;
+ margin-bottom:24px;
+ box-shadow:0 10px 30px rgba(0,0,0,0.15);
+}
+
+.header h1{
+ font-family:'Poppins',sans-serif;
+ font-size:36px;
+ margin-bottom:8px;
+}
+
+.kpis{
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+ gap:20px;
+ margin-bottom:30px;
+}
+
+.kpi{
+ background:white;
+ padding:24px;
+ border-radius:18px;
+ box-shadow:0 4px 18px rgba(0,0,0,0.08);
+ transition:0.3s;
+ border-left:6px solid var(--blue);
+}
+
+.kpi:hover{
+ transform:translateY(-6px);
+}
+
+.kpi h3{
+ color:var(--gray);
+ font-size:14px;
+ margin-bottom:10px;
+}
+
+.kpi .value{
+ font-size:30px;
+ font-weight:700;
+}
+
+.grid{
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(420px,1fr));
+ gap:24px;
+ margin-bottom:30px;
+}
+
+.card{
+ background:var(--card);
+ border-radius:18px;
+ padding:24px;
+ box-shadow:0 4px 18px rgba(0,0,0,0.08);
+}
+
+.card h2{
+ font-family:'Poppins',sans-serif;
+ margin-bottom:20px;
+ color:var(--navy);
+}
+
+.goal{
+ margin-bottom:18px;
+}
+
+.progress{
+ width:100%;
+ background:#e5e7eb;
+ height:14px;
+ border-radius:999px;
+ overflow:hidden;
+ margin-top:8px;
+}
+
+.progress span{
+ display:block;
+ height:100%;
+ background:linear-gradient(90deg,var(--blue),var(--muted));
+}
+
+table{
+ width:100%;
+ border-collapse:collapse;
+}
+
+th,td{
+ padding:12px;
+ border-bottom:1px solid #e5e7eb;
+ text-align:left;
+}
+
+th{
+ background:#eef2ff;
+ color:var(--navy);
+}
+
+.accordion{
+ margin-bottom:14px;
+}
+
+.acc-btn{
+ width:100%;
+ border:none;
+ background:var(--navy);
+ color:white;
+ padding:16px;
+ border-radius:12px;
+ cursor:pointer;
+ text-align:left;
+ font-size:16px;
+}
+
+.acc-content{
+ display:none;
+ padding:18px;
+ background:#f9fafb;
+ border-radius:0 0 12px 12px;
+}
+
+.pill-grid{
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+ gap:14px;
+ margin-top:14px;
+}
+
+.pill{
+ background:#eef2ff;
+ border:1px solid #dbeafe;
+ border-radius:14px;
+ padding:16px;
+}
+
+.pill strong{
+ display:block;
+ color:var(--navy);
+ font-size:18px;
+ margin-bottom:6px;
+}
+
+.insight-list{
+ padding-left:20px;
+ line-height:1.8;
+ color:#374151;
+}
+
+.metric-table tr:nth-child(even){
+ background:#f9fafb;
+}
+
+.highlight{
+ color:var(--blue);
+ font-weight:700;
+}
+
+.footer{
+ margin-top:40px;
+ text-align:center;
+ color:var(--gray);
+ padding:20px;
+}
+
+@media(max-width:900px){
+ .sidebar{
+   position:relative;
+   width:100%;
+   min-height:auto;
+ }
+ body{
+   flex-direction:column;
+ }
+ .main{
+   margin-left:0;
+   width:100%;
+ }
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+<h2>CMI Dashboard</h2>
+
+<a href="#summary">Executive Summary</a>
+<a href="#overview">Overview</a>
+<a href="#goals">Strategic Goals</a>
+<a href="#academic">Academic KPIs</a>
+<a href="#financial">Financial KPIs</a>
+<a href="#departments">Departments</a>
+<a href="#challenges">Challenges</a>
+<a href="#budget">Budget Sources</a>
+</div>
+
+<div class="main">
+
+<div class="header">
+<h1>CMI 3rd Quarter Report</h1>
+<p>FY2023–2024 Executive Performance & Financial Dashboard</p>
+</div>
+
+<section class="kpis">
+<div class="kpi">
+<h3>Total Revenue</h3>
+<div class="value">$11.21M</div>
+</div>
+
+<div class="kpi">
+<h3>Total Expenditures</h3>
+<div class="value">$11.21M</div>
+</div>
+
+<div class="kpi">
+<h3>Personnel Costs</h3>
+<div class="value">$6.67M</div>
+</div>
+
+<div class="kpi">
+<h3>Other Costs</h3>
+<div class="value">$4.04M</div>
+</div>
+
+<div class="kpi">
+<h3>Non-Operating Costs</h3>
+<div class="value">$504K</div>
+</div>
+</section>
+
+
+<section class="card" id="overview" style="margin-bottom:30px;">
+<h2>Overview</h2>
+<p style="line-height:1.8; color:#374151;">
+The College of the Marshall Islands 3rd Quarter Report summarizes institutional progress, budget execution, 
+departmental activities, strategic goal implementation, and academic and financial performance measures for FY2023–2024. 
+The dashboard organizes the report into leadership-ready views that connect activities, outcomes, challenges, and resource use.
+</p>
+
+<div class="pill-grid">
+<div class="pill">
+<strong>Institutional Mission</strong>
+Student-centered education, workforce preparation, community enrichment, and sustainable national development.
+</div>
+
+<div class="pill">
+<strong>Reporting Focus</strong>
+Quarterly progress, budget performance, challenges, recommendations, and strategic outcomes.
+</div>
+
+<div class="pill">
+<strong>Strategic Alignment</strong>
+Activities are organized around CMI's five strategic goals and objective areas.
+</div>
+
+<div class="pill">
+<strong>Budget Basis</strong>
+Line-item budget allocations by funding source, personnel cost, other cost, and non-operating category.
+</div>
+</div>
+</section>
+
+<div class="grid">
+
+<div class="card" id="goals">
+<h2>Strategic Goals Progress</h2>
+
+<div class="goal">
+<p>High Quality Student Services</p>
+<div class="progress"><span style="width:82%"></span></div>
+</div>
+
+<div class="goal">
+<p>Institutional Resources</p>
+<div class="progress"><span style="width:76%"></span></div>
+</div>
+
+<div class="goal">
+<p>Stakeholder Relations</p>
+<div class="progress"><span style="width:74%"></span></div>
+</div>
+
+<div class="goal">
+<p>Sustainability</p>
+<div class="progress"><span style="width:71%"></span></div>
+</div>
+
+<div class="goal">
+<p>Academic Programming</p>
+<div class="progress"><span style="width:88%"></span></div>
+</div>
+</div>
+
+<div class="card" id="financial">
+<h2>Revenue Allocation</h2>
+<canvas id="revenueChart"></canvas>
+</div>
+
+<div class="card">
+<h2>Expense Breakdown</h2>
+<canvas id="expenseChart"></canvas>
+</div>
+
+
+<div class="card" id="financial-measures">
+<h2>Financial Performance Indicators / Measures</h2>
+<canvas id="liquidityChart"></canvas>
+
+<table class="metric-table" style="margin-top:22px;">
+<thead>
+<tr>
+<th>Indicator</th>
+<th>Latest Reported Value</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Liquidity Ratio</td>
+<td class="highlight">0.87 in FY2015</td>
+<td>Less than $1 of current assets for every $1 of current obligation; continued monitoring recommended.</td>
+</tr>
+<tr>
+<td>Revenue vs. Expenditure</td>
+<td class="highlight">FY2015 Revenue: $8.12M / Expenditure: $8.35M</td>
+<td>Expenditures exceeded revenues in the latest trend year shown in the report.</td>
+</tr>
+<tr>
+<td>Net Revenue / Deficit</td>
+<td class="highlight">-$230,146 in FY2015</td>
+<td>Latest trend year shows a deficit after surpluses in FY2013 and FY2014.</td>
+</tr>
+<tr>
+<td>FY2023–2024 Total Revenue</td>
+<td class="highlight">$11,211,840</td>
+<td>Budgeted revenue balances with total expenditures.</td>
+</tr>
+<tr>
+<td>FY2023–2024 Total Expenditures</td>
+<td class="highlight">$11,211,840</td>
+<td>Personnel, other costs, and non-operating costs total 100% of expenditures.</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="card">
+<h2>Net Surplus / Deficit Trends</h2>
+<canvas id="surplusChart"></canvas>
+</div>
+
+
+<div class="card" id="academic">
+<h2>Enrollment Trends</h2>
+<canvas id="enrollmentChart"></canvas>
+</div>
+
+<div class="card">
+<h2>Revenue vs Expenditure</h2>
+<canvas id="trendChart"></canvas>
+</div>
+
+</div>
+
+
+<div class="card" style="margin-bottom:30px;">
+<h2>Financial Performance Narrative</h2>
+<ul class="insight-list">
+<li><strong>Liquidity:</strong> The report's historical liquidity ratio declined from 1.67 in FY2008 to 0.87 in FY2015, indicating tighter short-term financial capacity.</li>
+<li><strong>Revenue and expenditure trend:</strong> General Fund revenue increased through FY2014 before declining in FY2015, while expenditures remained above revenue in FY2015.</li>
+<li><strong>Net position:</strong> The trend shows deficits in FY2010–FY2012, surpluses in FY2013–FY2014, and a deficit again in FY2015.</li>
+<li><strong>FY2023–2024 budget balance:</strong> Total revenue and total expenditures are both reported at $11,211,840.</li>
+<li><strong>Cost structure:</strong> Personnel costs are the largest expenditure category at 62.78%, followed by other costs at 32.47% and non-operating costs at 4.75%.</li>
+</ul>
+</div>
+
+<div class="card" id="budget">
+<h2>Budget Summary</h2>
+
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Amount</th>
+<th>Percentage</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Personnel Costs</td>
+<td>$6,667,060</td>
+<td>62.78%</td>
+</tr>
+
+<tr>
+<td>Other Costs</td>
+<td>$4,040,580</td>
+<td>32.47%</td>
+</tr>
+
+<tr>
+<td>Non-Operating Costs</td>
+<td>$504,200</td>
+<td>4.75%</td>
+</tr>
+
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>$11,211,840</strong></td>
+<td><strong>100%</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="card" id="departments">
+<h2>Department Progress Reports</h2>
+
+<div class="accordion">
+<button class="acc-btn">STEM Department</button>
+<div class="acc-content">
+<p>Expanded STEM programs, developed AS degrees, academic coaching initiatives, and internship support.</p>
+</div>
+</div>
+
+<div class="accordion">
+<button class="acc-btn">Counseling Department</button>
+<div class="acc-content">
+<p>Improved early intervention support, mental health workshops, and student counseling outreach.</p>
+</div>
+</div>
+
+<div class="accordion">
+<button class="acc-btn">Physical Plant</button>
+<div class="acc-content">
+<p>Completed major maintenance projects, classroom improvements, and Micronesian Games preparation.</p>
+</div>
+</div>
+
+<div class="accordion">
+<button class="acc-btn">Land Grant & Agroforestry</button>
+<div class="acc-content">
+<p>Expanded research and sustainability programs including climate change, agriculture, and food security.</p>
+</div>
+</div>
+
+</div>
+
+<div class="card" id="challenges">
+<h2>Challenges & Recommendations</h2>
+
+<ul style="padding-left:20px; line-height:2;">
+<li>Instructor recruitment challenges in STEM and Marine Science.</li>
+<li>Procurement delays affecting supplies and equipment availability.</li>
+<li>Need for additional counseling staff and academic support personnel.</li>
+<li>Expand infrastructure for flexible learning and IT systems.</li>
+<li>Increase funding for professional development and student support.</li>
+</ul>
+
+</div>
+
+<div class="footer">
+College of the Marshall Islands — FY2023–2024 3rd Quarter Report Dashboard
+</div>
+
+</div>
+
+<script>
+const revenueChart = new Chart(document.getElementById('revenueChart'),{
+ type:'doughnut',
+ data:{
+  labels:['Tuition & Fees','General Fund','Compact','Federal Grants','Auxiliary'],
+  datasets:[{
+   data:[4773556,2000000,987003,934944,1036060],
+   backgroundColor:['#1E4E8C','#4F81BD','#6A9BD8','#9FBFE8','#0B1F3A']
+  }]
+ },
+ options:{
+  responsive:true,
+  plugins:{
+   legend:{position:'bottom'}
+  }
+ }
+});
+
+const expenseChart = new Chart(document.getElementById('expenseChart'),{
+ type:'bar',
+ data:{
+  labels:['Personnel','Other Costs','Non-Operating'],
+  datasets:[{
+   label:'Expenditures',
+   data:[6667060,4040580,504200],
+   backgroundColor:['#1E4E8C','#4F81BD','#9FBFE8']
+  }]
+ },
+ options:{
+  responsive:true
+ }
+});
+
+const enrollmentChart = new Chart(document.getElementById('enrollmentChart'),{
+ type:'line',
+ data:{
+  labels:['2010','2011','2012','2013','2014','2015'],
+  datasets:[{
+   label:'Enrollment',
+   data:[867,994,1122,1006,1087,975],
+   borderColor:'#1E4E8C',
+   backgroundColor:'rgba(30,78,140,0.2)',
+   fill:true,
+   tension:0.4
+  }]
+ }
+});
+
+const trendChart = new Chart(document.getElementById('trendChart'),{
+ type:'line',
+ data:{
+  labels:['FY2010','FY2011','FY2012','FY2013','FY2014','FY2015'],
+  datasets:[
+  {
+   label:'Revenue',
+   data:[7293952,7698335,7883073,8068862,8912207,8118217],
+   borderColor:'#2E8B57',
+   tension:0.4
+  },
+  {
+   label:'Expenditure',
+   data:[8372858,8184052,8512472,7549732,8399125,8348363],
+   borderColor:'#C0392B',
+   tension:0.4
+  }]
+ }
+});
+
+
+const liquidityChart = new Chart(document.getElementById('liquidityChart'),{
+ type:'line',
+ data:{
+  labels:['FY2008','FY2009','FY2010','FY2011','FY2012','FY2013','FY2014','FY2015'],
+  datasets:[
+  {
+   label:'Current Ratio',
+   data:[1.67,1.07,0.79,0.72,0.53,0.72,0.89,0.87],
+   borderColor:'#1E4E8C',
+   backgroundColor:'rgba(30,78,140,0.15)',
+   fill:true,
+   tension:0.4
+  },
+  {
+   label:'Benchmark: $1 per Obligation',
+   data:[1,1,1,1,1,1,1,1],
+   borderColor:'#E8A317',
+   borderDash:[6,6],
+   tension:0
+  }]
+ },
+ options:{
+  responsive:true,
+  plugins:{legend:{position:'bottom'}},
+  scales:{y:{beginAtZero:true}}
+ }
+});
+
+const surplusChart = new Chart(document.getElementById('surplusChart'),{
+ type:'bar',
+ data:{
+  labels:['FY2010','FY2011','FY2012','FY2013','FY2014','FY2015'],
+  datasets:[{
+   label:'Net Revenue / Deficit',
+   data:[-1078906,-485717,-629399,519130,513082,-230146],
+   backgroundColor:[
+    '#C0392B',
+    '#C0392B',
+    '#C0392B',
+    '#2E8B57',
+    '#2E8B57',
+    '#C0392B'
+   ]
+  }]
+ },
+ options:{
+  responsive:true,
+  plugins:{legend:{position:'bottom'}},
+  scales:{y:{ticks:{callback:value=>'$'+value.toLocaleString()}}}
+ }
+});
+
+document.querySelectorAll('.acc-btn').forEach(btn=>{
+ btn.addEventListener('click',()=>{
+  const content = btn.nextElementSibling;
+  content.style.display = content.style.display === 'block' ? 'none':'block';
+ });
+});
+</script>
+
+</body>
+</html>

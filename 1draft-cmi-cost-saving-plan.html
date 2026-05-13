@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CMI Cost Saving Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --navy:#0B2545;--navy2:#13376B;--blue:#1A5276;
+  --gold:#C9A84C;--gold-lt:#E8C97A;
+  --teal:#148F77;--teal-lt:#1ABC9C;
+  --red:#C0392B;--orange:#E67E22;--purple:#7D3C98;
+  --bg:#F2F5FA;--card:#fff;
+  --text:#1C2833;--muted:#5D6D7E;--border:#D5DBE8;
+  --r:14px;--sh:0 4px 24px rgba(11,37,69,.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+a{text-decoration:none}
+
+/* ─── HEADER ─── */
+header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 55%,#1b4980 100%);color:#fff;position:relative;overflow:hidden}
+header::before{content:'';position:absolute;top:-100px;right:-100px;width:500px;height:500px;background:radial-gradient(circle,rgba(201,168,76,.15) 0%,transparent 68%);border-radius:50%;pointer-events:none}
+header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--gold),var(--gold-lt),var(--gold))}
+.hdr-inner{max-width:1140px;margin:0 auto;padding:48px 28px 40px;position:relative;display:flex;align-items:center;gap:32px}
+.hdr-logo{flex-shrink:0;width:110px;height:110px;border-radius:50%;border:3px solid rgba(201,168,76,.5);box-shadow:0 0 0 6px rgba(201,168,76,.12),0 8px 32px rgba(0,0,0,.35);background:#fff;object-fit:cover;display:block}
+.hdr-text{flex:1}
+.hdr-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(201,168,76,.18);border:1px solid rgba(201,168,76,.38);border-radius:100px;padding:5px 16px;font-size:.75rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--gold-lt);margin-bottom:16px}
+h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,4.5vw,3.2rem);font-weight:900;line-height:1.12;letter-spacing:-.015em;color:#fff;margin-bottom:10px}
+h1 em{color:var(--gold-lt);font-style:normal}
+.hdr-sub{font-size:1rem;font-weight:300;color:rgba(255,255,255,.7);max-width:600px}
+@media(max-width:600px){.hdr-inner{flex-direction:column;align-items:flex-start;gap:18px}.hdr-logo{width:80px;height:80px}}
+
+/* hero pills */
+.hero-pills{background:rgba(0,0,0,.22);border-top:1px solid rgba(255,255,255,.07)}
+.pills-inner{max-width:1140px;margin:0 auto;padding:0 28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.pill{padding:20px 12px;text-align:center;border-right:1px solid rgba(255,255,255,.07);transition:background .2s}
+.pill:last-child{border-right:none}
+.pill:hover{background:rgba(255,255,255,.04)}
+.pill-num{font-family:'Playfair Display',serif;font-size:1.55rem;font-weight:700;color:var(--gold-lt);display:block}
+.pill-lbl{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.5);display:block;margin-top:2px}
+
+/* ─── MAIN ─── */
+main{max-width:1140px;margin:0 auto;padding:44px 20px 80px}
+
+/* ─── NAV TABS ─── */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:36px}
+.tab-btn{background:var(--card);border:2px solid var(--border);border-radius:100px;padding:9px 20px;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;white-space:nowrap}
+.tab-btn:hover{border-color:var(--navy);color:var(--navy)}
+.tab-btn.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.draft-chip{display:inline-block;background:rgba(231,76,60,.18);border:1px solid rgba(231,76,60,.45);color:#c0392b;border-radius:100px;font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:1px 7px;margin-left:5px;vertical-align:middle;line-height:1.6}
+.tab-btn.active .draft-chip{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.4);color:#fff}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ─── SECTION HEADINGS ─── */
+.sec-hd{margin-bottom:28px}
+.sec-title{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--navy);margin-bottom:4px}
+.sec-rule{height:3px;width:44px;border-radius:2px;margin-bottom:10px}
+.sec-desc{font-size:.94rem;color:var(--muted);max-width:760px}
+
+/* ─── OVERVIEW CARD ─── */
+.ov-card{border-radius:var(--r);box-shadow:var(--sh);padding:28px 32px;margin-bottom:32px;border-left:5px solid var(--gold);background:var(--card)}
+.ov-card p{font-size:.98rem;color:var(--muted)}
+
+/* ─── CATEGORY STRIP ─── */
+.cat-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:40px}
+.cat-card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:22px 22px 18px;border-top:4px solid var(--gold);cursor:pointer;transition:transform .2s,box-shadow .2s}
+.cat-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(11,37,69,.14)}
+.cat-icon{font-size:2rem;margin-bottom:10px}
+.cat-name{font-weight:700;font-size:1rem;color:var(--navy);margin-bottom:4px}
+.cat-saving{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;color:var(--teal)}
+.cat-sublbl{font-size:.74rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+
+/* ─── CARDS GRID ─── */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(295px,1fr));gap:22px;margin-bottom:44px}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;display:flex;flex-direction:column;transition:transform .22s,box-shadow .22s;animation:fadeUp .45s ease both}
+.card:hover{transform:translateY(-4px);box-shadow:0 12px 36px rgba(11,37,69,.14)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.card:nth-child(1){animation-delay:.04s}.card:nth-child(2){animation-delay:.09s}
+.card:nth-child(3){animation-delay:.14s}.card:nth-child(4){animation-delay:.19s}
+.card:nth-child(5){animation-delay:.24s}.card:nth-child(6){animation-delay:.29s}
+.card:nth-child(7){animation-delay:.34s}.card:nth-child(8){animation-delay:.39s}
+
+.card-hdr{background:var(--navy);padding:18px 22px 14px;display:flex;align-items:flex-start;gap:12px}
+.card-icon{width:42px;height:42px;border-radius:9px;background:rgba(201,168,76,.18);border:1px solid rgba(201,168,76,.35);display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;margin-top:2px}
+.card-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#fff;line-height:1.3}
+.card-sub{font-size:.74rem;color:rgba(255,255,255,.48);margin-top:2px}
+.card-body{padding:18px 22px 14px;flex:1}
+.card-body p{font-size:.9rem;color:var(--muted);margin-bottom:16px;line-height:1.55}
+.cost-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.cost-box{background:var(--bg);border-radius:8px;padding:9px 10px;text-align:center}
+.cost-lbl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:block;margin-bottom:2px}
+.cost-val{font-size:.95rem;font-weight:700;color:var(--text)}
+.cost-box.prev .cost-val{color:var(--red)}
+.cost-box.nw .cost-val{color:var(--teal)}
+.est-box{background:#EBF9F4;border:1px solid #A9DFBF;border-radius:8px;padding:10px 12px;text-align:center}
+.est-box .cost-lbl{color:var(--teal)}
+.est-box .cost-val{color:var(--teal);font-size:1rem}
+.card-note{font-size:.78rem;font-style:italic;color:#95a5a6;margin-top:6px;margin-bottom:0!important}
+.status-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.status-tag{display:inline-flex;align-items:center;gap:5px;border-radius:100px;padding:4px 11px;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.tag-inprogress{background:#FFF3CD;color:#856404;border:1px solid #FFDA6A}
+.tag-nextyear{background:#D1ECF1;color:#0C5460;border:1px solid #81C5CE}
+.tag-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;animation:pulse 1.8s ease-in-out infinite}
+.tag-inprogress .tag-dot{background:#856404}
+.tag-nextyear .tag-dot{background:#0C5460;animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ── TRAVEL TAB ── */
+.travel-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:32px}
+.t-hero-card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:22px 22px 18px;border-top:4px solid var(--navy);text-align:center}
+.t-hero-card.accent{border-top-color:var(--gold)}
+.t-hero-card.green{border-top-color:var(--teal)}
+.t-hero-icon{font-size:1.8rem;margin-bottom:8px}
+.t-hero-lbl{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:4px}
+.t-hero-val{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;color:var(--navy);display:block}
+.t-hero-sub{font-size:.78rem;color:var(--muted);margin-top:2px}
+
+.travel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;margin-bottom:32px}
+.t-panel{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.t-panel-hdr{background:var(--navy);color:#fff;padding:14px 20px;font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;display:flex;align-items:center;gap:10px}
+.t-panel-body{padding:0}
+.t-panel table{font-size:.9rem}
+.t-panel thead th{background:#f0f4ff;color:var(--navy);padding:10px 16px;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;text-align:left}
+.t-panel thead th:last-child{text-align:right}
+.t-panel tbody td{padding:10px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+.t-panel tbody tr:last-child td{border-bottom:none}
+.t-panel tbody td:last-child{text-align:right;font-weight:600}
+.t-panel tfoot td{background:#f8faff;padding:10px 16px;font-weight:700;color:var(--navy)}
+.t-panel tfoot td:last-child{text-align:right;color:var(--teal)}
+.t-yr-badge{display:inline-block;font-size:.7rem;font-weight:700;background:var(--bg);border:1px solid var(--border);border-radius:100px;padding:1px 8px;color:var(--muted)}
+.bar-row{display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid var(--border)}
+.bar-row:last-child{border-bottom:none}
+.bar-yr{font-size:.8rem;font-weight:700;color:var(--navy);width:52px;flex-shrink:0}
+.bar-track{flex:1;background:var(--bg);border-radius:100px;height:12px;overflow:hidden}
+.bar-fill{height:100%;border-radius:100px;transition:width .6s ease}
+.bar-val{font-size:.8rem;font-weight:700;color:var(--navy);width:90px;text-align:right;flex-shrink:0}
+.bar-avg-line{border-top:2px dashed var(--gold);margin:0 16px;padding:8px 0;font-size:.8rem;color:var(--muted);text-align:center}
+
+.rep-card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:28px 30px;margin-bottom:28px;border-left:5px solid var(--orange)}
+.rep-card h3{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--navy);margin-bottom:12px}
+.rep-card p{font-size:.93rem;color:var(--muted);margin-bottom:10px;line-height:1.6}
+.rep-card p:last-child{margin-bottom:0}
+.rep-card ul{margin:10px 0 10px 18px;font-size:.9rem;color:var(--muted);line-height:1.7}
+.rep-card strong{color:var(--navy)}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.comp-box{background:var(--bg);border-radius:8px;padding:12px 14px;text-align:center}
+.comp-box-lbl{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:block;margin-bottom:3px}
+.comp-box-val{font-size:1.15rem;font-weight:900;font-family:'Playfair Display',serif}
+.comp-box.old .comp-box-val{color:var(--red)}
+.comp-box.nw .comp-box-val{color:var(--teal)}
+.card-ftr{background:linear-gradient(135deg,#0f3060 0%,#163d70 100%);padding:13px 22px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.ftr-lbl{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.55)}
+.ftr-amt{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--gold-lt)}
+.ftr-badge{background:rgba(201,168,76,.18);border:1px solid rgba(201,168,76,.35);border-radius:5px;padding:2px 9px;font-size:.72rem;font-weight:700;color:var(--gold-lt)}
+
+/* ─── SUMMARY TABLE ─── */
+.tbl-wrap{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:44px}
+table{width:100%;border-collapse:collapse;font-size:.91rem}
+thead tr{background:var(--navy);color:#fff}
+thead th{padding:13px 18px;text-align:left;font-size:.71rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+thead th:last-child{text-align:right}
+tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#f0f4ff}
+tbody td{padding:12px 18px;vertical-align:middle}
+.td-cat{display:inline-block;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:100px;margin-right:6px;vertical-align:middle}
+.td-area{font-weight:600;color:var(--navy)}
+.td-prev{color:var(--red);font-weight:600}
+.td-new{color:var(--teal);font-weight:600}
+.td-save{font-weight:700;color:var(--navy);text-align:right}
+tfoot tr{background:linear-gradient(135deg,var(--navy),var(--navy2))}
+tfoot td{padding:15px 18px;color:#fff;font-weight:700;font-size:.95rem}
+tfoot td:last-child{text-align:right;font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gold-lt)}
+.cat-group-row td{background:#f8faff;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);padding:8px 18px;border-bottom:1px solid var(--border)}
+
+/* ─── TOTAL BANNER ─── */
+.total-banner{background:linear-gradient(135deg,var(--navy) 0%,var(--blue) 100%);border-radius:var(--r);padding:36px 40px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;box-shadow:0 8px 32px rgba(11,37,69,.22);position:relative;overflow:hidden;margin-bottom:40px}
+.total-banner::before{content:'';position:absolute;right:-60px;top:-60px;width:260px;height:260px;background:radial-gradient(circle,rgba(201,168,76,.14) 0%,transparent 70%);border-radius:50%}
+.tb-left h2{font-family:'Playfair Display',serif;font-size:1.2rem;color:rgba(255,255,255,.8);font-weight:400;margin-bottom:6px}
+.tb-left p{font-size:.87rem;color:rgba(255,255,255,.5);max-width:400px}
+.tb-right{text-align:right}
+.big-num{font-family:'Playfair Display',serif;font-size:clamp(2.4rem,5vw,3.6rem);font-weight:900;color:var(--gold-lt);line-height:1;display:block}
+.per-yr{font-size:.82rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);display:block;margin-top:4px}
+
+/* ─── 5-YEAR PROJECTION ─── */
+.proj-intro{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:26px 30px;margin-bottom:28px;display:flex;align-items:flex-start;gap:18px;border-top:4px solid var(--teal)}
+.proj-intro-icon{font-size:2.2rem;flex-shrink:0;margin-top:2px}
+.proj-intro p{font-size:.95rem;color:var(--muted);margin:0}
+.proj-intro strong{color:var(--navy)}
+
+/* chart */
+.chart-card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:28px 28px 20px;margin-bottom:24px;overflow:hidden}
+.chart-card h3{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--navy);margin-bottom:22px}
+.chart-wrap{display:flex;align-items:flex-end;gap:10px;height:220px;padding-bottom:34px;position:relative}
+.chart-wrap::after{content:'';position:absolute;bottom:34px;left:0;right:0;height:1px;background:var(--border)}
+.bar-group{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;position:relative}
+.bar-a{width:100%;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--teal) 0%,#0e7060 100%);position:relative;z-index:2;cursor:default}
+.bar-c{width:100%;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#1a5276 0%,var(--navy) 100%);opacity:.38;position:absolute;bottom:0;cursor:default}
+.bar-tip{position:absolute;top:-28px;left:50%;transform:translateX(-50%);font-size:.68rem;font-weight:700;color:var(--navy);white-space:nowrap;background:#fff;border:1px solid var(--border);border-radius:4px;padding:2px 7px;opacity:0;pointer-events:none;transition:opacity .18s;z-index:10}
+.bar-a:hover .bar-tip,.bar-c:hover .bar-tip{opacity:1}
+.bar-lbl{position:absolute;bottom:-26px;font-size:.78rem;font-weight:700;color:var(--navy);white-space:nowrap}
+.chart-legend{display:flex;gap:18px;margin-top:14px;flex-wrap:wrap}
+.leg-item{display:flex;align-items:center;gap:7px;font-size:.8rem;color:var(--muted);font-weight:600}
+.leg-dot{width:13px;height:13px;border-radius:3px;flex-shrink:0}
+.leg-a{background:var(--teal)}.leg-c{background:var(--navy);opacity:.55}
+
+/* milestone cards */
+.mc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+.mc{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:20px 18px;border-top:4px solid var(--gold);text-align:center;transition:transform .2s}
+.mc:hover{transform:translateY(-3px)}
+.mc-yr{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:5px}
+.mc-num{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:var(--navy);display:block;line-height:1.1;margin-bottom:3px}
+.mc-ann{font-size:.8rem;color:var(--teal);font-weight:600}
+
+/* proj table */
+.pt-wrap{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:24px}
+.pt-wrap table{font-size:.91rem}
+.pt-wrap thead th{background:var(--navy);color:#fff;padding:12px 16px;font-size:.71rem;text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+.pt-wrap thead th:not(:first-child){text-align:right}
+.pt-wrap tbody td{padding:12px 16px;border-bottom:1px solid var(--border)}
+.pt-wrap tbody tr:last-child td{border-bottom:none}
+.pt-wrap tbody td:not(:first-child){text-align:right}
+.yr-c{font-weight:700;color:var(--navy)}
+.ann-c{color:var(--teal);font-weight:600}
+.cum-c{font-weight:700;color:var(--navy2)}
+.pt-wrap tfoot td{background:var(--navy);color:#fff;padding:13px 16px;font-weight:700}
+.pt-wrap tfoot td:not(:first-child){text-align:right;color:var(--gold-lt);font-family:'Playfair Display',serif;font-size:1.1rem}
+
+/* ─── CRISIS PLAN ─── */
+.phase-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-bottom:36px}
+.phase-card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.phase-hdr{padding:16px 20px;color:#fff;font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:10px}
+.ph-blue{background:linear-gradient(135deg,#1a5276,#2980b9)}.ph-orange{background:linear-gradient(135deg,#784212,#e67e22)}.ph-red{background:linear-gradient(135deg,#7b241c,#c0392b)}.ph-green{background:linear-gradient(135deg,#1e8449,#27ae60)}
+.phase-body{padding:18px 20px}
+.phase-body p{font-size:.88rem;color:var(--muted);line-height:1.55;margin-bottom:12px}
+.phase-body p:last-child{margin-bottom:0}
+.phase-tag{display:inline-block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:100px;margin-bottom:10px}
+.pt-blue{background:#D6EAF8;color:#1a5276}.pt-orange{background:#FDEBD0;color:#784212}.pt-red{background:#FADBD8;color:#7b241c}.pt-green{background:#D5F5E3;color:#1e8449}
+
+/* ─── NOTE / INFO BOX ─── */
+.note{background:#EAF4FB;border-left:4px solid #2E86C1;border-radius:0 10px 10px 0;padding:14px 18px;font-size:.88rem;color:#1A5276;margin-bottom:24px}
+.note strong{font-weight:700}
+
+/* ─── FOOTER ─── */
+footer{background:var(--navy);color:rgba(255,255,255,.42);text-align:center;padding:22px 16px;font-size:.8rem;border-top:3px solid var(--gold)}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:700px){
+  .hdr-inner{padding:30px 16px 28px}
+  main{padding:28px 14px 60px}
+  .pills-inner{padding:0 14px}
+  .total-banner{padding:26px 22px}
+  .cards-grid{grid-template-columns:1fr}
+  thead th:nth-child(2),thead th:nth-child(3),tbody td:nth-child(2),tbody td:nth-child(3){display:none}
+  .chart-wrap{height:160px;gap:6px}
+  .proj-intro{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="hdr-inner">
+    <img src="data:image/jpeg;base64,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" class="hdr-logo" alt="CMI Logo"/>
+    <div class="hdr-text">
+    <div class="hdr-badge">🏫 College of the Marshall Islands</div>
+    <h1>CMI <em>Cost Saving Plan</em></h1>
+    <p class="hdr-sub">A unified dashboard consolidating all institutional cost-saving initiatives across IT systems, energy, academic programs, and operations.</p>
+    </div>
+  </div>
+  <div class="hero-pills">
+    <div class="pills-inner">
+      <div class="pill"><span class="pill-num" id="heroTotal">$0</span><span class="pill-lbl">Est. Annual Savings</span></div>
+      <div class="pill"><span class="pill-num">5</span><span class="pill-lbl">Cost-Saving Categories</span></div>
+      <div class="pill"><span class="pill-num">16+</span><span class="pill-lbl">Initiatives</span></div>
+      <div class="pill"><span class="pill-num">$6M+</span><span class="pill-lbl">5-Year Projection</span></div>
+      <div class="pill"><span class="pill-num">20×</span><span class="pill-lbl">Faster Internet</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ══ MAIN ══ -->
+<main>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('overview',this)">📊 Overview</button>
+    <button class="tab-btn" onclick="switchTab('it',this)">💻 IT Systems</button>
+    <button class="tab-btn" onclick="switchTab('energy',this)">☀️ Energy & Solar</button>
+    <button class="tab-btn" onclick="switchTab('academic',this)">📚 Academic Programs</button>
+    <button class="tab-btn" onclick="switchTab('travel',this)">✈️ Travel Savings</button>
+    <button class="tab-btn" onclick="switchTab('representation',this)">🍽️ Representation & Events</button>
+    <button class="tab-btn" onclick="switchTab('crisis',this)">⚡ Energy Crisis Plan <span class="draft-chip">Draft</span></button>
+    <button class="tab-btn" onclick="switchTab('projection',this)">📈 5-Year Projection</button>
+  </div>
+
+  <!-- ══ TAB: OVERVIEW ══ -->
+  <div class="tab-panel active" id="tab-overview">
+    <div class="sec-hd">
+      <div class="sec-title">All Cost-Saving Plans at a Glance</div>
+      <div class="sec-rule" style="background:var(--gold)"></div>
+      <p class="sec-desc">CMI has undertaken a comprehensive institutional review covering technology, energy infrastructure, academic delivery, and student services — achieving significant annual savings while improving quality across all areas.</p>
+    </div>
+
+    <div class="cat-strip" id="catStrip"></div>
+
+    <!-- MASTER SUMMARY TABLE -->
+    <div class="sec-title" style="margin-bottom:6px">Master Savings Summary</div>
+    <div class="sec-rule" style="background:var(--gold);margin-bottom:20px"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Initiative</th><th>Previous Cost</th><th>New Cost</th><th>Annual Savings</th></tr></thead>
+        <tbody id="masterTbody"></tbody>
+        <tfoot><tr><td colspan="3">💰 Total Confirmed Annual Savings</td><td id="masterTotal">—</td></tr></tfoot>
+      </table>
+    </div>
+
+    <!-- TOTAL BANNER -->
+    <div class="total-banner">
+      <div class="tb-left">
+        <h2>Total Estimated Annual Savings</h2>
+        <p>Across all CMI cost-saving initiatives, the institution is saving a substantial amount every year while improving service quality, modernizing infrastructure, and strengthening academic delivery.</p>
+      </div>
+      <div class="tb-right">
+        <span class="big-num" id="grandTotal">$0</span>
+        <span class="per-yr">Per Year (Estimated)</span>
+      </div>
+    </div>
+    <div class="note"><strong>📋 Note:</strong> Totals include confirmed savings only. Additional estimated benefits (Paperless Operations: $25K–$40K/yr; Textbook Logistical Savings; ABE outer-island expansion benefits) are excluded from the confirmed total but noted in each section.</div>
+  </div>
+
+  <!-- ══ TAB: REPRESENTATION & EVENTS ══ -->
+  <div class="tab-panel" id="tab-representation">
+    <div class="sec-hd">
+      <div class="sec-title">Representation &amp; Events Cost Reduction</div>
+      <div class="sec-rule" style="background:var(--orange)"></div>
+      <p class="sec-desc">CMI is implementing targeted controls on representation and event spending to reduce one of the institution's most significant discretionary cost areas.</p>
+    </div>
+
+    <!-- HERO COMPARISON -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px">
+      <div class="t-hero-card" style="border-top-color:var(--red)">
+        <div class="t-hero-icon">📊</div>
+        <div class="t-hero-lbl">FY2025 Actual Spend</div>
+        <span class="t-hero-val" style="color:var(--red)">$243,900+</span>
+        <div class="t-hero-sub">Representation expenses</div>
+      </div>
+      <div class="t-hero-card green">
+        <div class="t-hero-icon">🎯</div>
+        <div class="t-hero-lbl">Reduction Target</div>
+        <span class="t-hero-val" style="color:var(--teal)">$125,000</span>
+        <div class="t-hero-sub">Going forward</div>
+      </div>
+      <div class="t-hero-card accent">
+        <div class="t-hero-icon">💰</div>
+        <div class="t-hero-lbl">Estimated Annual Savings</div>
+        <span class="t-hero-val" style="color:var(--gold)">~$118,900</span>
+        <div class="t-hero-sub">From spending controls</div>
+      </div>
+      <div class="t-hero-card green">
+        <div class="t-hero-icon">🏛️</div>
+        <div class="t-hero-lbl">On-Campus Events Savings</div>
+        <span class="t-hero-val" style="color:var(--teal)">$4,200</span>
+        <div class="t-hero-sub">6 events × $700/event</div>
+      </div>
+    </div>
+
+    <div class="rep-card">
+      <h3>📋 Background &amp; Strategy</h3>
+      <p>During the <strong>2025 fiscal year, CMI spent over $243,900 on Representation alone</strong>. The goal moving forward is to reduce this amount to <strong>$125,000</strong> by holding more events on the CMI campus and tightly controlling spending on food.</p>
+      <div class="comp-grid">
+        <div class="comp-box old"><span class="comp-box-lbl">FY2025 Actual</span><span class="comp-box-val">$243,900+</span></div>
+        <div class="comp-box nw"><span class="comp-box-lbl">New Target</span><span class="comp-box-val">$125,000</span></div>
+      </div>
+    </div>
+
+    <div class="travel-grid">
+      <div class="t-panel">
+        <div class="t-panel-hdr">🏛️ On-Campus Event Hosting</div>
+        <div class="t-panel-body" style="padding:18px 20px">
+          <p style="font-size:.93rem;color:var(--muted);margin-bottom:14px;line-height:1.6">Over the past few years, it has been the practice to hold most college retreats and faculty in-service events at <strong>offsite locations</strong>. This typically includes <strong>six events per year</strong> with a facilities fee of <strong>$700 for each event</strong>.</p>
+          <div style="background:#EBF9F4;border-radius:8px;padding:14px 16px;text-align:center;border:1px solid #A9DFBF">
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--teal);margin-bottom:4px">Annual Savings from On-Campus Hosting</div>
+            <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--teal)">$4,200</div>
+            <div style="font-size:.8rem;color:var(--muted);margin-top:2px">6 events × $700 facility fee saved</div>
+          </div>
+          <p style="font-size:.88rem;color:var(--muted);margin-top:14px;margin-bottom:0;line-height:1.55">Holding these events on CMI property will save $4,200 per year by eliminating facility rental fees entirely.</p>
+        </div>
+      </div>
+
+      <div class="t-panel">
+        <div class="t-panel-hdr">📝 Office of the President Memorandum</div>
+        <div class="t-panel-body" style="padding:18px 20px">
+          <p style="font-size:.9rem;color:var(--muted);margin-bottom:12px;line-height:1.55">For the remainder of savings, the Office of the President will issue a memorandum <strong>limiting food spending</strong> to the following approved categories:</p>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+            <div style="display:flex;align-items:flex-start;gap:10px;background:var(--bg);border-radius:8px;padding:10px 12px">
+              <span style="font-size:1.1rem;flex-shrink:0">🎓</span>
+              <span style="font-size:.88rem;color:var(--text);font-weight:600">Student events</span>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px;background:var(--bg);border-radius:8px;padding:10px 12px">
+              <span style="font-size:1.1rem;flex-shrink:0">🤝</span>
+              <span style="font-size:.88rem;color:var(--text);font-weight:600">Events involving external stakeholders</span>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px;background:var(--bg);border-radius:8px;padding:10px 12px">
+              <span style="font-size:1.1rem;flex-shrink:0">🕐</span>
+              <span style="font-size:.88rem;color:var(--text);font-weight:600">Meetings &amp; workshops during meal periods (lunch hour or after 5 PM)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rep-card" style="border-left-color:var(--navy);margin-top:0">
+      <h3>📌 Budget Manager Directives</h3>
+      <p>The memo will also direct all <strong>budget managers</strong> to ensure that they are working with <strong>less expensive vendors</strong> and to carefully limit the amount of food ordered.</p>
+      <p>All <strong>e-requisitions involving requests for food</strong> should include the expected number of participants in the event. This ensures proportionate ordering and accountability across all departments.</p>
+    </div>
+  </div>
+
+  <!-- ══ TAB: TRAVEL SAVINGS ══ -->
+  <div class="tab-panel" id="tab-travel">
+    <div class="sec-hd">
+      <div class="sec-title">Travel Cost Savings</div>
+      <div class="sec-rule" style="background:var(--orange)"></div>
+      <p class="sec-desc">CMI has significantly reduced travel expenditures through budget controls and fiscal discipline. The data below compares travel spending across fiscal years and highlights the impact of the 20% budget cut applied in FY2026.</p>
+    </div>
+
+    <!-- HERO STATS -->
+    <div class="travel-hero">
+      <div class="t-hero-card accent">
+        <div class="t-hero-icon">📅</div>
+        <div class="t-hero-lbl">Oct 2024 – Feb 2025 (General Fund)</div>
+        <span class="t-hero-val">$76,191.84</span>
+        <div class="t-hero-sub">Prior year same-period</div>
+      </div>
+      <div class="t-hero-card green">
+        <div class="t-hero-icon">📉</div>
+        <div class="t-hero-lbl">Oct 2025 – Feb 2026 (General Fund)</div>
+        <span class="t-hero-val">$7,262.93</span>
+        <div class="t-hero-sub">90% reduction year-over-year</div>
+      </div>
+      <div class="t-hero-card accent">
+        <div class="t-hero-icon">🔒</div>
+        <div class="t-hero-lbl">Oct 2024 – Feb 2025 (Restricted)</div>
+        <span class="t-hero-val">$240,128.68</span>
+        <div class="t-hero-sub">Prior year same-period</div>
+      </div>
+      <div class="t-hero-card green">
+        <div class="t-hero-icon">✅</div>
+        <div class="t-hero-lbl">Oct 2025 – Feb 2026 (Restricted)</div>
+        <span class="t-hero-val">$8,993.92</span>
+        <div class="t-hero-sub">96% reduction year-over-year</div>
+      </div>
+    </div>
+
+    <div class="travel-grid">
+      <!-- PERIOD COMPARISON -->
+      <div class="t-panel">
+        <div class="t-panel-hdr">📊 Period Comparison (Oct–Feb)</div>
+        <div class="t-panel-body">
+          <table>
+            <thead><tr><th>Fund Type</th><th>Oct 2024–Feb 2025</th><th>Oct 2025–Feb 2026</th></tr></thead>
+            <tbody>
+              <tr><td><strong>General Fund</strong></td><td style="color:var(--red);font-weight:700">$76,191.84</td><td style="color:var(--teal);font-weight:700;text-align:right">$7,262.93</td></tr>
+              <tr><td><strong>Restricted</strong></td><td style="color:var(--red);font-weight:700">$240,128.68</td><td style="color:var(--teal);font-weight:700;text-align:right">$8,993.92</td></tr>
+            </tbody>
+            <tfoot><tr><td><strong>Total</strong></td><td style="color:var(--red)">$316,320.52</td><td style="color:var(--teal)">$16,256.85</td></tr></tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- BUDGET SNAPSHOT -->
+      <div class="t-panel">
+        <div class="t-panel-hdr">💰 Budget Snapshot: 2025 vs 2026</div>
+        <div class="t-panel-body">
+          <table>
+            <thead><tr><th>Fund</th><th>2025 Budget</th><th>20% Cut</th><th>2026 Budget</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>General Fund</strong></td>
+                <td>$9,407,941.23</td>
+                <td style="color:var(--red);font-weight:600">$337,312.00</td>
+                <td style="color:var(--teal);font-weight:700;text-align:right">$8,959,651.91</td>
+              </tr>
+              <tr>
+                <td><strong>Restricted</strong></td>
+                <td>$10,433,265.95</td>
+                <td style="color:var(--muted)">—</td>
+                <td style="color:var(--teal);font-weight:700;text-align:right">$8,619,536.12</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="padding:10px 16px;background:#FFF3CD;font-size:.82rem;color:#856404;font-weight:600;border-top:1px solid var(--border)">
+            ✂️ A 20% budget reduction was applied — saving <strong>$337,312.00</strong> from the General Fund alone.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORICAL TRAVEL BAR CHART -->
+    <div class="t-panel" style="margin-bottom:24px">
+      <div class="t-panel-hdr">📈 Historical Travel Actual Spending (FY2021–FY2026)</div>
+      <div class="t-panel-body" style="padding:16px 0 8px">
+        <div id="travelBars"></div>
+        <div class="bar-avg-line">— Average (FY2021–FY2025): <strong>$239,611.45</strong> &nbsp;|&nbsp; FY2026 as of 03.27.26: <strong>$17,472.73</strong></div>
+      </div>
+    </div>
+
+    <!-- TRAVEL DATA TABLE -->
+    <div class="t-panel" style="margin-bottom:28px">
+      <div class="t-panel-hdr">📋 Annual Travel Actual Expenditure</div>
+      <div class="t-panel-body">
+        <table>
+          <thead><tr><th>Fiscal Year</th><th>Actual Spent</th><th>vs Average</th><th>vs FY2026 Target</th></tr></thead>
+          <tbody id="travelDataTbody"></tbody>
+          <tfoot>
+            <tr><td><strong>Average (FY2021–FY2025)</strong></td><td colspan="3" style="text-align:right;color:var(--navy);font-family:'Playfair Display',serif;font-size:1.05rem">$239,611.45</td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>✈️ FY2026 Note:</strong> The FY2026 travel figure of $17,472.73 reflects spending as of March 27, 2026 only — the fiscal year is not yet complete. The dramatic reduction reflects the 20% budget cut applied to FY2026 and the institution's tightened travel controls. A 20% cut to the General Fund saved <strong>$337,312</strong>.
+    </div>
+  </div>
+
+  <!-- ══ TAB: IT SYSTEMS ══ -->
+  <div class="tab-panel" id="tab-it">
+    <div class="sec-hd">
+      <div class="sec-title">IT Systems Cost Savings</div>
+      <div class="sec-rule" style="background:#2980b9"></div>
+      <p class="sec-desc">CMI conducted a comprehensive review of all technology subscriptions, internet services, and cloud platforms — eliminating waste, renegotiating contracts, and transitioning to smarter solutions.</p>
+    </div>
+    <div class="cards-grid" id="itCards"></div>
+  </div>
+
+  <!-- ══ TAB: ENERGY & SOLAR ══ -->
+  <div class="tab-panel" id="tab-energy">
+    <div class="sec-hd">
+      <div class="sec-title">Energy & Solar Infrastructure Savings</div>
+      <div class="sec-rule" style="background:var(--teal)"></div>
+      <p class="sec-desc">CMI is modernizing its energy systems through solar PV renewal and strategic energy management, reducing dependence on costly fuel imports and achieving long-term financial resilience.</p>
+    </div>
+    <div class="cards-grid" id="energyCards"></div>
+    <div class="note"><strong>☀️ Solar Project Note:</strong> The 119 kWp solar PV modernization began in March 2026 with support from NEO. Marine-grade, salt-spray resistant components are being deployed. The $1.7M figure represents cumulative savings over 20 years at $85,680/year.</div>
+  </div>
+
+  <!-- ══ TAB: ACADEMIC PROGRAMS ══ -->
+  <div class="tab-panel" id="tab-academic">
+    <div class="sec-hd">
+      <div class="sec-title">Academic Program Cost Savings</div>
+      <div class="sec-rule" style="background:var(--purple)"></div>
+      <p class="sec-desc">Restructuring academic delivery — from consolidating ABE/AHS course offerings to transitioning from physical textbooks to eBooks — generates significant recurring savings while improving student access and outcomes.</p>
+    </div>
+    <div class="cards-grid" id="academicCards"></div>
+  </div>
+
+  <!-- ══ TAB: CRISIS PLAN ══ -->
+  <div class="tab-panel" id="tab-crisis">
+    <div class="sec-hd">
+      <div class="sec-title">Fuel &amp; Energy Shortage Crisis Plan</div>
+      <div class="sec-rule" style="background:var(--orange)"></div>
+      <p class="sec-desc">CMI has a phased response plan for fuel and energy emergencies. The plan protects institutional operations while minimizing costs during any crisis — from rising prices to declared disasters.</p>
+    </div>
+    <div class="ov-card" style="border-left-color:var(--orange)">
+      <p>The CMI Fuel &amp; Energy Shortage Crisis Plan outlines institutional responses across three crisis phases (Blue, Orange, Red), plus a recovery phase (Green). Each phase defines responsibilities for all departments — from faculty and security to IT and Finance. The plan ensures continuity of education while protecting resources during emergencies.</p>
+    </div>
+    <div class="phase-grid" id="phaseGrid"></div>
+    <div class="sec-title" style="font-size:1.1rem;margin-bottom:16px">Departmental Responsibilities by Phase</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Department / Group</th><th>🔵 Blue Phase</th><th>🟠 Orange Phase</th><th>🔴 Red Phase</th></tr></thead>
+        <tbody id="crisisTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ TAB: 5-YEAR PROJECTION ══ -->
+  <div class="tab-panel" id="tab-projection">
+    <div class="sec-hd">
+      <div class="sec-title">5-Year Savings Projection</div>
+      <div class="sec-rule" style="background:var(--teal)"></div>
+      <p class="sec-desc">Based on all confirmed cost-saving initiatives, CMI is on track to accumulate over $6 million in savings within five years — transforming institutional financial sustainability.</p>
+    </div>
+    <div class="proj-intro">
+      <div class="proj-intro-icon">📈</div>
+      <p>This projection combines confirmed annual savings from <strong>IT Systems ($334,514/yr)</strong>, <strong>Solar PV Energy ($85,680/yr)</strong>, <strong>ABE/AHS Consolidation ($89,600/yr)</strong>, and <strong>Textbook-to-eBook ($500,000/yr)</strong>. Year 1 reflects a slightly lower figure due to Moodle migration one-time cost. Paperless and logistical savings (estimated $57,500–$72,500/yr additional) are shown separately.</p>
+    </div>
+    <div class="chart-card">
+      <h3>Annual vs. Cumulative Savings by Year</h3>
+      <div class="chart-wrap" id="projChart"></div>
+      <div class="chart-legend">
+        <div class="leg-item"><div class="leg-dot leg-a"></div>Annual Savings (confirmed)</div>
+        <div class="leg-item"><div class="leg-dot leg-c"></div>Cumulative Savings</div>
+      </div>
+    </div>
+    <div class="mc-grid" id="mcGrid"></div>
+    <div class="pt-wrap">
+      <table>
+        <thead><tr><th>Year</th><th>Annual (Confirmed)</th><th>Cumulative (Confirmed)</th><th>Cumulative + Est. Paperless &amp; Logistics</th></tr></thead>
+        <tbody id="projTbody"></tbody>
+        <tfoot><tr><td>5-Year Total</td><td id="p5a">—</td><td id="p5c">—</td><td id="p5p">—</td></tr></tfoot>
+      </table>
+    </div>
+    <div class="note"><strong>📋 Assumptions:</strong> IT savings use Year 1 Moodle figure ($8,915 vs $14,948 in Y2+). Textbook savings conservatively set at $500K/yr. ABE/AHS savings based on $44,800/semester × 2. Solar at $85,680/yr from Year 1. Extra estimate = $65,000/yr (midpoint of paperless + logistics). Figures assume no major contract price changes.</div>
+  </div>
+
+</main>
+
+<footer>College of the Marshall Islands · P.O. Box 1258, Majuro, Marshall Islands MH 96960 · helpdesk@cmi.edu · (692) 625-3291/3843</footer>
+
+<script>
+/* ═══════════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════════ */
+
+const IT = {
+  label:'IT Systems', color:'#2980b9', icon:'💻',
+  items:[
+    {icon:'🛰️',title:'Starlink Internet',sub:'Outer Island Connectivity',status:'inprogress',desc:'Replaced the costly NTA vSAT system with Starlink at five outer-island centers (Wotje, Jaluit, Santo, Ebeye, Arrak). Internet speeds jumped from 3–9 Mbps to 130–200 Mbps — up to 20× faster.',prev:259687.56,next:7200,savings:252487.56},
+    {icon:'🎥',title:'Zoom License Optimization',sub:'DTEN Classroom Licensing',status:'inprogress',desc:'Reduced expensive Zoom Room licenses from 50 to 10 shared-room accounts, and expanded affordable Zoom Workspace licenses to cover 70+ faculty and staff.',prev:27000,next:10800,savings:16200},
+    {icon:'💻',title:'Microsoft 365 Licenses',sub:'License Right-Sizing',status:'inprogress',desc:'Reviewed all Microsoft 365 assignments and removed inactive licenses, cutting costs nearly in half while all active staff retained access.',prev:31775.71,next:13570.68,savings:18205.03},
+    {icon:'📚',title:'Moodle / LMS Hosting',sub:'eLearning System Transition',status:'nextyear',desc:'Moved from OpenLMS (billed by total active users with overage fees) to Nephila Web (concurrent-user billing), eliminating excess usage charges.',prev:30000,next:15051.97,savings:14948.03,note:'Year 1 transition cost is $21,084.51. Savings shown are Year 2+ steady-state.'},
+    {icon:'✍️',title:'DocuSign Licenses',sub:'Unutilized License Cleanup',status:'nextyear',desc:'Audited DocuSign accounts and reduced from 100 to 75 licenses after finding many users were inactive, while all active users retain full access.',prev:49826.60,next:37369.50,savings:12457.10},
+    {icon:'📄',title:'Paperless Operations',sub:'DocuSign Business Pro Adoption',status:'inprogress',desc:'Digitizing agreements, approvals, and workflows through DocuSign avoids printing an estimated 500,000 pages per year across all departments.',prev:null,next:null,savings:null,estimated:'$25,000–$40,000',note:'Estimate based on paper and printing cost avoidance.'},
+    {icon:'🏦',title:'MIP & Microix Cloud',sub:'Financial System Repricing',status:'nextyear',desc:'Renegotiated the MIP Momentive cloud subscription as a long-standing customer, securing a meaningful price reduction on the annual contract.',prev:39564,next:34348,savings:5216},
+    {icon:'🗂️',title:'eFileCabinet / RevverDocs',sub:'Document Management Optimization',status:'inprogress',desc:'Scaled back eFileCabinet to archival-only use in Student Services and migrated all active documents to DriveHQ — a far more affordable platform.',prev:24000,next:9000,savings:15000},
+  ]
+};
+
+const ENERGY = {
+  label:'Energy & Solar', color:'#148F77', icon:'☀️',
+  items:[
+    {icon:'☀️',title:'Solar PV Infrastructure Renewal',sub:'119 kWp System Modernization',desc:'The 119 kWp solar photovoltaic system is being modernized with marine-grade, salt-spray and high-wind resistant components suited for atoll environments. The project began in March 2026 with support from NEO donations.',prev:null,next:null,savings:85680,estimated:'$85,680/yr',isConfirmed:true,note:'Estimated cumulative savings: $1.7 million over 20 years.'},
+  ]
+};
+
+const ACADEMIC = {
+  label:'Academic Programs', color:'#7D3C98', icon:'📚',
+  items:[
+    {icon:'📖',title:'ABE & AHS Course Consolidation',sub:'Outer Island Program Efficiency',desc:'Consolidating Adult Basic Education and Adult High School courses reduces redundant instruction at outer-island sites. Joint instruction and rotating electives cut credit costs without reducing student access or program quality.',prev:217000/2,next:172200/2,savings:44800,note:'Per-semester savings of $44,800 = approximately $89,600/year. Based on Spring 2026 enrollment data.',isPerSemester:true},
+    {icon:'📱',title:'Textbook-to-eBook Transition',sub:'Digital-First Academic Framework',desc:'Replacing physical textbooks with eBooks and a tablet loan program eliminates the $150,000 annual net loss on unused inventory and reduces the $800,000 annual textbook procurement cost by up to $500,000.',prev:800000,next:300000,savings:500000,note:'Previous cost reflects annual textbook procurement average FY2014–FY2024. Savings are conservative estimate; full benefit may reach $650K+ annually including logistics.'},
+  ]
+};
+
+/* confirmed annuals for overview math */
+const itConfirmed   = IT.items.reduce((s,x)=>s+(x.savings||0),0);
+const energyConf    = 85680;
+const academicConf  = 89600 + 500000; // ABE annual + eBook
+const TOTAL_CONF    = itConfirmed + energyConf + academicConf;
+
+/* ═══════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════ */
+const fmt = (n,dec=2)=>'$'+n.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+const fmtM = n=>n>=1e6?'$'+(n/1e6).toFixed(2)+'M':'$'+Math.round(n/1000)+'K';
+
+/* ═══════════════════════════════════════════════
+   TAB SWITCH
+═══════════════════════════════════════════════ */
+function switchTab(id,btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════
+   BUILD CARDS
+═══════════════════════════════════════════════ */
+function buildCards(container, items){
+  const el = document.getElementById(container);
+  items.forEach(item=>{
+    const prevStr = item.prev!=null?fmt(item.prev):'—';
+    const nextStr = item.next!=null?fmt(item.next):'—';
+    const saveStr = item.savings!=null?fmt(item.savings):(item.estimated||'Est.');
+    const pct     = item.savings&&item.prev?Math.round((item.savings/item.prev)*100)+'% saved'
+                   :(item.isConfirmed?'Confirmed':'Estimated');
+    const costHtml = (item.prev!=null||item.next!=null)?`
+      <div class="cost-row">
+        <div class="cost-box prev"><span class="cost-lbl">Previous Cost${item.isPerSemester?' (per sem.)':''}</span><span class="cost-val">${prevStr}</span></div>
+        <div class="cost-box nw"><span class="cost-lbl">New Cost${item.isPerSemester?' (per sem.)':''}</span><span class="cost-val">${nextStr}</span></div>
+      </div>`
+      :`<div class="est-box"><span class="cost-lbl">Annual Savings</span><span class="cost-val">${item.estimated}</span></div>`;
+    const statusHtml = item.status==='inprogress'
+      ?`<div class="status-bar"><span class="status-tag tag-inprogress"><span class="tag-dot"></span>In Progress</span></div>`
+      :item.status==='nextyear'
+      ?`<div class="status-bar"><span class="status-tag tag-nextyear"><span class="tag-dot"></span>Changes Take Effect Next Year</span></div>`
+      :'';
+    el.innerHTML+=`
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-icon">${item.icon}</div>
+        <div><div class="card-title">${item.title}</div><div class="card-sub">${item.sub}</div></div>
+      </div>
+      <div class="card-body">
+        ${statusHtml}
+        <p>${item.desc}</p>
+        ${costHtml}
+        ${item.note?`<p class="card-note">ℹ️ ${item.note}</p>`:''}
+      </div>
+      <div class="card-ftr">
+        <span class="ftr-lbl">Annual Savings</span>
+        <span class="ftr-amt">${saveStr}</span>
+        <span class="ftr-badge">${pct}</span>
+      </div>
+    </div>`;
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   CATEGORY STRIP (Overview)
+═══════════════════════════════════════════════ */
+const cats = [
+  {icon:'💻',name:'IT Systems',saving:itConfirmed,lbl:'Confirmed / yr',color:'#2980b9'},
+  {icon:'☀️',name:'Energy & Solar',saving:85680,lbl:'Confirmed / yr',color:'#148F77'},
+  {icon:'📚',name:'Academic Programs',saving:589600,lbl:'Confirmed / yr',color:'#7D3C98'},
+  {icon:'📄',name:'Paperless (Est.)',saving:32500,lbl:'Estimate / yr',color:'#E67E22'},
+];
+const strip=document.getElementById('catStrip');
+cats.forEach(c=>{
+  strip.innerHTML+=`<div class="cat-card" style="border-top-color:${c.color}">
+    <div class="cat-icon">${c.icon}</div>
+    <div class="cat-name">${c.name}</div>
+    <div class="cat-saving" style="color:${c.color}">${fmt(c.saving,0)}</div>
+    <div class="cat-sublbl">${c.lbl}</div>
+  </div>`;
+});
+
+/* ═══════════════════════════════════════════════
+   MASTER TABLE
+═══════════════════════════════════════════════ */
+function addGroupRow(tbody,label,color){
+  tbody.innerHTML+=`<tr class="cat-group-row"><td colspan="4" style="color:${color}">▸ ${label}</td></tr>`;
+}
+const mTbody=document.getElementById('masterTbody');
+let masterTotal=0;
+
+const catStyle={
+  'IT Systems':{color:'#2980b9',bg:'#D6EAF8'},
+  'Energy & Solar':{color:'#148F77',bg:'#D5F5E3'},
+  'Academic Programs':{color:'#7D3C98',bg:'#E8DAEF'},
+};
+
+function addRows(tbody,items,catLabel){
+  const cs=catStyle[catLabel];
+  addGroupRow(tbody,catLabel,cs.color);
+  items.forEach(item=>{
+    const s=item.savings!=null?item.savings:0;
+    if(s) masterTotal+=s;
+    tbody.innerHTML+=`<tr>
+      <td><span class="td-cat" style="background:${cs.bg};color:${cs.color}">${catLabel.split(' ')[0]}</span><span class="td-area">${item.icon} ${item.title}</span></td>
+      <td class="td-prev">${item.prev!=null?fmt(item.prev):'—'}</td>
+      <td class="td-new">${item.next!=null?fmt(item.next):'—'}</td>
+      <td class="td-save">${item.savings!=null?fmt(item.savings):'<span style="color:#e67e22">'+(item.estimated||'Est.')+'</span>'}</td>
+    </tr>`;
+  });
+}
+addRows(mTbody,IT.items,'IT Systems');
+addRows(mTbody,ENERGY.items,'Energy & Solar');
+addRows(mTbody,ACADEMIC.items,'Academic Programs');
+document.getElementById('masterTotal').textContent=fmt(masterTotal);
+
+/* ═══════════════════════════════════════════════
+   BUILD ALL CARDS
+═══════════════════════════════════════════════ */
+buildCards('itCards',IT.items);
+buildCards('energyCards',ENERGY.items);
+buildCards('academicCards',ACADEMIC.items);
+
+/* ═══════════════════════════════════════════════
+   GRAND TOTAL ANIMATED COUNTER
+═══════════════════════════════════════════════ */
+function animCount(el,target,duration=1800){
+  const start=performance.now();
+  function tick(now){
+    const p=Math.min((now-start)/duration,1);
+    const ease=1-Math.pow(1-p,3);
+    el.textContent='$'+Math.round(ease*target).toLocaleString('en-US');
+    if(p<1)requestAnimationFrame(tick);
+    else el.textContent=fmt(target,0);
+  }
+  requestAnimationFrame(tick);
+}
+const gtEl=document.getElementById('grandTotal');
+const htEl=document.getElementById('heroTotal');
+const obs=new IntersectionObserver(entries=>{
+  if(entries[0].isIntersecting){animCount(gtEl,TOTAL_CONF);obs.disconnect();}
+},{threshold:.3});
+obs.observe(document.querySelector('.total-banner'));
+animCount(htEl,TOTAL_CONF,2000);
+
+/* ═══════════════════════════════════════════════
+   CRISIS PLAN
+═══════════════════════════════════════════════ */
+const phases=[
+  {cls:'ph-blue',ptcls:'pt-blue',label:'🔵 Blue Phase',icon:'🔵',
+   def:'Declared by the President when fuel and energy costs rise sharply or global events threaten supply. Operations remain generally normal but with heightened conservation awareness.',
+   status:'Campus operations are normal. Staff may optionally work from home 1–2 days/week. Energy conservation is a priority for all.'},
+  {cls:'ph-orange',ptcls:'pt-orange',label:'🟠 Orange Phase',icon:'🟠',
+   def:'Declared when prices continue to increase and a fuel or energy emergency (not disaster) is declared, or when rolling blackouts occur.',
+   status:'Campus activities become restricted. Remote work (1–2 days/week) becomes mandatory for applicable staff. Non-essential activities are avoided.'},
+  {cls:'ph-red',ptcls:'pt-red',label:'🔴 Red Phase',icon:'🔴',
+   def:'Triggered automatically when the RMI government declares a fuel or energy related disaster.',
+   status:'Heightened restrictions possible including remote learning, remote operations, and campus closures. Computer labs available for students without home electricity.'},
+  {cls:'ph-green',ptcls:'pt-green',label:'🟢 Green Phase',icon:'🟢',
+   def:'Declared by the President when the emergency has fully passed and regular operations can safely resume.',
+   status:'All normal activities resume. Incomplete grades are resolved. Departments review which energy-saving measures to carry forward permanently.'},
+];
+const pg=document.getElementById('phaseGrid');
+phases.forEach(p=>{
+  pg.innerHTML+=`<div class="phase-card">
+    <div class="phase-hdr ${p.cls}">${p.label}</div>
+    <div class="phase-body">
+      <span class="phase-tag ${p.ptcls}">Declaration</span>
+      <p>${p.def}</p>
+      <span class="phase-tag ${p.ptcls}">Campus Status</span>
+      <p>${p.status}</p>
+    </div>
+  </div>`;
+});
+
+const crisisRows=[
+  ['All Employees','Conserve energy; turn off lights/AC/tech when not in use. Optional WFH 1–2 days/week.','Mandatory WFH 1–2 days/week if applicable. Continue energy conservation.','Come to campus only if essential or lacking home electricity.'],
+  ['Senior Leadership Team','Monitor situation; review remote work plans.','Ensure compliance with emergency directives. Continue monitoring.','Decide on remote learning, campus closures, or calendar changes. Weekly Board updates required.'],
+  ['All Managers','Identify WFH-eligible employees; submit plans.','Enforce mandatory WFH. Identify essential on-campus staff. Avoid non-essential power use.','Ensure compliance. Maintain remote employee communication. Cancel non-essential energy activities.'],
+  ['Faculty','Begin planning asynchronous activities for potential blackouts.','Prepare students for possible remote learning. Identify courses that cannot go remote.','Teach remotely if required. Assign Incomplete grades temporarily if semester cannot be completed.'],
+  ['IT Department','Post plan and phase to website/screens. Prepare tech for remote work.','Update phase status. Support remote employees.','Move sensitive tech to minimize AC room usage. Continue remote support.'],
+  ['Finance Office','Ensure adequate fuel reserves are purchased.','Maintain fuel reserve.','Maintain fuel reserve to the extent possible.'],
+  ['Physical Plant','Develop energy savings plans. Research rapid-deploy renewable options.','Continue implementing energy savings and approved renewables.','Continue energy savings. Run buses at day start/end if fuel allows.'],
+  ['Security','Verify lights and AC are off in unused rooms.','Continue monitoring lights and AC.','Ensure only required rooms are in active use.'],
+];
+const ct=document.getElementById('crisisTbody');
+crisisRows.forEach(r=>{
+  ct.innerHTML+=`<tr><td><strong>${r[0]}</strong></td><td style="font-size:.85rem;color:var(--muted)">${r[1]}</td><td style="font-size:.85rem;color:var(--muted)">${r[2]}</td><td style="font-size:.85rem;color:var(--muted)">${r[3]}</td></tr>`;
+});
+
+/* ═══════════════════════════════════════════════
+   5-YEAR PROJECTION
+═══════════════════════════════════════════════ */
+// IT Year1 vs Year2+ (Moodle diff)
+const moodleY1=30000-21084.51, moodleY2=30000-15051.97;
+const itBase=itConfirmed-moodleY2;
+const annY1=itBase+moodleY1+energyConf+89600+500000;
+const annY2=itConfirmed+energyConf+89600+500000;
+const extra=65000; // paperless midpoint $32.5K + logistics est $32.5K
+
+const projYears=[];
+let cum=0,cumP=0;
+for(let y=1;y<=5;y++){
+  const ann=y===1?annY1:annY2;
+  cum+=ann; cumP+=ann+extra;
+  projYears.push({y,ann,cum,cumP});
+}
+
+// chart
+const chartEl=document.getElementById('projChart');
+const maxC=projYears[4].cum;
+const chartH=184;
+projYears.forEach(d=>{
+  const aH=Math.round((d.ann/maxC)*chartH);
+  const cH=Math.round((d.cum/maxC)*chartH);
+  chartEl.innerHTML+=`<div class="bar-group">
+    <div class="bar-c" style="height:${cH}px;"><div class="bar-tip">${fmt(d.cum,0)}</div></div>
+    <div class="bar-a" style="height:${aH}px;position:relative;z-index:2;">
+      <div class="bar-tip">${fmt(d.ann,0)}</div>
+    </div>
+    <span class="bar-lbl">Year ${d.y}</span>
+  </div>`;
+});
+
+// milestone cards
+const emojis=['🌱','📈','🚀','💎','🏆'];
+const mcG=document.getElementById('mcGrid');
+projYears.forEach((d,i)=>{
+  mcG.innerHTML+=`<div class="mc">
+    <div class="mc-yr">${emojis[i]} Year ${d.y}</div>
+    <span class="mc-num">${fmtM(d.cum)}</span>
+    <span class="mc-ann">+${fmt(d.ann,0)} this year</span>
+  </div>`;
+});
+
+// proj table
+const pt=document.getElementById('projTbody');
+projYears.forEach(d=>{
+  pt.innerHTML+=`<tr>
+    <td class="yr-c">Year ${d.y}${d.y===1?' <span style="font-size:.75rem;color:var(--muted);font-weight:400">(transition)</span>':''}</td>
+    <td class="ann-c">${fmt(d.ann)}</td>
+    <td class="cum-c">${fmt(d.cum)}</td>
+    <td style="text-align:right;font-weight:600;color:#148f77">${fmt(d.cumP)}</td>
+  </tr>`;
+});
+const fiveAnn=annY1+annY2*4;
+document.getElementById('p5a').textContent=fmt(fiveAnn);
+document.getElementById('p5c').textContent=fmt(projYears[4].cum);
+document.getElementById('p5p').textContent=fmt(projYears[4].cumP);
+
+/* ═══════════════════════════════════════════════
+   TRAVEL TAB
+═══════════════════════════════════════════════ */
+const travelData = [
+  {yr:'FY2021', val:17673.85},
+  {yr:'FY2022', val:233179.21},
+  {yr:'FY2023', val:392265.39},
+  {yr:'FY2024', val:466051.56},
+  {yr:'FY2025', val:311025.98},
+  {yr:'FY2026', val:17472.73, partial:true},
+];
+const tAvg = 239611.45;
+const tMax = Math.max(...travelData.map(d=>d.val));
+const barColors = ['#3498db','#2980b9','#e67e22','#c0392b','#8e44ad','#27ae60'];
+
+const barsEl = document.getElementById('travelBars');
+travelData.forEach((d,i)=>{
+  const pct = Math.round((d.val/tMax)*100);
+  barsEl.innerHTML += `
+  <div class="bar-row">
+    <span class="bar-yr">${d.yr}</span>
+    <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${barColors[i]}"></div></div>
+    <span class="bar-val">${fmt(d.val,0)}${d.partial?' *':''}</span>
+  </div>`;
+});
+
+const ttBody = document.getElementById('travelDataTbody');
+travelData.forEach((d,i)=>{
+  const diff = d.val - tAvg;
+  const diffStr = diff>=0
+    ?`<span style="color:var(--red);font-weight:600">▲ ${fmt(diff,0)}</span>`
+    :`<span style="color:var(--teal);font-weight:600">▼ ${fmt(Math.abs(diff),0)}</span>`;
+  const vs26 = d.partial
+    ?'<span style="color:var(--muted);font-style:italic">Partial year</span>'
+    :(i<5 ? `<span style="color:var(--red);font-weight:600">${fmt(d.val-17472.73,0)} over</span>` : '—');
+  ttBody.innerHTML+=`<tr>
+    <td><strong>${d.yr}</strong>${d.partial?' <span class="t-yr-badge">as of 03.27.26</span>':''}</td>
+    <td style="font-weight:700;color:${barColors[i]}">${fmt(d.val)}</td>
+    <td>${diffStr}</td>
+    <td>${vs26}</td>
+  </tr>`;
+});
+</script>
+</body>
+</html>

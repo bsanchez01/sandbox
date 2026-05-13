@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CMI Annual Report 2024</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --cmi:#00008a;--acc1:#3333a1;--acc2:#4d4dad;
+  --dark:#00000d;--card:#00003d;--card2:#000055;
+  --border:rgba(51,51,161,.45);--border2:rgba(77,77,173,.3);
+  --text:#e8e8ff;--muted:#9999cc;--white:#ffffff;
+  --green:#22c55e;--red:#ef4444;--orange:#f97316;--silver:#c0c0c0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:var(--dark);color:var(--text);min-height:100vh}
+.rebbelip{background-image:repeating-linear-gradient(45deg,rgba(51,51,161,.07) 0,rgba(51,51,161,.07) 1px,transparent 0,transparent 50%);background-size:20px 20px}
+.hdr{background:var(--cmi);padding:0;border-bottom:3px solid var(--acc2);position:relative;overflow:hidden}
+.hdr-stripe{position:absolute;top:0;right:0;width:180px;height:100%;background:linear-gradient(135deg,transparent 40%,rgba(77,77,173,.35));pointer-events:none}
+.hdr-inner{position:relative;display:flex;align-items:center;gap:16px;padding:14px 22px}
+
+.hdr-text h1{font-size:1.3rem;font-weight:900;color:#fff;letter-spacing:1.5px;text-transform:uppercase}
+.hdr-text p{font-size:.72rem;color:rgba(255,255,255,.7);margin-top:3px}
+.hdr-badge{background:#fff;color:var(--cmi);font-size:.67rem;font-weight:800;padding:5px 12px;border-radius:20px;flex-shrink:0}
+.tabs{background:#000070;display:flex;flex-wrap:wrap;gap:2px;padding:5px 10px;border-bottom:2px solid var(--border);overflow-x:auto}
+.tab{padding:7px 13px;border-radius:6px;cursor:pointer;font-size:.7rem;font-weight:600;color:rgba(255,255,255,.6);transition:.2s;white-space:nowrap;border:none;background:transparent}
+.tab:hover{color:#fff;background:rgba(255,255,255,.1)}
+.tab.active{background:#fff;color:var(--cmi)}
+.page{display:none;padding:18px 18px 32px;max-width:1400px;margin:0 auto}
+.page.active{display:block}
+.sec-hdr{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.sec-hdr h2{font-size:.98rem;font-weight:700;color:#fff;white-space:nowrap}
+.sec-hdr .line{flex:1;height:1px;background:var(--border)}
+.sec-hdr .pill{background:var(--cmi);color:#fff;border:1px solid var(--acc2);font-size:.62rem;font-weight:700;padding:3px 9px;border-radius:20px}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:16px}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:16px}
+.g2c{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:600px){.g2c{grid-template-columns:1fr}}
+.kcard{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden}
+.kcard::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--acc2)}
+.kcard.kgn::before{background:var(--green)}
+.kcard.krd::before{background:var(--red)}
+.kcard.kor::before{background:var(--orange)}
+.kcard.kwh::before{background:#fff}
+.kcard.kbl::before{background:var(--cmi)}
+.kcard .lbl{font-size:.64rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.kcard .val{font-size:1.6rem;font-weight:800;color:#fff;line-height:1}
+.kcard .sub{font-size:.67rem;color:var(--muted);margin-top:5px;line-height:1.4}
+.kcard .chg{font-size:.69rem;font-weight:700;margin-top:6px}
+.cup{color:var(--green)}.cdn{color:var(--red)}.ceq{color:var(--acc2)}
+.cc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px}
+.cc h3{font-size:.78rem;font-weight:700;color:#fff;margin-bottom:12px}
+.cc h3 em{font-size:.65rem;color:var(--muted);font-weight:400}
+.tw{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:auto;margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-size:.71rem}
+th{background:var(--cmi);color:#fff;padding:9px 12px;text-align:left;font-weight:700;font-size:.66rem;text-transform:uppercase;letter-spacing:.3px}
+td{padding:8px 12px;border-bottom:1px solid var(--border2);color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(77,77,173,.08)}
+.n{font-weight:700;color:#fff}.gd{color:var(--green);font-weight:700}.bd{color:var(--red);font-weight:700}.wd{color:var(--orange);font-weight:700}
+.ib{background:var(--card2);border:1px solid var(--border);border-left:3px solid var(--acc2);border-radius:8px;padding:12px 14px;margin-bottom:12px;font-size:.76rem;line-height:1.65}
+.ib h4{color:#fff;font-size:.76rem;margin-bottom:5px}
+.ms{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;gap:12px;align-items:flex-start;margin-bottom:8px}
+.mi{width:32px;height:32px;border-radius:50%;background:rgba(0,0,138,.4);border:1px solid var(--acc2);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.mb h4{font-size:.73rem;font-weight:700;color:#fff}
+.mb p{font-size:.68rem;color:var(--muted);margin-top:2px;line-height:1.5}
+.bdg{display:inline-block;padding:3px 8px;border-radius:20px;font-size:.62rem;font-weight:700}
+.bac{background:rgba(34,197,94,.14);color:var(--green);border:1px solid rgba(34,197,94,.3)}
+.bin{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25)}
+.lc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px}
+.lc h3{font-size:.8rem;font-weight:700;color:#fff;margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:6px}
+.lc p{font-size:.71rem;color:var(--muted);line-height:1.6}
+.lc ul{padding-left:14px;font-size:.7rem;color:var(--text);line-height:1.85;margin-top:6px}
+.gc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px}
+.gc .amt{font-size:1.12rem;font-weight:800;color:#fff}
+.gc h3{font-size:.76rem;font-weight:700;color:var(--text);margin:4px 0}
+.gc .fn{font-size:.66rem;color:var(--muted)}
+.gc p{font-size:.68rem;color:var(--muted);margin-top:7px;line-height:1.5}
+.pr{margin-bottom:10px}
+.pr .pl{display:flex;justify-content:space-between;font-size:.7rem;margin-bottom:4px}
+.pr .pb{background:rgba(77,77,173,.2);border-radius:4px;height:8px;overflow:hidden}
+.pr .pf{height:100%;border-radius:4px}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--acc1);border-radius:4px}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-stripe"></div>
+  <div class="hdr-inner">
+
+    <div class="hdr-text">
+      <h1>College of the Marshall Islands</h1>
+      <p>Annual Report Dashboard &nbsp;&middot;&nbsp; Academic Year 2024 &nbsp;&middot;&nbsp; Jitdam Kapeel &mdash; Seeking Knowledge</p>
+    </div>
+    <div class="hdr-badge">FY 2023&ndash;2024</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="show('overview',this)">&#127968; Overview</button>
+  <button class="tab" onclick="show('profile',this)">&#128202; CMI Profile</button>
+  <button class="tab" onclick="show('kpi',this)">&#127919; KPIs</button>
+  <button class="tab" onclick="show('academic',this)">&#127891; Academic &amp; WAVES</button>
+  <button class="tab" onclick="show('services',this)">&#129309; Student Services</button>
+  <button class="tab" onclick="show('locations',this)">&#128205; Locations</button>
+  <button class="tab" onclick="show('grants',this)">&#127758; Grants</button>
+  <button class="tab" onclick="show('financial',this)">&#128181; Financials</button>
+  <button class="tab" onclick="show('it',this)">&#128187; IT &amp; Auxiliary</button>
+</div>
+
+<!-- OVERVIEW -->
+<div id="overview" class="page active rebbelip">
+  <div class="sec-hdr"><h2>President's Message &amp; Year at a Glance</h2><div class="line"></div><div class="pill">2024</div></div>
+  <div class="ib"><h4>Message from President David A. Newnham &mdash; GO NAVIGATORS!</h4>In 2024, despite challenges, CMI moved forward in its Mission to provide access to quality higher and further educational services. Three new Wapepe plans were approved addressing <strong>Equitable Student Success, Community Engagement, and Climate Change</strong>. The CMI Childcare Center was funded through the Asian Development Bank WYSER project. The college completed its 2021 audit in September &mdash; a key step towards restoring trust in its financial integrity.</div>
+  <div class="g4">
+    <div class="kcard kwh"><div class="lbl">HS Equivalency Diplomas</div><div class="val">114</div><div class="sub">Awarded May 2024 &middot; all locations</div></div>
+    <div class="kcard kgn"><div class="lbl">Certificates Awarded</div><div class="val">58</div><div class="sub">Certificate-level graduates</div></div>
+    <div class="kcard kbl"><div class="lbl">Associate Degrees</div><div class="val">130</div><div class="sub">AA/AS graduates</div></div>
+    <div class="kcard kgn"><div class="lbl">Bachelor's Degrees</div><div class="val">27</div><div class="sub">Exceeded standard of 19</div><div class="chg cup">&#9650; Exceeded stretch goal</div></div>
+  </div>
+  <div class="g4">
+    <div class="kcard"><div class="lbl">Fall Enrollment (HC)</div><div class="val">894</div><div class="sub">709 FTE &middot; Fall 2024</div></div>
+    <div class="kcard"><div class="lbl">Spring Enrollment (HC)</div><div class="val">1,001</div><div class="sub">750 FTE &middot; Spring 2024</div></div>
+    <div class="kcard"><div class="lbl">Summer Enrollment (HC)</div><div class="val">555</div><div class="sub">504 FTE &middot; Summer 2024</div></div>
+    <div class="kcard kor"><div class="lbl">FY2024 Total Revenue</div><div class="val">$9.8M</div><div class="sub">Down from $11.9M FY2023</div><div class="chg cdn">&#9660; 17.7% YoY</div></div>
+  </div>
+  <div class="sec-hdr"><h2>Strategic Wapepe Plans</h2><div class="line"></div></div>
+  <div class="g3">
+    <div class="kcard kbl"><div class="lbl">Equitable Student Success</div><div class="val" style="font-size:.95rem;margin-top:6px;color:#aaaaff">9 Objectives</div><div class="sub">Data disaggregation &middot; Female completion &middot; First-gen equity &middot; Online access &middot; Disability inclusion &middot; Outer island access</div></div>
+    <div class="kcard kgn"><div class="lbl">Community Engagement</div><div class="val" style="font-size:.95rem;margin-top:6px;color:#aaaaff">6 Objectives</div><div class="sub">K-12 pathways &middot; Civic learning &middot; Service learning &middot; Marshallese culture &middot; Carnegie classification</div></div>
+    <div class="kcard kor"><div class="lbl">Climate Change</div><div class="val" style="font-size:.95rem;margin-top:6px;color:#aaaaff">6 Objectives</div><div class="sub">GHG inventory &middot; Energy conservation &middot; Emission reduction &middot; Renewable energy &middot; Climate education</div></div>
+  </div>
+  <div class="sec-hdr"><h2>Key Milestones 2024</h2><div class="line"></div></div>
+  <div class="g2c">
+    <div>
+      <div class="ms"><div class="mi">&#9875;</div><div class="mb"><h4>Jela Meto Maritime Training Center Opened</h4><p>Named at Uliga Dock July 2024. First cohort of 16 students began sea internships with MISC and World Bank ESSP.</p></div></div>
+      <div class="ms"><div class="mi">&#127959;</div><div class="mb"><h4>CMI Childcare Center Funded</h4><p>$1.5M matching fund approved with ADB WYSER Project &mdash; supports student parents and addresses gender gap in persistence.</p></div></div>
+      <div class="ms"><div class="mi">&#127807;</div><div class="mb"><h4>First Agroforestry Graduate</h4><p>AS in Agroforestry Education (introduced 2023) had its first completer in Fall 2024.</p></div></div>
+      <div class="ms"><div class="mi">&#128221;</div><div class="mb"><h4>2021 Audit Completed</h4><p>Completed September &mdash; critical step toward restoring financial integrity and avoiding future reporting delays.</p></div></div>
+    </div>
+    <div>
+      <div class="ms"><div class="mi">&#127891;</div><div class="mb"><h4>Wotje Center First College Graduate</h4><p>Wotje Center honored its first-ever college-level graduate at the 2024 graduation ceremony.</p></div></div>
+      <div class="ms"><div class="mi">&#127956;</div><div class="mb"><h4>Jaluit Graduation Returns</h4><p>First graduation since 2020 &mdash; honoring 6 ABE and 3 college graduates.</p></div></div>
+      <div class="ms"><div class="mi">&#128295;</div><div class="mb"><h4>First Advanced TVET Boot Camp</h4><p>Advanced trades boot camp on Majuro and Ebeye &mdash; Automotive, Welding, Electrical. 75 total trainees.</p></div></div>
+      <div class="ms"><div class="mi">&#127808;</div><div class="mb"><h4>Santo First ABE Graduation</h4><p>CMI Santo Sub-Center held its first-ever ABE graduation ceremony in Summer 2024.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE -->
+<div id="profile" class="page rebbelip">
+  <div class="sec-hdr"><h2>CMI Profile &mdash; Enrollment &amp; Demographics</h2><div class="line"></div><div class="pill">2024</div></div>
+  <div class="g3">
+    <div class="cc"><h3>Headcount 2024 <em>vs 10-yr Average</em></h3><canvas id="hcChart" height="180"></canvas></div>
+    <div class="cc"><h3>Credit Load 2024 <em>FT vs PT %</em></h3><canvas id="loadChart" height="180"></canvas></div>
+    <div class="cc"><h3>Academic Programs <em>Fall 2024 share</em></h3><canvas id="progChart" height="180"></canvas></div>
+  </div>
+  <div class="g2">
+    <div class="cc">
+      <h3>Ethnicity &mdash; Fall 2024</h3>
+      <div class="pr"><div class="pl"><span>Marshallese</span><span>97.3%</span></div><div class="pb"><div class="pf" style="width:97.3%;background:#fff"></div></div></div>
+      <div class="pr"><div class="pl"><span>Micronesian</span><span>0.7%</span></div><div class="pb"><div class="pf" style="width:7%;background:var(--acc2)"></div></div></div>
+      <div class="pr"><div class="pl"><span>Asian</span><span>0.6%</span></div><div class="pb"><div class="pf" style="width:6%;background:var(--acc1)"></div></div></div>
+      <div class="pr"><div class="pl"><span>Other Pacific Islands</span><span>0.5%</span></div><div class="pb"><div class="pf" style="width:5%;background:var(--silver)"></div></div></div>
+      <div class="pr"><div class="pl"><span>White</span><span>0.1%</span></div><div class="pb"><div class="pf" style="width:1%;background:var(--muted)"></div></div></div>
+      <div style="margin-top:10px;font-size:.69rem;color:var(--muted)">10-yr avg Marshallese: 96.1% &rarr; increased to 97.3% in 2024</div>
+    </div>
+    <div class="cc"><h3>Gender Distribution 2024</h3><canvas id="genderChart" height="200"></canvas></div>
+  </div>
+  <div class="sec-hdr"><h2>Enrollment Detail</h2><div class="line"></div></div>
+  <div class="tw"><table>
+    <thead><tr><th>Metric</th><th>Spring 2024</th><th>Summer 2024</th><th>Fall 2024</th><th>10-yr Avg (Fall)</th></tr></thead>
+    <tbody>
+      <tr><td>Headcount</td><td class="n">1,001</td><td class="n">555</td><td class="n">894</td><td class="n">1,108</td></tr>
+      <tr><td>FTE</td><td class="n">750</td><td class="n">504</td><td class="n">709</td><td class="n">826</td></tr>
+      <tr><td>Full-Time %</td><td>62%</td><td>86%</td><td>69%</td><td>62%</td></tr>
+      <tr><td>First-Time Students</td><td>14%</td><td>12%</td><td>25%</td><td>29%</td></tr>
+      <tr><td>Average Age</td><td>22.15</td><td>22.61</td><td>22.15</td><td>22.39</td></tr>
+      <tr><td>RMI Citizenship</td><td>94%</td><td>88%</td><td>&mdash;</td><td>95.3%</td></tr>
+      <tr><td>English: Credit Level</td><td>59%</td><td>38%</td><td>63%</td><td>53%</td></tr>
+      <tr><td>Math: Credit Level</td><td>55%</td><td>35%</td><td>51%</td><td>43%</td></tr>
+    </tbody>
+  </table></div>
+  <div class="sec-hdr"><h2>Academic Programs &mdash; Fall 2024</h2><div class="line"></div></div>
+  <div class="tw"><table>
+    <thead><tr><th>Program</th><th>2024 Share</th><th>10-yr Avg</th><th>Trend</th></tr></thead>
+    <tbody>
+      <tr><td>AA-BUS / AS-BUS / AS-BA (Business)</td><td class="n">24%</td><td>12%</td><td class="gd">&#9650; Growing</td></tr>
+      <tr><td>AA-LBA (Liberal Arts)</td><td class="n">36%</td><td>41%</td><td class="wd">&#9660; Slight decline</td></tr>
+      <tr><td>AS-EEDU (Elementary Education)</td><td class="n">16%</td><td>20%</td><td class="wd">&#9660; Slight decline</td></tr>
+      <tr><td>AS-NURS (Nursing)</td><td class="n">9%</td><td>18%</td><td class="bd">&#9660; Decline</td></tr>
+      <tr><td>BA-EEDU (Bachelor's Education)</td><td class="n">7%</td><td>4%</td><td class="gd">&#9650; Growing</td></tr>
+      <tr><td>CC-CARP (Carpentry)</td><td class="n">1%</td><td>2%</td><td>= Stable</td></tr>
+      <tr><td>Others (incl. Agroforestry, Maritime)</td><td class="n">7%</td><td>3%</td><td class="gd">&#9650; Expanding</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- KPIs -->
+<div id="kpi" class="page rebbelip">
+  <div class="sec-hdr"><h2>Key Performance Indicators</h2><div class="line"></div><div class="pill">ACCJC &amp; BOR Required</div></div>
+  <div class="g4">
+    <div class="kcard krd"><div class="lbl">KPI 1: 150% Degree Completion</div><div class="val">11%</div><div class="sub">Standard: 15% &middot; Stretch: 27%</div><div class="chg cdn">&#9660; Below standard</div></div>
+    <div class="kcard kor"><div class="lbl">KPI 2: Course Completion (Fall)</div><div class="val">68.4%</div><div class="sub">Standard: 69.1% &middot; Stretch: 79.1%</div><div class="chg cdn">&#9660; Slightly below</div></div>
+    <div class="kcard kor"><div class="lbl">KPI 2: Course Completion (Spring)</div><div class="val">66.2%</div><div class="sub">Standard: 68.6% &middot; Stretch: 78.6%</div><div class="chg cdn">&#9660; Below standard</div></div>
+    <div class="kcard krd"><div class="lbl">KPI 6: Fall-to-Fall Retention</div><div class="val">47%</div><div class="sub">Standard: 55% &middot; Stretch: 65%</div><div class="chg cdn">&#9660; 8 pts below standard</div></div>
+  </div>
+  <div class="g4">
+    <div class="kcard kor"><div class="lbl">KPI 3A: Certificate Graduates</div><div class="val">58</div><div class="sub">Standard: 72 &middot; Stretch: 79</div><div class="chg cdn">&#9660; Below standard</div></div>
+    <div class="kcard kor"><div class="lbl">KPI 3B: Associate Graduates</div><div class="val">130</div><div class="sub">Standard: 141 &middot; Stretch: 155</div><div class="chg cdn">&#9660; Below standard</div></div>
+    <div class="kcard kgn"><div class="lbl">KPI 3C: Bachelor's Graduates</div><div class="val">27</div><div class="sub">Standard: 19 &middot; Stretch: 21</div><div class="chg cup">&#10003; EXCEEDED stretch goal</div></div>
+    <div class="kcard kgn"><div class="lbl">KPI 7: Early Momentum</div><div class="val">8%</div><div class="sub">Standard: 5% &middot; Stretch: 15%</div><div class="chg cup">&#10003; Exceeded standard</div></div>
+  </div>
+  <div class="g4">
+    <div class="kcard kgn"><div class="lbl">KPI 8: English Gateway</div><div class="val">31%</div><div class="sub">Standard: 30% &middot; Stretch: 40%</div><div class="chg cup">&#10003; Exceeded standard</div></div>
+    <div class="kcard kgn"><div class="lbl">KPI 9: Math Gateway</div><div class="val">16%</div><div class="sub">Standard: 16% &middot; Stretch: 26%</div><div class="chg ceq">= Met standard exactly</div></div>
+    <div class="kcard"><div class="lbl">ABE Diplomas</div><div class="val">118</div><div class="sub">HS equivalency awarded 2024</div></div>
+    <div class="kcard"><div class="lbl">Upward Bound</div><div class="val">62</div><div class="sub">12/12 seniors graduated high school</div></div>
+  </div>
+  <div class="g2">
+    <div class="cc"><h3>KPI 2: Course Completion by Subgroup &mdash; Fall 2024</h3><canvas id="kpi2Chart" height="220"></canvas></div>
+    <div class="cc"><h3>Graduate Counts vs Targets 2023&ndash;2024</h3><canvas id="gradChart" height="220"></canvas></div>
+  </div>
+  <div class="sec-hdr"><h2>KPI Summary Table</h2><div class="line"></div></div>
+  <div class="tw"><table>
+    <thead><tr><th>KPI</th><th>Subgroup</th><th>Actual</th><th>ISS Standard</th><th>Stretch</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>3A Certificates</td><td>Female</td><td>33</td><td>32</td><td>35</td><td class="gd">&#10003; Met</td></tr>
+      <tr><td>3A Certificates</td><td>Male</td><td>25</td><td>40</td><td>44</td><td class="bd">Below</td></tr>
+      <tr><td>3B Associate</td><td>RMI Public</td><td>85</td><td>79</td><td>87</td><td class="gd">&#10003; Exceeded</td></tr>
+      <tr><td>3C Bachelor's</td><td>Female</td><td>18</td><td>11</td><td>12</td><td class="gd">&#10003; Exceeded</td></tr>
+      <tr><td>3C Bachelor's</td><td>Male</td><td>9</td><td>8</td><td>9</td><td class="gd">&#10003; Met Stretch</td></tr>
+      <tr><td>KPI 6 Retention</td><td>RMI Public</td><td>49%</td><td>46%</td><td>56%</td><td class="gd">&#10003; Met Standard</td></tr>
+      <tr><td>KPI 6 Retention</td><td>RMI HS Equiv</td><td>20%</td><td>52%</td><td>62%</td><td class="bd">Far Below</td></tr>
+      <tr><td>KPI 8 English GW</td><td>Non-RMI</td><td>4%</td><td>51%</td><td>61%</td><td class="bd">Far Below</td></tr>
+      <tr><td>KPI 9 Math GW</td><td>ALL</td><td>16%</td><td>16%</td><td>26%</td><td class="gd">&#10003; Met Standard</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ACADEMIC -->
+<div id="academic" class="page rebbelip">
+  <div class="sec-hdr"><h2>Academic Affairs</h2><div class="line"></div><div class="pill">2024&ndash;2025</div></div>
+  <div class="ib"><h4>Programs Offered</h4>BA in Elementary Education &middot; AS in Elementary Education &middot; AS in Nursing &middot; AS in Agroforestry Education &middot; AA in Liberal Arts &middot; AA in Business Studies &middot; Certificates: Teaching, Special Education, Public Health, Marine Science, Accounting Clerkship, Marshallese Language Arts, Marshallese Social Sciences</div>
+  <div class="ib"><h4>Key 2024 Initiatives</h4>All programs aligned with revised USDOE credit hour policy. CMI 101 integrated service learning on human trafficking, mental health, and early childhood literacy. First STEM 3-day camp launched in October. Math Transition Course and 12th-grade English Bridge expanded K-12 readiness pathways. Symposium with Tokai University students held in March.</div>
+  <div class="sec-hdr"><h2>WAVES &mdash; Workforce Adult &amp; Vocational Education</h2><div class="line"></div></div>
+  <div class="g3">
+    <div class="kcard kgn"><div class="lbl">ABE Diplomas Awarded</div><div class="val">118</div><div class="sub">All campuses and centers 2024</div></div>
+    <div class="kcard kbl"><div class="lbl">Maritime Cohort 1</div><div class="val">16</div><div class="sub">14 completed sea time &middot; graduating May</div></div>
+    <div class="kcard"><div class="lbl">Youth Corps Tourism</div><div class="val">32</div><div class="sub">12 full tour guide + 20 customer service</div></div>
+  </div>
+  <div class="cc"><h3>ABE Enrollment by Campus/Center <em>Annual totals 2020&ndash;2024</em></h3><canvas id="abeChart" height="130"></canvas></div>
+  <div class="sec-hdr"><h2>TVET Boot Camp &mdash; Trainee Counts</h2><div class="line"></div></div>
+  <div class="tw"><table>
+    <thead><tr><th>Location</th><th>Automotive</th><th>Welding</th><th>Electrical</th><th>Total</th></tr></thead>
+    <tbody>
+      <tr><td>Majuro</td><td class="n">13</td><td class="n">14</td><td class="n">17</td><td class="n gd">44</td></tr>
+      <tr><td>Ebeye</td><td class="n">14</td><td class="n">17</td><td>N/A</td><td class="n">31</td></tr>
+      <tr><td><strong>Total</strong></td><td class="n">27</td><td class="n">31</td><td class="n">17</td><td class="n gd">75</td></tr>
+    </tbody>
+  </table></div>
+  <div class="sec-hdr"><h2>Vocational Programs Summary</h2><div class="line"></div></div>
+  <div class="tw"><table>
+    <thead><tr><th>Program</th><th>Key Stat</th><th>Highlight</th></tr></thead>
+    <tbody>
+      <tr><td>Vocational Carpentry (CC-CARP)</td><td class="n">9/10 completed</td><td>High completion &amp; employment; NTC-funded internship</td></tr>
+      <tr><td>Maritime &mdash; Navigation Watch</td><td class="n">16 students</td><td>First cohort; 14 completed sea time; graduating May 2025</td></tr>
+      <tr><td>Maritime &mdash; Engine Room Watch</td><td class="n">18 (Cohort 2)</td><td>3 women enrolled; outreach via Intl Women in Maritime Day</td></tr>
+      <tr><td>Agroforestry AS Degree</td><td class="n">1st graduate</td><td>First completer Fall 2024; enrollment growth target 2025</td></tr>
+      <tr><td>Youth Corps Hospitality</td><td class="n">32 participants</td><td>Collaboration with Guam Community College &amp; OCIT</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- SERVICES -->
+<div id="services" class="page rebbelip">
+  <div class="sec-hdr"><h2>Student Services &amp; Campus Life</h2><div class="line"></div></div>
+  <div class="g4">
+    <div class="kcard kbl"><div class="lbl">Counseling Workshops</div><div class="val">50</div><div class="sub">500 total attendees &middot; 57.1% male</div></div>
+    <div class="kcard kgn"><div class="lbl">Library New Items</div><div class="val">302</div><div class="sub">Added to physical collections</div></div>
+    <div class="kcard"><div class="lbl">Library Users</div><div class="val">1,516</div><div class="sub">Students in library instruction</div></div>
+    <div class="kcard"><div class="lbl">Upward Bound</div><div class="val">62</div><div class="sub">12/12 seniors graduated HS</div></div>
+  </div>
+  <div class="ib"><h4>Counseling Highlights 2024</h4>50 workshops across all programs and locations (Zoom + in-person). Topics: time management, SMART goals, peer pressure, stress, substance abuse. Collaboration with Ministry of Health (Dr. Nena &amp; Dr. Hicking) and COM-FSM. <strong>First Men's Bwebwenato session</strong> held &mdash; male depression and coping strategies.</div>
+  <div class="g3">
+    <div class="kcard"><div class="lbl">Gym Participants</div><div class="val">~200</div><div class="sub">Over 15% female &middot; women-only hours added</div></div>
+    <div class="kcard"><div class="lbl">Sports Tournaments</div><div class="val">4</div><div class="sub">Basketball, Volleyball, Ping Pong, New Year New Me</div></div>
+    <div class="kcard kgn"><div class="lbl">SGA Milestone</div><div class="val" style="font-size:.95rem;margin-top:6px">Live Meetings</div><div class="sub">Kobokake Podcast revived &middot; First live-broadcast monthly meetings &middot; Trunk or Treat, Club Rush</div></div>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Library Metric</th><th>2024</th></tr></thead>
+    <tbody>
+      <tr><td>New physical items added</td><td class="n">302</td></tr>
+      <tr><td>Digital academic databases</td><td class="n">5</td></tr>
+      <tr><td>Students in library instruction</td><td class="n">1,516</td></tr>
+      <tr><td>External students served (Laura H.S.)</td><td class="n">65</td></tr>
+      <tr><td>Japan Reading Project books incoming</td><td class="n">200</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- LOCATIONS -->
+<div id="locations" class="page rebbelip">
+  <div class="sec-hdr"><h2>CMI Locations &mdash; 2024 Activity</h2><div class="line"></div><div class="pill">6 Sites</div></div>
+  <div class="g3">
+    <div class="lc"><h3>&#127979; Arrak Campus</h3><p>Main second campus &mdash; Land Grant and community education hub.</p><ul><li>Residence life for Arrak + Uliga students</li><li>Vocational Carpentry program</li><li>TVET Boot Camp (Welding, Electrical, Automotive)</li><li>Upward Bound Summer Residential</li><li>Hydroponics training (KRISO-funded)</li></ul></div>
+    <div class="lc"><h3>&#127979; Kwajalein Campus</h3><p><strong style="color:var(--acc2)">Upgraded from Center to full Campus 2024</strong></p><ul><li>STCW training for V2X ferry employees</li><li>Thanksgiving, Manit Day, Constitution Day events</li><li>Nuclear Victims' Remembrance Day advocacy</li><li>Starlink high-speed internet connected</li></ul></div>
+    <div class="lc"><h3>&#127804; Wotje CMI Center</h3><p><strong style="color:var(--green)">Historic: First college-level graduate 2024</strong></p><ul><li>8 ABE graduates at 2024 ceremony</li><li>Education activities with Northern Island H.S.</li><li>Manit Week &middot; virtual counseling via Zoom</li><li>Traditional Marshallese basket making</li></ul></div>
+    <div class="lc"><h3>&#127754; Jaluit CMI Center</h3><p><strong style="color:var(--green)">First graduation since 2020</strong></p><ul><li>6 ABE + 3 college graduates honored</li><li>Jaluit Day activities &middot; community clean-ups</li><li>Starlink connectivity installed</li></ul></div>
+    <div class="lc"><h3>&#127856; Santo CMI Sub-Center</h3><p><strong style="color:var(--green)">First-ever ABE graduation Summer 2024</strong></p><ul><li>Historic first ABE graduation ceremony</li><li>Starlink high-speed internet connected</li><li>ABE enrollment: 16 in 2024</li></ul></div>
+    <div class="lc"><h3>&#9875; Jela Meto Maritime Center</h3><p><strong style="color:var(--acc2)">Officially named &amp; opened July 2024</strong></p><ul><li>Located at Uliga Dock</li><li>Navigation Watch &amp; Engine Room Watch certs</li><li>CPR and First Aid &middot; STCW programs</li></ul></div>
+  </div>
+  <div class="sec-hdr"><h2>ABE Enrollment by Location 2020&ndash;2024</h2><div class="line"></div></div>
+  <div class="tw"><table>
+    <thead><tr><th>Location</th><th>2020</th><th>2021</th><th>2022</th><th>2023</th><th>2024</th><th>Trend</th></tr></thead>
+    <tbody>
+      <tr><td>Uliga (Main)</td><td>162</td><td>197</td><td>182</td><td>149</td><td class="gd">205</td><td class="gd">&#9650; Strong growth</td></tr>
+      <tr><td>Kwajalein</td><td>54</td><td>64</td><td>42</td><td>51</td><td class="gd">70</td><td class="gd">&#9650; Rebounding</td></tr>
+      <tr><td>Jaluit</td><td>19</td><td>5</td><td>9</td><td>9</td><td>14</td><td class="wd">&#9650; Recovering</td></tr>
+      <tr><td>Wotje</td><td>N/A</td><td>19</td><td>20</td><td>16</td><td class="wd">10</td><td class="bd">&#9660; Declining</td></tr>
+      <tr><td>Kili</td><td>N/A</td><td>15</td><td>0</td><td>0</td><td>0</td><td class="bd">&mdash; Inactive</td></tr>
+      <tr><td>Santo</td><td>N/A</td><td>N/A</td><td>N/A</td><td>27</td><td class="wd">16</td><td class="wd">&#9660; Slight decline</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- GRANTS -->
+<div id="grants" class="page rebbelip">
+  <div class="sec-hdr"><h2>Grants Portfolio</h2><div class="line"></div><div class="pill">Federal &amp; International</div></div>
+  <div class="g4">
+    <div class="kcard kwh"><div class="lbl">Est. Active Grants</div><div class="val">$4.2M+</div><div class="sub">Across all active grants</div></div>
+    <div class="kcard kgn"><div class="lbl">Applications Submitted</div><div class="val">12</div><div class="sub">3 funded &middot; $450K secured FY2024</div></div>
+    <div class="kcard"><div class="lbl">New STEM Award</div><div class="val">$200K</div><div class="sub">STEM education initiatives</div></div>
+    <div class="kcard"><div class="lbl">Cultural Preservation</div><div class="val">$150K</div><div class="sub">Cultural preservation programs</div></div>
+  </div>
+  <div class="g3">
+    <div class="gc"><div class="amt">$1,794,628</div><h3>NTIA Broadband Access</h3><div class="fn">U.S. Dept. of Commerce &mdash; NTIA &nbsp;<span class="bdg bac">Active</span></div><p>Subsidized broadband for remote communities; Starlink to 4 outer centers; digital inclusion and IT workforce development. Oct 2022 &rarr; Oct 2025.</p></div>
+    <div class="gc"><div class="amt">$1,359,460</div><h3>Upward Bound Program</h3><div class="fn">U.S. Dept. of Education &nbsp;<span class="bdg bac">Active</span></div><p>Support for low-income and first-generation high school students preparing for college. 62 students served in 2024. Sep 2022 &rarr; Aug 2027.</p></div>
+    <div class="gc"><div class="amt">$1,050,000</div><h3>Pacific Sustainability Readers</h3><div class="fn">USAID / Pacific American Fund &nbsp;<span class="bdg bac">Active</span></div><p>Bilingual place-based early readers for all ECE/primary schools in RMI. Climate, culture, governance themes. &rarr; June 2025.</p></div>
+    <div class="gc"><div class="amt">$165,330</div><h3>Greenhouse Soilless System</h3><div class="fn">U.S. Dept. of Agriculture &nbsp;<span class="bdg bac">Active</span></div><p>Hydroponic, aeroponic, aquaponic infrastructure at Uliga and Arrak campuses. &rarr; Sep 2026.</p></div>
+    <div class="gc"><div class="amt">$850,000</div><h3>Improving Quality of Basic Education</h3><div class="fn">Asian Development Bank &nbsp;<span class="bdg bin">Completed</span></div><p>Quality Pedagogical Framework integrated across education programs. Learning Designer role created. &rarr; Oct 2023.</p></div>
+    <div class="gc"><div class="amt">$5,206,752</div><h3>CARES Act II &mdash; Emergency Aid</h3><div class="fn">Federal Emergency COVID Funding &nbsp;<span class="bdg bin">Inactive</span></div><p>Emergency financial aid grants supporting safe operation of higher education during COVID-19. May 2020 &rarr; Feb 2024.</p></div>
+  </div>
+  <div class="sec-hdr"><h2>Land Grant Research Highlights &mdash; FY 23/24</h2><div class="line"></div></div>
+  <div class="g3">
+    <div class="kcard"><div class="lbl">Agriculture Clients</div><div class="val">513</div><div class="sub">388 received hands-on training (76%)</div></div>
+    <div class="kcard"><div class="lbl">Seedling Trays</div><div class="val">1,610</div><div class="sub">Distributed to 125 clients</div></div>
+    <div class="kcard"><div class="lbl">Aquaculture Outreach</div><div class="val">237</div><div class="sub">143 male &middot; 94 female community members</div></div>
+  </div>
+</div>
+
+<!-- FINANCIALS -->
+<div id="financial" class="page rebbelip">
+  <div class="sec-hdr"><h2>FY2023&ndash;2024 Financial Overview</h2><div class="line"></div><div class="pill">Unaudited</div></div>
+  <div class="g4">
+    <div class="kcard kor"><div class="lbl">Total Revenue FY2024</div><div class="val">$9.81M</div><div class="sub">Down from $11.92M FY2023</div><div class="chg cdn">&#9660; 17.7% YoY</div></div>
+    <div class="kcard krd"><div class="lbl">Total Expenditure FY2024</div><div class="val">$9.93M</div><div class="sub">Reduced from $12.66M FY2023</div></div>
+    <div class="kcard krd"><div class="lbl">Net Deficit FY2024</div><div class="val">$(118,961)</div><div class="sub">First deficit after prior surpluses</div><div class="chg cdn">&#9660; Requires fiscal attention</div></div>
+    <div class="kcard kbl"><div class="lbl">Largest Revenue Source</div><div class="val" style="font-size:.95rem;margin-top:6px">Tuition &amp; Fees</div><div class="sub">$4.79M &middot; 49% of total revenue</div></div>
+  </div>
+  <div class="g2">
+    <div class="cc"><h3>Revenue vs Expenditure <em>FY2018&ndash;FY2024</em></h3><canvas id="revExpChart" height="200"></canvas></div>
+    <div class="cc"><h3>Revenue Breakdown FY2024 <em>by source</em></h3><canvas id="revPieChart" height="200"></canvas></div>
+  </div>
+  <div class="sec-hdr"><h2>Revenue Table FY2018&ndash;FY2024</h2><div class="line"></div></div>
+  <div class="tw"><table>
+    <thead><tr><th>Revenue Source</th><th>FY2018</th><th>FY2019</th><th>FY2020</th><th>FY2021</th><th>FY2022</th><th>FY2023*</th><th>FY2024*</th></tr></thead>
+    <tbody>
+      <tr><td>Tuition &amp; Fees</td><td>$4,338,097</td><td>$4,544,951</td><td>$4,425,098</td><td>$5,090,476</td><td>$6,305,219</td><td>$6,220,363</td><td class="wd">$4,790,616</td></tr>
+      <tr><td>RMI Subsidy</td><td>$3,155,406</td><td>$4,812,730</td><td>$4,969,285</td><td>$3,997,897</td><td>$2,760,424</td><td>$2,727,424</td><td>$2,879,177</td></tr>
+      <tr><td>Auxiliary Enterprises</td><td>$890,586</td><td>$1,003,963</td><td>$996,510</td><td>$1,099,043</td><td>$1,238,193</td><td>$1,198,058</td><td class="wd">$780,460</td></tr>
+      <tr><td>Other Revenues</td><td>$1,016,290</td><td>$546,759</td><td>$484,383</td><td>$55,683</td><td>$1,865,720</td><td>$1,774,798</td><td>$1,363,234</td></tr>
+      <tr><td><strong>Total Revenues</strong></td><td>$9,400,379</td><td>$10,908,402</td><td>$10,875,275</td><td>$10,131,733</td><td>$12,169,556</td><td>$11,920,643</td><td class="bd">$9,813,486</td></tr>
+    </tbody>
+  </table></div>
+  <div class="sec-hdr"><h2>Expenditure Table FY2018&ndash;FY2024</h2><div class="line"></div></div>
+  <div class="tw"><table>
+    <thead><tr><th>Expenditure</th><th>FY2018</th><th>FY2019</th><th>FY2020</th><th>FY2021</th><th>FY2022</th><th>FY2023*</th><th>FY2024*</th></tr></thead>
+    <tbody>
+      <tr><td>Salaries &amp; Wages</td><td>$4,353,912</td><td>$4,350,219</td><td>$4,553,149</td><td>$4,393,027</td><td>$5,648,893</td><td>$5,474,907</td><td>$4,880,485</td></tr>
+      <tr><td>Insurance</td><td>$274,129</td><td>$212,531</td><td>$235,475</td><td>$212,192</td><td>$238,074</td><td>$388,912</td><td>$336,792</td></tr>
+      <tr><td>Staff Housing</td><td>$437,738</td><td>$430,379</td><td>$397,144</td><td>$341,294</td><td>$413,923</td><td>$420,351</td><td>$380,385</td></tr>
+      <tr><td>Student Aid &amp; Activities</td><td>$218,175</td><td>$257,056</td><td>$366,279</td><td>$951,756</td><td>$340,022</td><td>$390,724</td><td>$336,601</td></tr>
+      <tr><td>Utilities</td><td>$417,781</td><td>$383,523</td><td>$546,309</td><td>$606,402</td><td>$544,657</td><td>$587,089</td><td class="gd">$462,369</td></tr>
+      <tr><td>Bookstores</td><td>$740,944</td><td>$880,677</td><td>$1,153,878</td><td>$743,604</td><td>$801,276</td><td>$1,138,899</td><td class="gd">$454,183</td></tr>
+      <tr><td><strong>Total Expenditures</strong></td><td>$8,579,475</td><td>$8,818,955</td><td>$9,556,830</td><td>$9,522,181</td><td>$12,013,465</td><td>$12,659,333</td><td class="wd">$9,932,447</td></tr>
+      <tr><td><strong>Net Revenue/(Deficit)</strong></td><td class="gd">$820,904</td><td class="gd">$2,089,447</td><td class="gd">$1,318,445</td><td class="gd">$609,552</td><td class="gd">$156,091</td><td class="bd">$(738,690)</td><td class="bd">$(118,961)</td></tr>
+    </tbody>
+  </table></div>
+  <p style="font-size:.65rem;color:var(--muted);margin-bottom:14px">* FY2022&ndash;FY2024 figures are unaudited</p>
+  <div class="cc"><h3>Expenditure Breakdown FY2024 <em>Major categories</em></h3><canvas id="expChart" height="120"></canvas></div>
+</div>
+
+<!-- IT & AUXILIARY -->
+<div id="it" class="page rebbelip">
+  <div class="sec-hdr"><h2>IT Infrastructure &amp; Auxiliary Services</h2><div class="line"></div><div class="pill">FY2024</div></div>
+  <div class="g4">
+    <div class="kcard kgn"><div class="lbl">Network Cost Savings</div><div class="val">40&ndash;50%</div><div class="sub">Via UniFi Ubiquiti wireless, LAN &amp; CCTV</div></div>
+    <div class="kcard kgn"><div class="lbl">Admin Processing Time</div><div class="val">&minus;40%</div><div class="sub">Reduction via One Stop Shop (OSS)</div></div>
+    <div class="kcard kgn"><div class="lbl">Online Utilization</div><div class="val">+25%</div><div class="sub">Increase with OSS digital self-service</div></div>
+    <div class="kcard kbl"><div class="lbl">Remote Sites Connected</div><div class="val">4</div><div class="sub">Ebeye, Jaluit, Wotje &amp; Santo via Starlink</div></div>
+  </div>
+  <div class="g2c">
+    <div>
+      <div class="ms"><div class="mi">&#128274;</div><div class="mb"><h4>SSO Enhancement</h4><p>Upgraded with Active Directory cloud backup. Hybrid on-premise + cloud improves scalability and reduces downtime.</p></div></div>
+      <div class="ms"><div class="mi">&#128737;</div><div class="mb"><h4>Cybersecurity</h4><p>Advanced threat detection via Arista Threat Management with centralized internet gateways for data security.</p></div></div>
+      <div class="ms"><div class="mi">&#128225;</div><div class="mb"><h4>Infrastructure Modernization</h4><p>UniFi Ubiquiti for campus-wide wireless, LAN, and CCTV &mdash; achieving 40&ndash;50% cost savings vs prior systems.</p></div></div>
+      <div class="ms"><div class="mi">&#128752;</div><div class="mb"><h4>Starlink Expansion</h4><p>High-speed internet extended to Ebeye, Jaluit, Wotje, and Santo promoting equitable digital access across the RMI.</p></div></div>
+    </div>
+    <div class="cc"><h3>Auxiliary Revenue FY2024</h3><canvas id="auxChart" height="220"></canvas></div>
+  </div>
+  <div class="sec-hdr"><h2>Auxiliary &amp; Commercial Services</h2><div class="line"></div></div>
+  <div class="tw"><table>
+    <thead><tr><th>Service</th><th>Metric</th><th>FY2024</th><th>Note</th></tr></thead>
+    <tbody>
+      <tr><td>Media Center</td><td>Projects completed</td><td class="n gd">26,475</td><td>Up from 19,899 in FY2023 (+33%)</td></tr>
+      <tr><td>Media Center</td><td>Revenue</td><td class="n">$34,232</td><td>Monthly webinars expanded</td></tr>
+      <tr><td>Bookstore</td><td>Customers served</td><td class="n">50,794</td><td>New "Buyback Week" program</td></tr>
+      <tr><td>Bookstore</td><td>Revenue</td><td class="n gd">$198,462</td><td>Highest auxiliary revenue</td></tr>
+      <tr><td>Food Services</td><td>Revenue</td><td class="n wd">$104,302</td><td>Reduced campus activity; mobile ordering piloted</td></tr>
+      <tr><td>Transportation</td><td>Trips / Passengers</td><td class="n">1,776 / 128</td><td>Electric shuttles introduced</td></tr>
+      <tr><td>Safety &amp; Security</td><td>AI surveillance</td><td class="gd">Deployed</td><td>AI-driven campus surveillance integrated</td></tr>
+    </tbody>
+  </table></div>
+  <div class="sec-hdr"><h2>Board of Regents 2024</h2><div class="line"></div></div>
+  <div class="tw"><table>
+    <thead><tr><th>Name</th><th>Role</th></tr></thead>
+    <tbody>
+      <tr><td>Kathryn Relang</td><td style="color:#aaaaff;font-weight:700">Chair &middot; Also Chair of Pacific Islands College Board</td></tr>
+      <tr><td>Julius Lucky</td><td>Vice Chair</td></tr>
+      <tr><td>Jelton Anjain</td><td>Regent</td></tr>
+      <tr><td>Melet Jatios</td><td>Regent</td></tr>
+      <tr><td>Marie Maddison</td><td>Regent</td></tr>
+      <tr><td>Kino Kabua</td><td>Regent</td></tr>
+      <tr><td>Joe Lomae</td><td>Regent</td></tr>
+      <tr><td>Nimata Nakamura</td><td>Regent</td></tr>
+      <tr><td>Salome Andrike</td><td>Regent</td></tr>
+      <tr><td>Benjamin Wakefield</td><td>Regent</td></tr>
+      <tr><td>Wilmer Joel</td><td>Student Regent</td></tr>
+    </tbody>
+  </table></div>
+  <div class="ib">Board held <strong>10 meetings + 1 retreat</strong> in 2024. March retreat led by ACCT consultant Bruce Leslie. Board participated in ACCT NLS (Washington D.C.), ACCT GLI (Saipan), and ACCT Leadership Congress (October). CMI Board Chair Kathryn Relang appointed Chair of the Pacific Islands College Board.</div>
+</div>
+
+<script>
+function show(id, btn) {
+  var pages = document.querySelectorAll('.page');
+  var tabs = document.querySelectorAll('.tab');
+  for (var i = 0; i < pages.length; i++) pages[i].classList.remove('active');
+  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+var CMI = '#00008a', A1 = '#3333a1', A2 = '#4d4dad', W = '#ffffff', SL = '#c0c0c0';
+var GN = '#22c55e', RD = '#ef4444', OR = '#f97316', MU = '#9999cc';
+
+var DEF = {
+  plugins: { legend: { labels: { color: '#e8e8ff', font: { size: 10 } } } },
+  scales: {
+    x: { ticks: { color: MU, font: { size: 10 } }, grid: { color: 'rgba(77,77,173,.2)' } },
+    y: { ticks: { color: MU, font: { size: 10 } }, grid: { color: 'rgba(77,77,173,.2)' } }
+  }
+};
+
+new Chart(document.getElementById('hcChart'), {
+  type: 'bar',
+  data: { labels: ['Spring', 'Summer', 'Fall'], datasets: [{ label: '2024 HC', data: [1001, 555, 894], backgroundColor: W }, { label: '10-yr Avg HC', data: [1032, 538, 1108], backgroundColor: A2 }] },
+  options: { responsive: true, plugins: DEF.plugins, scales: DEF.scales }
+});
+
+new Chart(document.getElementById('loadChart'), {
+  type: 'bar',
+  data: { labels: ['Spring', 'Summer', 'Fall'], datasets: [{ label: 'Full-Time %', data: [62, 86, 69], backgroundColor: W }, { label: 'Part-Time %', data: [38, 14, 31], backgroundColor: A1 }] },
+  options: { responsive: true, plugins: DEF.plugins, scales: { x: DEF.scales.x, y: { ticks: { color: MU, font: { size: 10 } }, grid: { color: 'rgba(77,77,173,.2)' }, max: 100 } } }
+});
+
+new Chart(document.getElementById('progChart'), {
+  type: 'doughnut',
+  data: { labels: ['Business', 'Liberal Arts', 'Edu AS', 'Nursing', 'Edu BA', 'Carpentry', 'Others'], datasets: [{ data: [24, 36, 16, 9, 7, 1, 7], backgroundColor: [W, A1, A2, SL, '#8888cc', '#6666aa', '#5555aa'], borderWidth: 0 }] },
+  options: { responsive: true, plugins: { legend: { labels: { color: '#e8e8ff', font: { size: 9 } }, position: 'bottom' } } }
+});
+
+new Chart(document.getElementById('genderChart'), {
+  type: 'bar',
+  data: { labels: ['Spring 2024', 'Summer 2024', 'Fall 2024'], datasets: [{ label: 'Female', data: [53, 54, 54], backgroundColor: '#cc88ff' }, { label: 'Male', data: [47, 46, 46], backgroundColor: A2 }] },
+  options: { responsive: true, plugins: DEF.plugins, scales: { x: DEF.scales.x, y: { ticks: { color: MU, font: { size: 10 } }, grid: { color: 'rgba(77,77,173,.2)' }, max: 100 } } }
+});
+
+new Chart(document.getElementById('kpi2Chart'), {
+  type: 'bar',
+  data: { labels: ['ALL', 'Female', 'Male', 'RMI Public', 'RMI Private', 'RMI HS Equiv', 'Non-RMI'], datasets: [{ label: 'Actual', data: [68.4, 69.1, 67.5, 66.6, 72.3, 57.8, 83.2], backgroundColor: W }, { label: 'Standard', data: [69.1, 68.6, 70.2, 67.7, 70.8, 59.5, 82.7], backgroundColor: A1 }] },
+  options: { responsive: true, plugins: DEF.plugins, scales: { x: DEF.scales.x, y: { ticks: { color: MU, font: { size: 10 } }, grid: { color: 'rgba(77,77,173,.2)' }, min: 50, max: 95 } } }
+});
+
+new Chart(document.getElementById('gradChart'), {
+  type: 'bar',
+  data: { labels: ['Certificates', 'Associate Degrees', "Bachelor's"], datasets: [{ label: 'Actual', data: [58, 130, 27], backgroundColor: [OR, OR, GN] }, { label: 'Standard (ISS)', data: [72, 141, 19], backgroundColor: A1 }, { label: 'Stretch Goal', data: [79, 155, 21], backgroundColor: A2 }] },
+  options: { responsive: true, plugins: DEF.plugins, scales: DEF.scales }
+});
+
+new Chart(document.getElementById('abeChart'), {
+  type: 'line',
+  data: { labels: ['2020', '2021', '2022', '2023', '2024'], datasets: [{ label: 'Uliga', data: [162, 197, 182, 149, 205], borderColor: W, tension: 0.3, fill: false }, { label: 'Kwajalein', data: [54, 64, 42, 51, 70], borderColor: A2, tension: 0.3, fill: false }, { label: 'Jaluit', data: [19, 5, 9, 9, 14], borderColor: SL, tension: 0.3, fill: false }, { label: 'Wotje', data: [null, 19, 20, 16, 10], borderColor: OR, tension: 0.3, fill: false }, { label: 'Santo', data: [null, null, null, 27, 16], borderColor: '#aa88ff', tension: 0.3, fill: false }] },
+  options: { responsive: true, plugins: DEF.plugins, scales: DEF.scales }
+});
+
+new Chart(document.getElementById('revExpChart'), {
+  type: 'line',
+  data: { labels: ['FY18', 'FY19', 'FY20', 'FY21', 'FY22', 'FY23', 'FY24'], datasets: [{ label: 'Revenue ($)', data: [9400379, 10908402, 10875275, 10131733, 12169556, 11920643, 9813486], borderColor: W, tension: 0.3, fill: false }, { label: 'Expenditures ($)', data: [8579475, 8818955, 9556830, 9522181, 12013465, 12659333, 9932447], borderColor: RD, tension: 0.3, fill: false }] },
+  options: { responsive: true, plugins: DEF.plugins, scales: { x: DEF.scales.x, y: { ticks: { callback: function(v) { return '$' + (v / 1000000).toFixed(1) + 'M'; }, color: MU, font: { size: 9 } }, grid: { color: 'rgba(77,77,173,.2)' } } } }
+});
+
+new Chart(document.getElementById('revPieChart'), {
+  type: 'doughnut',
+  data: { labels: ['Tuition & Fees', 'RMI Subsidy', 'Auxiliary', 'Other'], datasets: [{ data: [4790616, 2879177, 780460, 1363234], backgroundColor: [W, A1, A2, SL], borderWidth: 0 }] },
+  options: { responsive: true, plugins: { legend: { labels: { color: '#e8e8ff', font: { size: 10 } }, position: 'bottom' } } }
+});
+
+new Chart(document.getElementById('expChart'), {
+  type: 'bar',
+  data: { labels: ['Salaries & Wages', 'Bookstores', 'Utilities', 'Student Aid', 'Staff Housing', 'Insurance'], datasets: [{ label: 'FY2024 ($)', data: [4880485, 454183, 462369, 336601, 380385, 336792], backgroundColor: [W, A2, A1, SL, A1, A2] }] },
+  options: { responsive: true, indexAxis: 'y', plugins: DEF.plugins, scales: { x: { ticks: { callback: function(v) { return '$' + (v / 1000000).toFixed(1) + 'M'; }, color: MU, font: { size: 9 } }, grid: { color: 'rgba(77,77,173,.2)' } }, y: DEF.scales.y } }
+});
+
+new Chart(document.getElementById('auxChart'), {
+  type: 'bar',
+  data: { labels: ['Media Center', 'Bookstore', 'Food Services'], datasets: [{ label: 'FY2024 Revenue ($)', data: [34232, 198462, 104302], backgroundColor: [A2, W, A1] }] },
+  options: { responsive: true, plugins: DEF.plugins, scales: DEF.scales }
+});
+</script>
+</body>
+</html>

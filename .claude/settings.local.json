@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Remove-Item \"c:\\\\Users\\\\MK\\\\DriveHQSync\\\\sandbox\\\\sandbox\\\\.git\\\\objects\\\\pack\\\\pack-9210b673a607d735283efd24dd8cf5146265ea8b.pack\" -Force)",
+      "Bash(Remove-Item \"c:\\\\Users\\\\MK\\\\DriveHQSync\\\\sandbox\\\\sandbox\\\\.git\\\\objects\\\\pack\\\\pack-9210b673a607d735283efd24dd8cf5146265ea8b.idx\" -Force)"
+    ]
+  }
+}

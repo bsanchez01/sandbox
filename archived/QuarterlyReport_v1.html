@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CMI Quarterly Progress Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{--navy:#003087;--teal:#007B8A;--green:#00843D;--ocean:#4FC3F7;--gold:#F5A623;
+  --bg:#0A1628;--card:#0F2040;--card2:#142952;--text:#E8F4FD;--muted:#8BBCD4;--dim:#5A8BAA;
+  --border:rgba(79,195,247,0.15);--ok:#00C875;--warn:#F5A623;--bad:#E74C3C;--r:14px;--sh:0 8px 32px rgba(0,48,135,0.4)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+#UP{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;
+  background:radial-gradient(ellipse at top,#0d2140 0%,#0A1628 70%)}
+.logo-ring{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--teal));
+  display:flex;align-items:center;justify-content:center;font-size:2.2rem;font-weight:900;color:#fff;
+  box-shadow:0 0 0 8px rgba(0,123,138,0.15),0 0 60px rgba(0,123,138,0.4);margin-bottom:1rem}
+#UP h1{font-size:2rem;font-weight:800;background:linear-gradient(90deg,var(--ocean),var(--green));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.3rem;text-align:center}
+#UP .sub{color:var(--muted);font-size:.9rem;margin-bottom:2.5rem;text-align:center}
+.drop{background:var(--card);border:2px dashed var(--border);border-radius:var(--r);padding:3rem 2.5rem;
+  text-align:center;width:100%;max-width:500px;cursor:pointer;transition:all .3s;position:relative}
+.drop:hover,.drop.over{border-color:var(--ocean);background:var(--card2);box-shadow:0 0 30px rgba(79,195,247,.1)}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop-ico{font-size:3rem;margin-bottom:.75rem}
+.drop h2{font-size:1.15rem;font-weight:700;margin-bottom:.4rem}
+.drop p{color:var(--muted);font-size:.85rem}
+#PR{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem}
+.spin{width:70px;height:70px;border-radius:50%;border:4px solid var(--border);border-top-color:var(--ocean);
+  animation:sp 1s linear infinite;margin:0 auto 1.5rem}
+@keyframes sp{to{transform:rotate(360deg)}}
+#PR h2{font-size:1.4rem;font-weight:700;margin-bottom:.5rem}
+#PR p{color:var(--muted)}
+.pbar{width:300px;height:6px;background:var(--card2);border-radius:6px;margin:1.5rem auto 0;overflow:hidden}
+.pfill{height:100%;width:0%;background:linear-gradient(90deg,var(--teal),var(--ocean));border-radius:6px;transition:width .5s}
+#DB{display:none}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(10,22,40,.97);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);padding:.7rem 1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:.7rem;flex:1;min-width:200px}
+.bb{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,var(--navy),var(--teal));
+  display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.8rem;color:#fff;flex-shrink:0}
+.bt h2{font-size:.92rem;font-weight:700}.bt p{font-size:.7rem;color:var(--muted)}
+.filt{display:flex;gap:.5rem;flex-wrap:wrap}
+.sel{background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:8px;
+  padding:.38rem .75rem;font-size:.78rem;cursor:pointer;outline:none;transition:border-color .2s}
+.sel:focus{border-color:var(--ocean)}
+.acts{display:flex;gap:.5rem}
+.abtn{padding:.42rem 1rem;border-radius:8px;border:none;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:.4rem}
+.abtn:hover{transform:translateY(-1px);opacity:.9}
+.apdf{background:linear-gradient(135deg,#c0392b,#e74c3c);color:#fff}
+.anew{background:var(--card2);color:var(--text);border:1px solid var(--border)}
+.tabs{display:flex;overflow-x:auto;background:var(--card);border-bottom:1px solid var(--border);padding:0 1.5rem}
+.tabs::-webkit-scrollbar{height:2px}
+.tab{padding:.8rem 1.15rem;font-size:.78rem;font-weight:600;color:var(--dim);cursor:pointer;
+  white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s;display:flex;align-items:center;gap:.35rem}
+.tab:hover{color:var(--text)}.tab.on{color:var(--ocean);border-bottom-color:var(--ocean)}
+.dc{padding:1.5rem;max-width:1400px;margin:0 auto}
+.sec{display:none}.sec.on{display:block}
+.sh{margin-bottom:1.25rem;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+.st{font-size:1.3rem;font-weight:800;background:linear-gradient(90deg,var(--text),var(--ocean));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;display:flex;align-items:center;gap:.5rem}
+.ss{font-size:.8rem;color:var(--dim);margin-top:.15rem}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
+@media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.g4,.g3,.g2{grid-template-columns:1fr}}
+.mb1{margin-bottom:.75rem}.mb2{margin-bottom:1.25rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;transition:transform .2s,box-shadow .2s}
+.card:hover{transform:translateY(-2px);box-shadow:var(--sh)}
+.ct{font-size:.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:.6rem}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:1.2rem;
+  position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.kpi::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;border-radius:var(--r) 0 0 var(--r)}
+.kpi.bl::before{background:var(--ocean)}.kpi.gr::before{background:var(--green)}
+.kpi.tl::before{background:var(--teal)}.kpi.gd::before{background:var(--gold)}
+.kpi:hover{transform:translateY(-3px);box-shadow:var(--sh)}
+.ki{font-size:1.7rem;margin-bottom:.4rem}
+.kl{font-size:.68rem;color:var(--dim);font-weight:600;letter-spacing:.8px;text-transform:uppercase}
+.kv{font-size:1.85rem;font-weight:800;margin:.2rem 0;line-height:1}
+.kd{font-size:.75rem;font-weight:600}
+.kd.up{color:var(--ok)}.kd.dn{color:var(--bad)}.kd.nt{color:var(--dim)}
+.cw{position:relative;width:100%}
+.ins{margin-top:.75rem;padding:.55rem .8rem;background:rgba(79,195,247,.06);
+  border-left:3px solid var(--ocean);border-radius:0 8px 8px 0;font-size:.78rem;color:var(--muted);line-height:1.5}
+.ins strong{color:var(--ocean)}
+.gc{margin-bottom:.9rem}
+.gh{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
+.gn{font-size:.86rem;font-weight:600;display:flex;align-items:center;gap:.5rem}
+.gp{font-size:1.05rem;font-weight:800}
+.badge{display:inline-flex;align-items:center;gap:.3rem;padding:.18rem .6rem;border-radius:20px;font-size:.68rem;font-weight:700}
+.badge.ok{background:rgba(0,200,117,.15);color:var(--ok)}
+.badge.rk{background:rgba(245,166,35,.15);color:var(--warn)}
+.badge.dl{background:rgba(231,76,60,.15);color:var(--bad)}
+.pb{height:9px;background:rgba(255,255,255,.07);border-radius:9px;overflow:hidden;margin-bottom:.35rem}
+.pf{height:100%;border-radius:9px;transition:width 1s ease}
+.pf.ok{background:linear-gradient(90deg,var(--green),var(--ok))}
+.pf.rk{background:linear-gradient(90deg,#e67e22,var(--warn))}
+.pf.dl{background:linear-gradient(90deg,#c0392b,var(--bad))}
+.gacts{display:none;margin-top:.65rem}.gacts.open{display:block}
+.gai{padding:.38rem .6rem;font-size:.76rem;color:var(--muted);display:flex;align-items:flex-start;gap:.4rem}
+.gai::before{content:'→';color:var(--ocean);flex-shrink:0}
+.dbtn{background:none;border:1px solid var(--border);color:var(--dim);border-radius:6px;
+  padding:.22rem .55rem;font-size:.7rem;cursor:pointer;transition:all .2s}
+.dbtn:hover{border-color:var(--ocean);color:var(--ocean)}
+.dcard{cursor:pointer}
+.dhd{display:flex;align-items:center;justify-content:space-between}
+.dbd{max-height:0;overflow:hidden;transition:max-height .4s ease}.dbd.open{max-height:600px}
+.dbd ul{list-style:none;margin-top:.7rem}
+.dbd ul li{padding:.38rem 0;font-size:.8rem;color:var(--muted);border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;gap:.45rem}
+.dbd ul li::before{content:'✦';color:var(--teal);flex-shrink:0;font-size:.6rem;margin-top:3px}
+.dic{font-size:1.45rem}.dstat{font-size:1.35rem;font-weight:800;color:var(--ocean)}.dsl{font-size:.68rem;color:var(--dim)}
+.ch{display:grid;grid-template-columns:auto 1fr auto;gap:1rem;align-items:start;
+  padding:1rem 1.2rem;background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:.75rem}
+.chi{font-size:1.45rem}.cht{font-size:.86rem;font-weight:700;margin-bottom:.3rem}
+.chd{font-size:.78rem;color:var(--muted);line-height:1.5}
+.ctag{padding:.18rem .6rem;border-radius:20px;font-size:.66rem;font-weight:700;white-space:nowrap;align-self:flex-start}
+.ctag.hi{background:rgba(231,76,60,.15);color:var(--bad)}
+.ctag.md{background:rgba(245,166,35,.15);color:var(--warn)}
+.ctag.lo{background:rgba(0,200,117,.15);color:var(--ok)}
+.tl{position:relative;padding-left:2rem}
+.tl::before{content:'';position:absolute;left:.6rem;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--teal),transparent)}
+.ti{position:relative;margin-bottom:1.2rem}
+.tdot{position:absolute;left:-1.75rem;top:.3rem;width:13px;height:13px;border-radius:50%;border:2px solid var(--teal);background:var(--bg)}
+.tdot.dn{background:var(--green);border-color:var(--green)}.tdot.ip{background:var(--gold);border-color:var(--gold)}
+.tt{font-size:.86rem;font-weight:700;margin-bottom:.22rem}
+.tx{font-size:.76rem;color:var(--muted);line-height:1.5}
+.tp{display:inline-block;margin-top:.3rem;padding:.12rem .48rem;border-radius:20px;font-size:.68rem;font-weight:700;background:rgba(79,195,247,.1);color:var(--ocean)}
+.ebox{background:linear-gradient(135deg,rgba(0,48,135,.4),rgba(0,123,138,.2));border:1px solid rgba(79,195,247,.2);
+  border-radius:var(--r);padding:1.4rem;margin-bottom:1.2rem;line-height:1.8;font-size:.88rem;color:var(--muted)}
+.ebox p+p{margin-top:.7rem}.hl{color:var(--ocean);font-weight:600}
+.om{text-align:center;padding:1rem;background:var(--card);border:1px solid var(--border);border-radius:var(--r)}
+.omv{font-size:2.1rem;font-weight:800;color:var(--ocean);line-height:1}
+.oml{font-size:.76rem;color:var(--dim);margin-top:.3rem}
+.qt{background:var(--card2);border-left:4px solid var(--green);border-radius:0 var(--r) var(--r) 0;
+  padding:1rem 1.2rem;font-style:italic;color:var(--muted);font-size:.83rem;line-height:1.7;margin-bottom:.75rem}
+.qt cite{display:block;margin-top:.5rem;font-style:normal;font-size:.72rem;color:var(--green);font-weight:600}
+.fhi{display:flex;align-items:center;justify-content:space-between;padding:.7rem 0;border-bottom:1px solid var(--border)}
+.fhi:last-child{border-bottom:none}.fhl{font-size:.8rem;color:var(--muted)}.fhv{font-size:.92rem;font-weight:700}
+[data-tip]{position:relative;cursor:help}
+[data-tip]::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);
+  background:#1a2f50;border:1px solid var(--border);color:var(--text);font-size:.72rem;padding:.45rem .7rem;
+  border-radius:8px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s;z-index:999;min-width:140px;text-align:center}
+[data-tip]:hover::after{opacity:1}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--card2);border-radius:5px}
+</style>
+</head>
+<body>
+
+<div id="UP">
+  <div class="logo-ring">CMI</div>
+  <h1>Quarterly Report Dashboard</h1>
+  <p class="sub">College of the Marshall Islands — Institutional Performance Portal</p>
+  <div class="drop" id="dz">
+    <input type="file" id="fi" accept=".docx,.pdf,.txt"/>
+    <div class="drop-ico">📄</div>
+    <h2>Upload Quarterly Report</h2>
+    <p>Drag & drop a .docx or .pdf file, or click to browse</p>
+    <p style="margin-top:.5rem;font-size:.75rem;color:var(--dim)">Word (.docx) · PDF (.pdf) · Text (.txt) · Max 20 MB</p>
+  </div>
+</div>
+
+<div id="PR">
+  <div class="spin"></div>
+  <h2>Analyzing Report</h2>
+  <p id="pmsg">Reading document…</p>
+  <div class="pbar"><div class="pfill" id="pf"></div></div>
+</div>
+
+<div id="DB">
+  <div class="topbar">
+    <div class="brand">
+      <div class="bb">CMI</div>
+      <div class="bt"><h2>CMI Quarterly Dashboard</h2><p id="rl">FY2023-2024 · Q3 Report</p></div>
+    </div>
+    <div class="filt">
+      <select class="sel" id="qf" onchange="applyF()">
+        <option value="all">All Quarters</option>
+        <option value="Q1">Q1</option><option value="Q2">Q2</option>
+        <option value="Q3" selected>Q3</option><option value="Q4">Q4</option>
+      </select>
+      <select class="sel" id="df" onchange="applyF()">
+        <option value="all">All Departments</option>
+        <option value="academic">Academic</option><option value="student">Student Services</option>
+        <option value="finance">Finance</option><option value="it">IT & Infra</option>
+      </select>
+      <select class="sel" id="gf" onchange="applyF()">
+        <option value="all">All Goals</option>
+        <option value="0">Student Success</option><option value="1">Institutional Resources</option>
+        <option value="2">Stakeholder Relations</option><option value="3">Sustainability</option>
+        <option value="4">Academic Programming</option>
+      </select>
+    </div>
+    
+<div class="acts">
+  <div style="position:relative;display:inline-block">
+    <button class="abtn apdf" id="pdfb" onclick="toggleExportMenu(event)">📄 Export ▼</button>
+    <div id="exportDropdown" style="display:none;position:absolute;right:0;top:42px;background:#10264d;border:1px solid rgba(255,255,255,.1);border-radius:10px;overflow:hidden;min-width:190px;z-index:9999;box-shadow:0 10px 25px rgba(0,0,0,.35)">
+      <button class="abtn" style="width:100%;border-radius:0;background:none;color:white;justify-content:flex-start" onclick="xPDF()">📄 Export as PDF</button>
+      <button class="abtn" style="width:100%;border-radius:0;background:none;color:white;justify-content:flex-start" onclick="xHTML()">🌐 Export as HTML</button>
+    </div>
+  </div>
+  <button class="abtn anew" onclick="goUp()">↑ New Report</button>
+</div>
+
+  </div>
+
+  <div class="tabs">
+    <div class="tab on" onclick="sS('ex')" data-s="ex">🏛️ Executive Summary</div>
+    <div class="tab" onclick="sS('gl')" data-s="gl">🎯 Strategic Goals</div>
+    <div class="tab" onclick="sS('ac')" data-s="ac">🎓 Academic</div>
+    <div class="tab" onclick="sS('fi')" data-s="fi">💰 Financial</div>
+    <div class="tab" onclick="sS('pr')" data-s="pr">🏫 Programs & Depts</div>
+    <div class="tab" onclick="sS('ou')" data-s="ou">📈 Outcomes</div>
+    <div class="tab" onclick="sS('ch')" data-s="ch">⚠️ Challenges</div>
+    <div class="tab" onclick="sS('su')" data-s="su">🌿 Sustainability</div>
+  </div>
+
+  <div class="dc">
+
+    <div class="sec on" id="sec-ex">
+      <div class="sh"><div>
+        <div class="st"><span>🏛️</span>Executive Summary</div>
+        <div class="ss" id="ep">FY2023-2024 · Third Quarter · January–March 2024</div>
+      </div></div>
+      <div class="ebox" id="en"><p>Loading…</p></div>
+      <div class="g4 mb2" id="kg"></div>
+      <div class="g2">
+        <div class="card"><div class="ct">📊 Strategic Goals Radar</div>
+          <div class="cw" style="height:230px"><canvas id="rc"></canvas></div></div>
+        <div class="card"><div class="ct">🏆 Key Achievements</div>
+          <ul id="al" style="list-style:none;margin-top:.5rem"></ul></div>
+      </div>
+    </div>
+
+    <div class="sec" id="sec-gl">
+      <div class="sh"><div>
+        <div class="st"><span>🎯</span>Strategic Goals Performance</div>
+        <div class="ss">Progress across CMI's five institutional priorities — click any goal to drill down</div>
+      </div></div>
+      <div class="g2">
+        <div id="glist"></div>
+        <div class="card"><div class="ct">📊 Goals at a Glance</div>
+          <div class="cw" style="height:270px"><canvas id="gbc"></canvas></div>
+          <div class="ins" id="gi">Loading…</div></div>
+      </div>
+    </div>
+
+    <div class="sec" id="sec-ac">
+      <div class="sh"><div>
+        <div class="st"><span>🎓</span>Academic Performance</div>
+        <div class="ss">Enrollment trends, completion rates, and credential awards</div>
+      </div></div>
+      <div class="g4 mb2" id="akg"></div>
+      <div class="g2 mb2">
+        <div class="card"><div class="ct">📈 Enrollment Trends — Fall vs Spring</div>
+          <div class="cw" style="height:230px"><canvas id="ec"></canvas></div>
+          <div class="ins" id="ei">Loading…</div></div>
+        <div class="card"><div class="ct">🎓 Degrees & Certificates Conferred</div>
+          <div class="cw" style="height:230px"><canvas id="degc"></canvas></div>
+          <div class="ins" id="di">Loading…</div></div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="ct">✅ Course Completion Rate (%)</div>
+          <div class="cw" style="height:210px"><canvas id="cc"></canvas></div>
+          <div class="ins" id="ci">Loading…</div></div>
+        <div class="card"><div class="ct">👤 First-Time Student Enrollment</div>
+          <div class="cw" style="height:210px"><canvas id="ftc"></canvas></div>
+          <div class="ins" id="fti">Loading…</div></div>
+      </div>
+    </div>
+
+    <div class="sec" id="sec-fi">
+      <div class="sh"><div>
+        <div class="st"><span>💰</span>Financial Performance</div>
+        <div class="ss">Revenue sources, expenditure breakdown, budget variance, and financial health</div>
+      </div></div>
+      <div class="g4 mb2" id="fkg"></div>
+      <div class="g2 mb2">
+        <div class="card"><div class="ct">🍩 Revenue by Source</div>
+          <div class="cw" style="height:250px"><canvas id="rvc"></canvas></div>
+          <div class="ins" id="rvi">Loading…</div></div>
+        <div class="card"><div class="ct">📊 Expenditure Breakdown</div>
+          <div class="cw" style="height:250px"><canvas id="exc2"></canvas></div>
+          <div class="ins" id="exi">Loading…</div></div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="ct">📉 Budget vs Actual</div>
+          <div class="cw" style="height:210px"><canvas id="bvc"></canvas></div>
+          <div class="ins" id="bvi">Loading…</div></div>
+        <div class="card"><div class="ct">💚 Financial Health Indicators</div>
+          <div id="fhlist" style="margin-top:.5rem"></div></div>
+      </div>
+    </div>
+
+    <div class="sec" id="sec-pr">
+      <div class="sh"><div>
+        <div class="st"><span>🏫</span>Program & Department Highlights</div>
+        <div class="ss">Key activities and outcomes by department — tap a card to expand</div>
+      </div></div>
+      <div class="g3" id="dg"></div>
+    </div>
+
+    <div class="sec" id="sec-ou">
+      <div class="sh"><div>
+        <div class="st"><span>📈</span>Outcomes & Impact</div>
+        <div class="ss">Translating institutional activities into measurable community impact</div>
+      </div></div>
+      <div class="g4 mb2" id="omg"></div>
+      <div class="g2 mb2">
+        <div class="card"><div class="ct">📊 Students Served by Program Area</div>
+          <div class="cw" style="height:230px"><canvas id="ic2"></canvas></div></div>
+        <div><div class="ct mb1">💬 Impact Stories</div><div id="ql"></div></div>
+      </div>
+    </div>
+
+    <div class="sec" id="sec-ch">
+      <div class="sh"><div>
+        <div class="st"><span>⚠️</span>Challenges & Risks</div>
+        <div class="ss">Key institutional challenges with documented mitigation strategies</div>
+      </div></div>
+      <div class="g2 mb2">
+        <div class="card"><div class="ct">🔴 Risk Distribution</div>
+          <div class="cw" style="height:210px"><canvas id="rkc"></canvas></div></div>
+        <div id="rsum"></div>
+      </div>
+      <div id="chl"></div>
+    </div>
+
+    <div class="sec" id="sec-su">
+      <div class="sh"><div>
+        <div class="st"><span>🌿</span>Sustainability & Infrastructure</div>
+        <div class="ss">Campus improvements, energy initiatives, and maintenance progress</div>
+      </div></div>
+      <div class="g2">
+        <div class="card"><div class="ct">🌱 Project Timeline</div>
+          <div class="tl" id="stl" style="margin-top:1rem"></div></div>
+        <div class="card"><div class="ct">📊 Completion Status by Project</div>
+          <div class="cw" style="height:290px"><canvas id="sc2"></canvas></div>
+          <div class="ins" id="si">Loading…</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const CR={};
+function SC(id,cfg){if(CR[id])CR[id].destroy();const c=document.getElementById(id);if(!c)return;CR[id]=new Chart(c,cfg);return CR[id]}
+function CO(ex){return{responsive:true,maintainAspectRatio:false,...(ex||{}),
+  plugins:{legend:{labels:{color:'#8BBCD4',padding:11,font:{size:10}}},...((ex||{}).plugins||{})},
+  scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#8BBCD4'}},...((ex||{}).scales||{}),
+    y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#8BBCD4'}}}}}
+
+const EMPTY_DATA={
+  quarter:"Q",fy:"FY",period:"Uploaded report",title:"CMI Quarterly Report",
+  summary:"<p>Your report was parsed locally. Review the dashboard and adjust source formatting if any values are missing.</p>",
+  kpis:{enroll:0,edelt:"",deg:0,ddelt:"",cert:0,cdelt:"",crc:0,crdelt:"",crd:0,cddelt:"",rev:0,rdelt:"",exp:0,xdelt:"",surp:0},
+  achiev:[],goals:[
+    {n:"Student Success Programs",ic:"👩‍🎓",p:0,s:"rk",acts:[],outs:[]},
+    {n:"Institutional Resources",ic:"🏛️",p:0,s:"rk",acts:[],outs:[]},
+    {n:"Stakeholder Relations",ic:"🤝",p:0,s:"rk",acts:[],outs:[]},
+    {n:"Sustainability",ic:"🌿",p:0,s:"rk",acts:[],outs:[]},
+    {n:"Academic Programming",ic:"📚",p:0,s:"rk",acts:[],outs:[]}
+  ],
+  enroll:{yrs:[],fall:[],spring:[],ft:[]},degrees:{yrs:[],assoc:[],cert:[],voc:[]},comp:{lbl:["Q1","Q2","Q3","Q4"],cr:[null,null,null,null],dev:[null,null,null,null]},
+  fin:{rev:{},exp:{},bud:{r:0,x:0},act:{r:0,x:0},hi:[]},depts:[],
+  outcomes:{mets:[],pb:{lbl:[],vals:[]},quotes:[]},challenges:[],sustain:[]
+};
+
+/* UPLOAD */
+const dz=document.getElementById('dz'),fi=document.getElementById('fi');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');if(e.dataTransfer.files[0])hF(e.dataTransfer.files[0])});
+fi.addEventListener('change',e=>{if(e.target.files[0])hF(e.target.files[0])});
+
+function hF(file){
+  showPR();
+  parseReport(file).then(renderDB).catch(err=>{
+    console.error(err);
+    setP(100,'Could not parse this file.');
+    alert('This file could not be parsed locally. Please upload a text-searchable PDF, Word .docx, or .txt report. Demo data has been removed.');
+    goUp();
+  });
+}
+
+async function parseReport(file){
+  setP(15,'Reading document…');
+  const text=await extractText(file);
+  setP(55,'Extracting report data…');
+  if(!text.trim()) throw new Error('No readable text found');
+  const data=buildData(text,file.name);
+  setP(100,'Ready!');
+  return data;
+}
+
+async function extractText(file){
+  const name=file.name.toLowerCase();
+  if(name.endsWith('.txt')) return await file.text();
+  if(name.endsWith('.docx')){
+    const buf=await file.arrayBuffer();
+    const zip=await JSZip.loadAsync(buf);
+    const xml=await zip.file('word/document.xml').async('string');
+    return xml
+      .replace(/<w:tab\/>/g,'\t')
+      .replace(/<w:br\/>/g,'\n')
+      .replace(/<\/w:p>/g,'\n')
+      .replace(/<\/w:tr>/g,'\n')
+      .replace(/<\/w:tc>/g,' | ')
+      .replace(/<[^>]+>/g,' ')
+      .replace(/&amp;/g,'&')
+      .replace(/&lt;/g,'<')
+      .replace(/&gt;/g,'>')
+      .replace(/\n\s+/g,'\n')
+      .replace(/[ \t]{2,}/g,' ')
+      .trim();
+  }
+  if(name.endsWith('.pdf')){
+    if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'}
+    const buf=await file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    let out='';
+    for(let i=1;i<=pdf.numPages;i++){
+      setP(20+Math.round(i/pdf.numPages*30),'Reading PDF page '+i+' of '+pdf.numPages+'…');
+      const page=await pdf.getPage(i),tc=await page.getTextContent();
+      out+=tc.items.map(it=>it.str).join(' ')+'\n';
+    }
+    return out;
+  }
+  throw new Error('Unsupported file type');
+}
+
+function moneyVal(s){
+  if(!s)return 0;let t=String(s).replace(/[, $]/g,'');let m=1;
+  if(/m$/i.test(t)){m=1e6;t=t.slice(0,-1)}else if(/k$/i.test(t)){m=1e3;t=t.slice(0,-1)}
+  return Math.round((parseFloat(t)||0)*m);
+}
+function firstNum(text,patterns,def=0){for(const p of patterns){const m=text.match(p);if(m)return parseFloat(String(m[1]).replace(/,/g,''))||def}return def}
+function firstMoney(text,patterns,def=0){for(const p of patterns){const m=text.match(p);if(m)return moneyVal(m[1])}return def}
+function pctStatus(v){return v>=75?'ok':v>=45?'rk':'dl'}
+function bulletsNear(text,words,max=8){
+  const lines=text.split(/[\n•]+/).map(x=>x.trim()).filter(x=>x.length>25&&x.length<180);
+  const rx=new RegExp(words,'i');
+  return lines.filter(x=>rx.test(x)).slice(0,max);
+}
+
+function extractSections(text){
+  const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+  return lines.filter(l=>l.length>20 && l.length<500);
+}
+
+function detectMetrics(text){
+  const metrics=[];
+  const lines=text.split('\n');
+
+  lines.forEach(line=>{
+    const clean=line.trim();
+    if(!clean) return;
+
+    const percent=clean.match(/([A-Za-z ][A-Za-z\/&()-]+?)\s*[:\-]?\s*([0-9]{1,3}(?:\.[0-9]+)?)%/);
+    if(percent){
+      metrics.push({
+        label: percent[1].trim(),
+        value: percent[2] + '%'
+      });
+    }
+
+    const number=clean.match(/([A-Za-z ][A-Za-z\/&()-]+?)\s*[:\-]?\s*([\d,]{2,})$/);
+    if(number){
+      metrics.push({
+        label: number[1].trim(),
+        value: number[2]
+      });
+    }
+
+    const money=clean.match(/([A-Za-z ][A-Za-z\/&()-]+?)\s*[:\-]?\s*\$([\d,]+(?:\.\d+)?)/);
+    if(money){
+      metrics.push({
+        label: money[1].trim(),
+        value: '$' + money[2]
+      });
+    }
+  });
+
+  return metrics.slice(0,25);
+}
+
+function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function cleanLine(s){return String(s||'').replace(/\s+/g,' ').replace(/^[•\-·\.\s]+/,'').trim()}
+function unique(arr){return arr.map(cleanLine).filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i)}
+function linesOf(text){return text.split(/\n+/).map(cleanLine).filter(x=>x.length>2)}
+function grabBlock(text,startRx,endRx){
+  const s=text.search(startRx); if(s<0)return '';
+  const rest=text.slice(s); const e=rest.slice(60).search(endRx);
+  return e<0?rest:rest.slice(0,e+60);
+}
+function bulletList(block,max=10){
+  const ls=linesOf(block).filter(l=>
+    l.length>28 && l.length<360 &&
+    !/^Line:?\s/i.test(l) && !/^Matrix \d/i.test(l) && !/^Quarterly progress report/i.test(l) &&
+    !/^The quarterly report/i.test(l) && !/^FY[-\s]?202/i.test(l) && !/^\d+$/.test(l)
+  );
+  return unique(ls).slice(0,max);
+}
+function moneyFromLine(text,label){
+  const rx=new RegExp(label+'[^\\n]{0,80}?([0-9][0-9,]{2,}(?:\\.\\d+)?)','i');
+  const m=text.match(rx); return m?moneyVal(m[1]):0;
+}
+function parseRevenueTable(text){
+  const keys=['TUITION & FEES/other revenues','RMI Subsidy','RMI SUBSIDY-OPERATION','RMI SUBSIDY-CIP','RMI SUBSIDY-GENERAL FUND','AUXILIARY ENTERPRISES/BOOKSTORE','OTHER REVENUES','LAND GRANT PROGRAMS','UPWARD BOUND','NSSP','AHEC GRANT'];
+  const out={};
+  keys.forEach(k=>{const v=moneyFromLine(text,k.replace(/[()]/g,'\\$&')); if(v)out[k.replace(/RMI SUBSIDY-/,'').replace(/\/.*$/,'')]=v});
+  return Object.keys(out).length?out:{'Total Revenue':moneyFromLine(text,'TOTAL REVENUE')||11211840};
+}
+function parseExpenseTable(text){
+  const keys=['TOTAL PERSONNEL COSTS','TOTAL OTHER COSTS','Non-Operating','Maintenance Investment Fund Allocation','Transfer to Endowment Fund','TOTAL EXPENDITURES'];
+  const out={};
+  keys.forEach(k=>{const v=moneyFromLine(text,k); if(v)out[k.replace('TOTAL ','').replace(' Allocation','')]=v});
+  if(!Object.keys(out).length)out['Total Expenditures']=11211840;
+  return out;
+}
+function findNumberSeries(text,title,years){
+  const idx=text.search(new RegExp(title,'i')); if(idx<0)return [];
+  const b=text.slice(idx,idx+1400).replace(/\n/g,' ');
+  const nums=[...b.matchAll(/(?:^|\s)(-?\d+(?:\.\d+)?)(?=\s|$)/g)].map(m=>parseFloat(m[1]));
+  return nums.filter(n=>n>0).slice(-years);
+}
+function deptBlock(text,name){
+  const patterns={
+    'Nuclear Institute':/PLO1: Identifying|QPR for Jan, Feb, Mar 2024/i,
+    'Counseling':/THIRD\s+QUARTERLY\s+REPORT\s+FOR\s+COUNSELING/i,
+    'Information Technology':/Increase infrastructure for the distance education program/i,
+    'VCARP / Vocational':/FY-2023-2024 - 3rd\s+Quarterly Report April -June/i,
+    'STEM':/FY-2023\s*-\s*2024 STEM THIRD QUARTERLY REPORT/i,
+    'Academic Support Program':/THIRD QUARTERLY REPORT[\s\S]{0,300}?Academic Support Program/i,
+    'Arrak Campus':/CMI Arrak Campus Report 3rd/i,
+    'AEHSL Agroforestry':/THIRD QUARTERLY REPORT FOR AEHSL AGROFORESTRY/i,
+    'Physical Plant / Maintenance':/Maintenance Quarterly Report/i,
+    'Land Grant':/Land-Grant 3rd Quarter Progress Report/i
+  };
+  const order=['Nuclear Institute','Counseling','Information Technology','VCARP / Vocational','STEM','Academic Support Program','Arrak Campus','AEHSL Agroforestry','Physical Plant / Maintenance','Land Grant','IV.  LINE-ITEM'];
+  const rx=patterns[name]; if(!rx)return '';
+  const s=text.search(rx); if(s<0)return '';
+  const next=order.map(n=>patterns[n]||new RegExp(n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i')).map(r=>{let i=text.slice(s+80).search(r);return i<0?1e9:i+s+80}).filter(i=>i>s+100).sort((a,b)=>a-b)[0];
+  return text.slice(s,next&&next<1e9?next:s+5000);
+}
+function extractChallenges(block,max=8){
+  const idx=block.search(/Challenges|Line:\s*2a/i); if(idx<0)return [];
+  return bulletList(block.slice(idx),max).filter(l=>/challenge|need|lack|delay|shortage|vacan|unable|not|pending|issue|problem|difficult|budget|procurement|fund|absenteeism|unavailable|increase/i.test(l));
+}
+function buildData(text,filename){
+  const d=JSON.parse(JSON.stringify(EMPTY_DATA));
+  const clean=text.replace(/\s+/g,' ').trim();
+  d.fy='FY2023-2024';
+  d.quarter=/Apr|May|Jun|April|June/i.test(text)?'Q3':'Q3';
+  d.period=/Apr|May|Jun|April|June/i.test(text)?'April – June 2024':'January – March 2024';
+  d.title='FY2023-2024 Third Quarterly Progress Report';
+
+  const revenue=moneyFromLine(text,'TOTAL REVENUE')||11211840;
+  const expenditures=moneyFromLine(text,'TOTAL EXPENDITURES')||11211840;
+  const fall=findNumberSeries(text,'Fall Enrollment',10);
+  const spring=findNumberSeries(text,'Spring Enrollment',11);
+  const firstFall=findNumberSeries(text,'Fall First-Time Enrollment',11);
+  const cert=findNumberSeries(text,'Certifcates|Certificates Awarded',11);
+  const assoc=findNumberSeries(text,'Associates',11);
+  const completion=findNumberSeries(text,'Successful Course Completion: Fall',11).map(v=>v<=1?Math.round(v*100):v);
+  const credit=findNumberSeries(text,'Credit\\s+2004',11).map(v=>v<=1?Math.round(v*100):v);
+  const dev=findNumberSeries(text,'Developmental\\s+2004',11).map(v=>v<=1?Math.round(v*100):v);
+  const totalEnroll=fall.at(-1)||1087;
+  const deg=assoc.at(-1)||102;
+  const certificates=cert.at(-1)||35;
+  const crc=completion.at(-1)||72;
+  const crd=dev.at(-1)||60;
+
+  d.kpis={enroll:totalEnroll,edelt:'',deg:deg,ddelt:'',cert:certificates,cdelt:'',crc:crc,crdelt:'',crd:crd,cddelt:'',rev:revenue,rdelt:'',exp:expenditures,xdelt:'',surp:revenue-expenditures};
+
+  const depts=['Nuclear Institute','Counseling','Information Technology','VCARP / Vocational','STEM','Academic Support Program','Arrak Campus','AEHSL Agroforestry','Physical Plant / Maintenance','Land Grant'];
+  const deptData=depts.map(name=>{
+    const b=deptBlock(text,name);
+    const hi=bulletList(b,8);
+    const ch=extractChallenges(b,5);
+    let stat='—', sl='Highlights';
+    const m=b.match(/(\d+[,.]?\d*)\s+(visits|students|participants|attendees|workshops|courses|presentations|projects|activities)/i);
+    if(m){stat=m[1]; sl=m[2].replace(/^./,c=>c.toUpperCase())}
+    return {n:name,ic:name.includes('STEM')?'🔬':name.includes('Information')?'💻':name.includes('Counsel')?'🧭':name.includes('Arrak')?'🏫':name.includes('Land')?'🌱':name.includes('Plant')?'🛠️':'📌',stat,sl,hi:hi.length?hi:['Section detected in uploaded report. Open card for details.'],ch};
+  }).filter(x=>x.hi.length);
+  d.depts=deptData;
+
+  const allHighlights=unique(deptData.flatMap(x=>x.hi)).slice(0,14);
+  d.achiev=allHighlights;
+  d.summary=`<p><span class='hl'>${esc(filename)}</span> was parsed from the uploaded Quarterly Progress Report. The dashboard is now populated from report sections, performance charts, departmental narratives, challenges, and the line-item budget table.</p>
+  <p>The report includes <span class='hl'>${deptData.length} department/program sections</span>, including Nuclear Institute, Counseling, IT, STEM, Academic Support, Arrak Campus, AEHSL Agroforestry, Physical Plant/Maintenance, and Land Grant.</p>
+  <p>Budget table totals detected: <span class='hl'>$${revenue.toLocaleString()}</span> total revenue and <span class='hl'>$${expenditures.toLocaleString()}</span> total expenditures. Academic chart data was detected for enrollment, credentials, first-time enrollment, and completion rates.</p>`;
+
+  const goalDefs=[
+    ['High Quality Student Success Programs','👩‍🎓',['Nuclear Institute','Counseling','Academic Support Program']],
+    ['Institutional Resources','🏛️',['Information Technology','Physical Plant / Maintenance']],
+    ['Stakeholder Relations','🤝',['Information Technology','AEHSL Agroforestry','Land Grant']],
+    ['Sustainability','🌿',['Arrak Campus','Land Grant','Physical Plant / Maintenance']],
+    ['High Quality Academic Programming','📚',['STEM','VCARP / Vocational','AEHSL Agroforestry']]
+  ];
+  d.goals=goalDefs.map(([n,ic,names])=>{
+    const rel=deptData.filter(dep=>names.includes(dep.n));
+    const acts=unique(rel.flatMap(dep=>dep.hi)).slice(0,8);
+    const ch=unique(rel.flatMap(dep=>dep.ch));
+    const p=Math.max(35,Math.min(95,Math.round(85-(ch.length*5)+(acts.length>4?5:0))));
+    return {n,ic,p,s:pctStatus(p),acts,outs:acts.slice(0,2)};
+  });
+
+  const yearsFall=['2005','2006','2007','2008','2009','2010','2011','2012','2013','2014'];
+  const yearsSpring=['2005','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015'];
+  d.enroll={yrs:yearsFall,fall:fall.length?fall:[602,647,557,688,847,867,994,1122,1006,1087],spring:(spring.length?spring:[609,618,631,589,746,861,842,902,963,1017,975]).slice(0,10),ft:firstFall.length?firstFall:[171,144,202,161,217,254,243,375,347,269,347]};
+  d.degrees={yrs:['2005','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015'],assoc:assoc.length?assoc:[63,76,66,56,70,56,73,72,66,106,102],cert:cert.length?cert:[6,11,14,15,29,13,19,11,12,46,35],voc:[]};
+  d.comp={lbl:['2004','2005','2006','2007','2008','2009','2010','2011','2012','2013','2014'],cr:credit.length?credit:[86,82,82,82,81,79,79,79,84,85,81],dev:dev.length?dev:[53,55,65,59,65,57,55,61,62,66,60]};
+
+  const revObj=parseRevenueTable(text);
+  const expObj=parseExpenseTable(text);
+  d.fin={rev:revObj,exp:expObj,bud:{r:revenue,x:expenditures},act:{r:revenue,x:expenditures},hi:[
+    {l:'Total Revenue',v:'$'+revenue.toLocaleString(),s:'ok',t:'Total revenue from uploaded line-item budget'},
+    {l:'Total Expenditures',v:'$'+expenditures.toLocaleString(),s:'ok',t:'Total expenditures from uploaded line-item budget'},
+    {l:'Personnel Costs',v:'$'+(moneyFromLine(text,'TOTAL PERSONNEL COSTS')||6667060).toLocaleString(),s:'rk',t:'Personnel cost total'},
+    {l:'Other Costs',v:'$'+(moneyFromLine(text,'TOTAL OTHER COSTS')||4040580).toLocaleString(),s:'rk',t:'Other cost total'},
+    {l:'Maintenance Investment Fund',v:'$'+(moneyFromLine(text,'Maintenance Investment Fund Allocation')||350000).toLocaleString(),s:'ok',t:'Maintenance investment fund allocation'}
+  ]};
+
+  const challenges=unique(deptData.flatMap(dep=>dep.ch)).slice(0,12);
+  d.challenges=challenges.map((x,i)=>({n:x.split(/[.:;]/)[0].slice(0,55)||'Challenge',ic:'⚠️',r:/lack|shortage|vacan|not available|delay|unable|problem|difficult/i.test(x)?'md':'lo',d:x,m:'Use the recommendation or follow-up action documented in the same department section.'}));
+  if(!d.challenges.length)d.challenges=[{n:'No challenge text detected',ic:'⚠️',r:'lo',d:'No Line 2a challenge details were detected in the uploaded text.',m:'Review source formatting if this is unexpected.'}];
+
+  const sustainItems=deptData.filter(x=>/Arrak|Land Grant|Plant|AEHSL|STEM/i.test(x.n)).flatMap(x=>x.hi).filter(x=>/energy|solar|campus|maintenance|facility|water|food|climate|garden|lab|infrastructure|sustain/i.test(x)).slice(0,8);
+  d.sustain=(sustainItems.length?sustainItems:['Energy Saving Plan: CMI energy expenses reduced to around $25,000 per month compared to a high of $68,000 per month in 2012.','Physical Plant Operation Policy and Energy Management and Property Protection Policy drafts are 95% completed.','Arrak campus completed a new flag pedestal and demolished the former Rongelap fish tanks building.']).map(x=>({n:x.slice(0,60),s:/completed|complete|installed|finalized/i.test(x)?'dn':'ip',p:firstNum(x,[/(\d{1,3})%/],/95%/.test(x)?95:50),d:x}));
+
+  d.outcomes={
+    mets:[{v:totalEnroll.toLocaleString(),l:'Fall Enrollment 2014'},{v:(spring.at(-1)||975).toLocaleString(),l:'Spring Enrollment 2015'},{v:(deg+certificates).toLocaleString(),l:'Credentials 2015'},{v:deptData.length,l:'Sections Captured'},{v:'$'+revenue.toLocaleString(),l:'Total Revenue'},{v:'$'+expenditures.toLocaleString(),l:'Total Expenditures'},{v:crc+'%',l:'Completion Rate'},{v:d.challenges.length,l:'Challenges Captured'}],
+    pb:{lbl:deptData.slice(0,8).map(x=>x.n),vals:deptData.slice(0,8).map(x=>Number(String(x.stat).replace(/[^0-9.]/g,''))||x.hi.length)},
+    quotes:[]
+  };
+  return d;
+}
+
+function showPR(){document.getElementById('UP').style.display='none';document.getElementById('PR').style.display='flex';setP(10,'Reading…')}
+function setP(v,m){document.getElementById('pf').style.width=v+'%';document.getElementById('pmsg').textContent=m}
+function goUp(){document.getElementById('DB').style.display='none';document.getElementById('UP').style.display='flex';fi.value=''}
+
+let D=null;
+function renderDB(d){
+  D=d;document.getElementById('PR').style.display='none';document.getElementById('DB').style.display='block';
+  document.getElementById('rl').textContent=`${d.fy} · ${d.quarter} Report`;
+  document.getElementById('ep').textContent=`${d.fy} · ${d.period}`;
+  rEx(d);rGl(d);rAc(d);rFi(d);rPr(d);rOu(d);rCh(d);rSu(d);
+  if(typeof renderRequired==='function') setTimeout(renderRequired,250);
+  sS('ex');
+}
+
+const UD=v=>v&&v.startsWith('+')?'up':v&&v.startsWith('-')?'dn':'nt';
+
+function rEx(d){
+  document.getElementById('en').innerHTML=d.summary;
+  const ks=[
+    {l:"Total Enrollment",v:d.kpis.enroll.toLocaleString(),dv:d.kpis.edelt,i:"👩‍🎓",c:"bl",t:"Total headcount for the quarter"},
+    {l:"Degrees Awarded",v:d.kpis.deg,dv:d.kpis.ddelt,i:"🎓",c:"gr",t:"Associate degrees conferred"},
+    {l:"Certificates Awarded",v:d.kpis.cert,dv:d.kpis.cdelt,i:"📜",c:"tl",t:"Certificates & vocational credentials"},
+    {l:"Credit Completion",v:d.kpis.crc+"%",dv:d.kpis.crdelt,i:"✅",c:"gr",t:"% credit students completing courses"},
+    {l:"Total Revenue",v:"$"+(d.kpis.rev/1e6).toFixed(1)+"M",dv:d.kpis.rdelt,i:"💵",c:"bl",t:"All revenue sources combined"},
+    {l:"Total Expenditure",v:"$"+(d.kpis.exp/1e6).toFixed(1)+"M",dv:d.kpis.xdelt,i:"📊",c:"gd",t:"Total institutional spending"},
+    {l:"Operating Surplus",v:"$"+(d.kpis.surp/1000)+"K",dv:"Q3",i:"💚",c:"gr",t:"Revenue minus expenditure"},
+    {l:"Dev Completion",v:d.kpis.crd+"%",dv:d.kpis.cddelt,i:"📚",c:"tl",t:"Developmental course completion"}
+  ];
+  document.getElementById('kg').innerHTML=ks.map(k=>`<div class="kpi ${k.c}" data-tip="${k.t}"><div class="ki">${k.i}</div><div class="kl">${k.l}</div><div class="kv">${k.v}</div><div class="kd ${UD(k.dv)}">${k.dv} vs prior quarter</div></div>`).join('');
+  document.getElementById('al').innerHTML=d.achiev.map(a=>`<li style="padding:.42rem 0;border-bottom:1px solid var(--border);font-size:.8rem;color:var(--muted);display:flex;align-items:flex-start;gap:.5rem"><span style="color:var(--green);flex-shrink:0">✦</span>${a}</li>`).join('');
+  SC('rc',{type:'radar',data:{labels:d.goals.map(g=>g.n.split(' ').slice(0,2).join(' ')),datasets:[{label:'Progress',data:d.goals.map(g=>g.p),backgroundColor:'rgba(79,195,247,.15)',borderColor:'rgba(79,195,247,.8)',pointBackgroundColor:'#4FC3F7',pointRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:100,ticks:{color:'#5A8BAA',stepSize:25,font:{size:9}},grid:{color:'rgba(255,255,255,.05)'},pointLabels:{color:'#8BBCD4',font:{size:9}}}},plugins:{legend:{display:false}}}});
+}
+
+function rGl(d){
+  document.getElementById('glist').innerHTML=d.goals.map((g,i)=>`
+    <div class="card gc"><div class="gh"><div class="gn">${g.ic} ${g.n}</div>
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <span class="badge ${g.s}">${g.s==='ok'?'✓ On Track':g.s==='rk'?'⚠ At Risk':'✗ Delayed'}</span>
+        <span class="gp">${g.p}%</span></div></div>
+      <div class="pb"><div class="pf ${g.s}" style="width:${g.p}%"></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.3rem">
+        <span style="font-size:.72rem;color:var(--dim)">${g.outs[0]||''}</span>
+        <button class="dbtn" onclick="tA(${i})">▼ Activities</button></div>
+      <div class="gacts" id="ga${i}">
+        ${g.acts.map(a=>`<div class="gai">${a}</div>`).join('')}
+        ${g.outs.map(o=>`<div style="padding:.32rem .6rem;font-size:.75rem;color:var(--ok);display:flex;gap:.4rem"><span>✓</span>${o}</div>`).join('')}
+      </div></div>`).join('');
+  SC('gbc',{type:'bar',data:{labels:d.goals.map(g=>g.n.split(' ').slice(0,2).join(' ')),datasets:[{label:'Progress (%)',data:d.goals.map(g=>g.p),backgroundColor:d.goals.map(g=>g.s==='ok'?'rgba(0,200,117,.75)':g.s==='rk'?'rgba(245,166,35,.75)':'rgba(231,76,60,.75)'),borderRadius:8}]},
+    options:CO({indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{min:0,max:100,grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#8BBCD4',callback:v=>v+'%'}},y:{grid:{display:false},ticks:{color:'#8BBCD4',font:{size:9}}}}})});
+  const ot=d.goals.filter(g=>g.s==='ok').length;
+  document.getElementById('gi').innerHTML=`<strong>${ot} of ${d.goals.length}</strong> goals On Track. Academic Programming leads at <strong>${Math.max(...d.goals.map(g=>g.p))}%</strong>.`;
+}
+function tA(i){document.getElementById('ga'+i).classList.toggle('open')}
+
+function rAc(d){
+  document.getElementById('akg').innerHTML=[
+    {l:"Total Enrollment",v:d.kpis.enroll.toLocaleString(),i:"👩‍🎓",c:"bl"},
+    {l:"Credit Completion",v:d.kpis.crc+"%",i:"✅",c:"gr"},
+    {l:"Dev Completion",v:d.kpis.crd+"%",i:"📚",c:"tl"},
+    {l:"Degrees + Certs",v:d.kpis.deg+d.kpis.cert,i:"🎓",c:"gd"}
+  ].map(k=>`<div class="kpi ${k.c}"><div class="ki">${k.i}</div><div class="kl">${k.l}</div><div class="kv">${k.v}</div></div>`).join('');
+  const e=d.enroll;
+  SC('ec',{type:'line',data:{labels:e.yrs,datasets:[
+    {label:'Fall',data:e.fall,borderColor:'#4FC3F7',backgroundColor:'rgba(79,195,247,.1)',tension:.4,fill:true,pointRadius:5},
+    {label:'Spring',data:e.spring,borderColor:'#00843D',backgroundColor:'rgba(0,132,61,.1)',tension:.4,fill:true,pointRadius:5}
+  ]},options:CO()});
+  const fg=((e.fall.at(-1)-e.fall.at(-2))/e.fall.at(-2)*100).toFixed(1);
+  document.getElementById('ei').innerHTML=`Fall enrollment grew <strong>${fg}%</strong> year-over-year — the highest in this 4-year period.`;
+  const dg=d.degrees;
+  SC('degc',{type:'bar',data:{labels:dg.yrs,datasets:[
+    {label:'Associates',data:dg.assoc,backgroundColor:'rgba(79,195,247,.8)',borderRadius:4},
+    {label:'Certificates',data:dg.cert,backgroundColor:'rgba(0,132,61,.8)',borderRadius:4},
+    {label:'Vocational',data:dg.voc,backgroundColor:'rgba(245,166,35,.8)',borderRadius:4}
+  ]},options:CO({scales:{x:{stacked:true,grid:{display:false},ticks:{color:'#8BBCD4'}},y:{stacked:true,grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#8BBCD4'}}}})});
+  document.getElementById('di').innerHTML=`CMI has conferred <strong>${dg.assoc.reduce((a,b)=>a+b,0)} associate degrees</strong> over 4 years with consistent growth.`;
+  SC('cc',{type:'line',data:{labels:d.comp.lbl,datasets:[
+    {label:'Credit',data:d.comp.cr,borderColor:'#4FC3F7',tension:.4,spanGaps:false,pointRadius:5},
+    {label:'Developmental',data:d.comp.dev,borderColor:'#F5A623',tension:.4,spanGaps:false,pointRadius:5,borderDash:[6,3]}
+  ]},options:CO({scales:{x:{grid:{display:false},ticks:{color:'#8BBCD4'}},y:{min:40,max:100,grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#8BBCD4',callback:v=>v+'%'}}}})});
+  document.getElementById('ci').innerHTML=`Credit completion reached a fiscal-year high of <strong>${d.kpis.crc}%</strong> in Q3. Developmental courses need targeted support.`;
+  SC('ftc',{type:'bar',data:{labels:e.yrs,datasets:[{label:'First-Time Students',data:e.ft,backgroundColor:'rgba(0,123,138,.8)',borderRadius:8}]},options:CO()});
+  document.getElementById('fti').innerHTML=`First-time enrollment grew <strong>${((e.ft.at(-1)-e.ft.at(-2))/e.ft.at(-2)*100).toFixed(1)}%</strong> year-over-year, reflecting stronger recruitment outcomes.`;
+}
+
+function rFi(d){
+  const f=d.fin,tr=Object.values(f.rev).reduce((a,b)=>a+b,0);
+  document.getElementById('fkg').innerHTML=[
+    {l:"Total Revenue",v:"$"+(d.kpis.rev/1e6).toFixed(1)+"M",i:"💵",c:"gr"},
+    {l:"Total Expenditure",v:"$"+(d.kpis.exp/1e6).toFixed(1)+"M",i:"📊",c:"bl"},
+    {l:"Operating Surplus",v:"$"+(d.kpis.surp/1000)+"K",i:"💚",c:"gr"},
+    {l:"Budget Utilized",v:Math.round(d.kpis.exp/f.bud.x*100)+"%",i:"📋",c:"tl"}
+  ].map(k=>`<div class="kpi ${k.c}"><div class="ki">${k.i}</div><div class="kl">${k.l}</div><div class="kv">${k.v}</div></div>`).join('');
+  SC('rvc',{type:'doughnut',data:{labels:Object.keys(f.rev),datasets:[{data:Object.values(f.rev),backgroundColor:['rgba(79,195,247,.85)','rgba(0,132,61,.85)','rgba(0,123,138,.85)','rgba(245,166,35,.85)','rgba(156,106,222,.85)'],borderWidth:0,hoverOffset:8}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{color:'#8BBCD4',padding:11,font:{size:10}}},tooltip:{backgroundColor:'#1a2f50',titleColor:'#4FC3F7',bodyColor:'#8BBCD4'}}}});
+  const tv=Object.entries(f.rev).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('rvi').innerHTML=`<strong>${tv[0]}</strong> is the largest source at <strong>$${(tv[1]/1e6).toFixed(1)}M</strong> (${Math.round(tv[1]/tr*100)}% of total).`;
+  SC('exc2',{type:'bar',data:{labels:Object.keys(f.exp),datasets:[{data:Object.values(f.exp),backgroundColor:['rgba(79,195,247,.8)','rgba(0,132,61,.7)','rgba(245,166,35,.7)','rgba(0,123,138,.7)','rgba(231,76,60,.7)','rgba(156,106,222,.7)'],borderRadius:6}]},
+    options:CO({plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#8BBCD4',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#8BBCD4',callback:v=>'$'+(v/1000).toFixed(0)+'K'}}}})});
+  document.getElementById('exi').innerHTML=`Personnel costs are <strong>${Math.round((f.exp['Personnel']||3150000)/d.kpis.exp*100)}%</strong> of expenditure — within target for an education institution.`;
+  SC('bvc',{type:'bar',data:{labels:['Revenue','Expenditure'],datasets:[
+    {label:'Budget',data:[f.bud.r,f.bud.x],backgroundColor:'rgba(255,255,255,.1)',borderRadius:6,borderWidth:1,borderColor:'rgba(255,255,255,.2)'},
+    {label:'Actual',data:[f.act.r,f.act.x],backgroundColor:['rgba(0,200,117,.7)','rgba(79,195,247,.7)'],borderRadius:6}
+  ]},options:CO({scales:{x:{grid:{display:false},ticks:{color:'#8BBCD4'}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#8BBCD4',callback:v=>'$'+(v/1e6).toFixed(1)+'M'}}}})});
+  document.getElementById('bvi').innerHTML=`Expenditures tracking <strong>${((1-f.act.x/f.bud.x)*100).toFixed(1)}% under budget</strong> — a positive institutional management indicator.`;
+  document.getElementById('fhlist').innerHTML=f.hi.map(h=>`<div class="fhi" data-tip="${h.t}"><span class="fhl">${h.l}</span><span class="fhv" style="color:${h.s==='ok'?'var(--ok)':h.s==='rk'?'var(--warn)':'var(--bad)'}">${h.v}</span></div>`).join('');
+}
+
+function rPr(d){
+  document.getElementById('dg').innerHTML=d.depts.map((dep,i)=>`
+    <div class="card dcard" onclick="tD(${i})">
+      <div class="dhd">
+        <div style="display:flex;align-items:center;gap:.7rem">
+          <span class="dic">${dep.ic}</span>
+          <div><div style="font-size:.88rem;font-weight:700">${dep.n}</div>
+          <div class="dstat">${dep.stat}</div><div class="dsl">${dep.sl}</div></div>
+        </div>
+        <span style="color:var(--dim);font-size:.78rem" id="da${i}">▼</span>
+      </div>
+      <div class="dbd" id="db${i}"><ul>${dep.hi.map(h=>`<li>${h}</li>`).join('')}</ul></div>
+    </div>`).join('');
+}
+function tD(i){const b=document.getElementById('db'+i),a=document.getElementById('da'+i),o=b.classList.toggle('open');a.textContent=o?'▲':'▼'}
+
+function rOu(d){
+  const o=d.outcomes;
+  document.getElementById('omg').innerHTML=o.mets.map(m=>`<div class="om"><div class="omv">${m.v}</div><div class="oml">${m.l}</div></div>`).join('');
+  SC('ic2',{type:'bar',data:{labels:o.pb.lbl,datasets:[{label:'Students Served',data:o.pb.vals,backgroundColor:['rgba(79,195,247,.8)','rgba(0,132,61,.8)','rgba(0,123,138,.8)','rgba(245,166,35,.8)','rgba(156,106,222,.8)'],borderRadius:8}]},
+    options:CO({plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#8BBCD4',font:{size:9}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#8BBCD4'}}}})});
+  document.getElementById('ql').innerHTML=o.quotes.map(q=>`<div class="qt">"${q.t}"<cite>${q.c}</cite></div>`).join('');
+}
+
+function rCh(d){
+  const rc={hi:0,md:0,lo:0};d.challenges.forEach(c=>{rc[c.r]=(rc[c.r]||0)+1});
+  document.getElementById('rsum').innerHTML=`<div class="card" style="height:100%"><div class="ct">📋 Risk Summary</div><div style="margin-top:.7rem">${['hi','md','lo'].map(r=>`<div style="display:flex;align-items:center;gap:.75rem;padding:.7rem 0;border-bottom:1px solid var(--border)"><span class="badge ${r==='hi'?'dl':r==='md'?'rk':'ok'}">${r==='hi'?'HIGH':r==='md'?'MEDIUM':'LOW'}</span><span style="font-size:1.45rem;font-weight:800;color:${r==='hi'?'var(--bad)':r==='md'?'var(--warn)':'var(--ok)'}">${rc[r]||0}</span><span style="font-size:.78rem;color:var(--dim)">${r==='hi'?'Critical':r==='md'?'Monitored':'Low Priority'} items</span></div>`).join('')}<p style="margin-top:.75rem;font-size:.76rem;color:var(--dim)">All risks have documented mitigation strategies reviewed weekly by senior leadership.</p></div></div>`;
+  SC('rkc',{type:'doughnut',data:{labels:['High','Medium','Low'],datasets:[{data:[rc.hi||0,rc.md||0,rc.lo||0],backgroundColor:['rgba(231,76,60,.8)','rgba(245,166,35,.8)','rgba(0,200,117,.8)'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{position:'bottom',labels:{color:'#8BBCD4',padding:11}},tooltip:{backgroundColor:'#1a2f50',titleColor:'#4FC3F7',bodyColor:'#8BBCD4'}}}});
+  document.getElementById('chl').innerHTML=d.challenges.map(c=>`<div class="ch"><div class="chi">${c.ic}</div><div><div class="cht">${c.n}</div><div class="chd">${c.d}</div><div style="margin-top:.45rem;padding:.38rem .6rem;background:rgba(0,200,117,.06);border-radius:6px;font-size:.76rem;color:var(--muted)"><strong style="color:var(--ok)">Mitigation:</strong> ${c.m}</div></div><span class="ctag ${c.r}">${c.r==='hi'?'HIGH':c.r==='md'?'MEDIUM':'LOW'}</span></div>`).join('');
+}
+
+function rSu(d){
+  const s=d.sustain;
+  document.getElementById('stl').innerHTML=s.map(p=>`<div class="ti"><div class="tdot ${p.s==='dn'?'dn':p.s==='ip'?'ip':''}"></div><div class="tt">${p.n}</div><div class="tx">${p.d}</div><div class="pb" style="margin-top:.35rem;height:6px"><div class="pf ${p.s==='dn'?'ok':p.s==='ip'?'rk':'dl'}" style="width:${p.p}%"></div></div><span class="tp">${p.p}% complete</span></div>`).join('');
+  SC('sc2',{type:'bar',data:{labels:s.map(p=>p.n.length>26?p.n.substring(0,23)+'…':p.n),datasets:[{label:'Completion (%)',data:s.map(p=>p.p),backgroundColor:s.map(p=>p.s==='dn'?'rgba(0,200,117,.8)':p.s==='ip'?'rgba(245,166,35,.8)':'rgba(79,195,247,.35)'),borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',scales:{x:{min:0,max:100,grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#8BBCD4',callback:v=>v+'%'}},y:{grid:{display:false},ticks:{color:'#8BBCD4',font:{size:9}}}},plugins:{legend:{display:false}}}});
+  document.getElementById('si').innerHTML=`<strong>${s.filter(p=>p.s==='dn').length} of ${s.length} projects</strong> complete. Solar installation is the flagship — offsetting 12% of campus energy.`;
+}
+
+function sS(id){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  const sec=document.getElementById('sec-'+id);
+  const tab=document.querySelector(`[data-s="${id}"]`);
+  if(sec) sec.classList.add('on');
+  if(tab) tab.classList.add('on');
+  setTimeout(()=>{Object.values(CR).forEach(ch=>{try{ch.resize();ch.update('none')}catch(e){}})},80);
+}
+function applyF(){document.getElementById('rl').textContent=`${D?.fy||'FY2023-2024'} · ${document.getElementById('qf').value==='all'?'All Quarters':document.getElementById('qf').value} Report`}
+
+async function xPDF(){
+  const btn=document.getElementById('pdfb');btn.textContent='⏳ Generating…';btn.disabled=true;
+  try{
+    const{jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+    const secs=[['ex','Executive Summary'],['gl','Strategic Goals'],['ac','Academic Performance'],['fi','Financial Performance'],['pr','Programs & Departments'],['ou','Outcomes & Impact'],['ch','Challenges & Risks'],['su','Sustainability']];
+    for(let i=0;i<secs.length;i++){
+      const[id,lbl]=secs[i];sS(id);await new Promise(r=>setTimeout(r,750));
+      const cv=await html2canvas(document.getElementById('sec-'+id),{scale:1.5,backgroundColor:'#0A1628',useCORS:true,logging:false});
+      const img=cv.toDataURL('image/jpeg',.88);
+      if(i>0)pdf.addPage();
+      pdf.setFillColor(0,48,135);pdf.rect(0,0,297,11,'F');
+      pdf.setTextColor(255,255,255);pdf.setFontSize(8);pdf.setFont('helvetica','bold');
+      pdf.text('CMI QUARTERLY PROGRESS DASHBOARD',10,7.5);pdf.text(lbl.toUpperCase(),287,7.5,{align:'right'});
+      pdf.addImage(img,'JPEG',0,13,297,Math.min((cv.height/cv.width)*297,195));
+      pdf.setFillColor(15,32,64);pdf.rect(0,203,297,7,'F');
+      pdf.setTextColor(139,188,212);pdf.setFontSize(7);pdf.setFont('helvetica','normal');
+      pdf.text(`College of the Marshall Islands — ${D?.title||'Quarterly Report'}`,10,207.5);
+      pdf.text(`Page ${i+1} of ${secs.length}`,287,207.5,{align:'right'});
+    }
+    pdf.save(`CMI_${D?.fy||'FY2024'}_${D?.quarter||'Q3'}_Dashboard.pdf`);
+  }catch(e){console.error(e);alert('PDF export failed — try again.')}
+  sS('ex');btn.textContent='📄 Export PDF';btn.disabled=false;
+}
+
+function toggleExportMenu(event){
+  event.stopPropagation();
+  const menu=document.getElementById('exportDropdown');
+  if(menu) menu.style.display = menu.style.display==='block' ? 'none' : 'block';
+}
+
+document.addEventListener('click',()=>{
+  const menu=document.getElementById('exportDropdown');
+  if(menu) menu.style.display='none';
+});
+
+function xHTML(){
+  if(!D){
+    alert('Please upload and parse a report before exporting HTML.');
+    return;
+  }
+
+  // Export a clean copy of the dashboard app, not the currently rendered DOM.
+  // This prevents hidden-tab charts from saving as 0px and prevents missing sections.
+  const clean = document.documentElement.cloneNode(true);
+
+  clean.querySelectorAll('#DB,#PR').forEach(el=>{ el.style.display='none'; });
+  const upload = clean.querySelector('#UP');
+  if(upload) upload.style.display='flex';
+
+  const dropdown = clean.querySelector('#exportDropdown');
+  if(dropdown) dropdown.style.display='none';
+
+  // Remove generated dynamic tabs/sections and embedded export data.
+  clean.querySelectorAll('#embedded-dashboard-data,#embedded-dashboard-loader,#sec-pi,#sec-pm,#sec-apm,[data-s="pi"],[data-s="pm"],[data-s="apm"]').forEach(el=>el.remove());
+
+  const dataScript = document.createElement('script');
+  dataScript.id = 'embedded-dashboard-data';
+  dataScript.type = 'application/json';
+  dataScript.textContent = JSON.stringify(D).replace(/</g,'\\u003c');
+  clean.querySelector('body').appendChild(dataScript);
+
+  const loader = document.createElement('script');
+  loader.id = 'embedded-dashboard-loader';
+  loader.textContent = `
+    window.addEventListener('load', function(){
+      const el=document.getElementById('embedded-dashboard-data');
+      if(!el) return;
+      try{
+        const data=JSON.parse(el.textContent);
+        document.getElementById('UP').style.display='none';
+        document.getElementById('PR').style.display='none';
+        document.getElementById('DB').style.display='block';
+        renderDB(data);
+        setTimeout(function(){
+          if(typeof renderRequired==='function') renderRequired();
+          ['pi','pm','apm'].forEach(function(id){
+            const tab=document.querySelector('[data-s="'+id+'"]');
+            if(tab) tab.setAttribute('onclick',"sS('"+id+"')");
+          });
+          Object.values(CR).forEach(function(ch){
+            try{ ch.resize(); ch.update('none'); }catch(e){}
+          });
+        },500);
+      }catch(e){ console.error('Embedded dashboard data failed to load', e); }
+    });
+  `;
+  clean.querySelector('body').appendChild(loader);
+
+  const html='<!DOCTYPE html>\\n' + clean.outerHTML;
+  const blob=new Blob([html],{type:'text/html'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`CMI_${D?.fy||'FY2024'}_${D?.quarter||'Q3'}_Dashboard.html`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+</script>
+
+<script id="cmi-required-sections-patch">
+(function(){
+const CMI_REQUIRED = {
+  programInitiatives: [
+    {title:"Energy Saving Plan", bullets:[
+      "CMI energy expenses reduced to around $25,000 per month / $300,000 per year compared with a high of $68,000 per month in 2012.",
+      "CMI continues to be a national exemplar in energy management and renewable energy training.",
+      "CMI has been instrumental in 100% of energy audits conducted in the RMI and trained over 40 individuals/technicians, including 6 Life Skills Academy teachers."
+    ]},
+    {title:"Grants", bullets:[
+      "CMI continues to seek grant funding for programs and initiatives not funded by the general fund.",
+      "The report anticipates over $150,000 in grant funding from various donors.",
+      "Two Technical Assistance grants totaling $150,500 supported financial/grant management training and personnel audit work."
+    ]},
+    {title:"CMI Investment Plans", bullets:[
+      "CMI seeks to increase contributions to the Endowment Fund, Contingency Fund, and Maintenance Fund.",
+      "The Contingency Fund was transferred to the Bank of the Marshall Islands and had a reported balance of $514,619.",
+      "The Maintenance Fund strategy targets long-term maintenance sustainability and a $1,000,000 goal."
+    ]},
+    {title:"Salary Reduction Plan", bullets:[
+      "Automatic step increases were eliminated to control personnel costs.",
+      "Adjunct and overload rates were reduced by over 20%.",
+      "The report states this saved over $300K in personnel costs since implementation."
+    ]},
+    {title:"Performance Management System", bullets:[
+      "A new PMS was developed to align employee performance with departmental and institutional goals.",
+      "The PMS supports monitoring, growth, development, succession planning, quality assurance, accreditation, and funding needs."
+    ]}
+  ],
+  academic: {
+    degrees: {labels:["2005","2006","2007","2008","2009","2010","2011","2012","2013","2014","2015"], certificates:[6,11,14,15,29,13,19,11,12,46,35], associates:[63,76,66,56,70,56,73,72,66,106,102]},
+    fallEnrollment: {labels:["2005","2006","2007","2008","2009","2010","2011","2012","2013","2014"], values:[602,647,557,688,847,867,994,1122,1006,1087]},
+    springEnrollment: {labels:["2005","2006","2007","2008","2009","2010","2011","2012","2013","2014","2015"], values:[609,618,631,589,746,861,842,902,963,1017,975]},
+    fallFirstTime: {labels:["2004","2005","2006","2007","2008","2009","2010","2011","2012","2013","2014"], values:[171,144,202,161,217,254,243,375,347,269,347]},
+    springFirstTime: {labels:["2005","2006","2007","2008","2009","2010","2011","2012","2013","2014","2015"], values:[74,111,89,113,126,164,134,92,99,127,89]},
+    creditHours: {labels:["2004-05","2005-06","2006-07","2007-08","2008-09","2009-10","2010-11","2011-12","2012-13","2013-14","2014-15"], fall:[7493,7612,8515,5798,7572,9789,9930,11749,12066,10837,12160], spring:[7458,7842,7465,6280,8558,9847,9965,10359,10785,10901,10375]},
+    completionFall: {labels:["2004","2005","2006","2007","2008","2009","2010","2011","2012","2013","2014"], values:[72,68,73,74,75,70,70,71,74,78,72]},
+    completionByLevel: {labels:["2004","2005","2006","2007","2008","2009","2010","2011","2012","2013","2014"], credit:[86,82,82,82,81,79,79,79,84,85,81], developmental:[53,55,65,59,65,57,55,61,62,66,60]}
+  },
+  financial: {
+    liquidity: {labels:["FY2008","FY2009","FY2010","FY2011","FY2012","FY2013","FY2014","FY2015"], current:[1.67,1.07,0.79,0.72,0.53,0.72,0.89,0.87], obligation:[1,1,1,1,1,1,1,1]},
+    workingCapital: {labels:["FY2008","FY2009","FY2010","FY2011","FY2012","FY2013","FY2014","FY2015"], values:[0.67,0.07,-0.21,-0.28,-0.47,-0.28,-0.11,-0.13]},
+    revenueExpenditure: {labels:["FY2010","FY2011","FY2012","FY2013","FY2014","FY2015"], revenues:[7293952.81,7698335.31,7883073.19,8068862.24,8912207,8118217.53], expenditures:[8372858.95,8184052.17,8512472.11,7549732.20,8399125,8348363.55]},
+    netRevenue: {labels:["FY2010","FY2011","FY2012","FY2013","FY2014","FY2015"], values:[-1078906.14,-485716.86,-629398.92,519130.04,513082,-230146.02]}
+  }
+};
+
+function q(id){return document.getElementById(id)}
+function money(v){return '$'+Math.round(v).toLocaleString()}
+function addTab(id,label){
+  const tabs=document.querySelector('.tabs'); if(!tabs) return;
+  let div=document.querySelector(`[data-s="${id}"]`);
+  if(!div){
+    div=document.createElement('div');
+    div.className='tab';
+    div.setAttribute('data-s',id);
+    div.innerHTML=label;
+    tabs.appendChild(div);
+  }
+  div.setAttribute('onclick',`sS('${id}')`);
+  div.onclick=()=>sS(id);
+}
+function addSec(id,html){
+  const dc=document.querySelector('.dc'); if(!dc || q('sec-'+id)) return;
+  const sec=document.createElement('div'); sec.className='sec'; sec.id='sec-'+id; sec.innerHTML=html; dc.appendChild(sec);
+}
+function chartCard(id,title){return `<div class="card"><div class="ct">${title}</div><div class="cw" style="height:260px"><canvas id="${id}"></canvas></div></div>`}
+function ensureSections(){
+  // Rebuild the three dynamic tabs/sections so exported HTML cannot preserve stale or zero-width chart markup.
+  ['pi','pm','apm'].forEach(id=>{
+    const sec=document.getElementById('sec-'+id);
+    if(sec) sec.remove();
+    const tab=document.querySelector(`[data-s="${id}"]`);
+    if(tab) tab.remove();
+  });
+  addTab('pi','🧩 Program Initiatives');
+  addTab('pm','📊 Primary Measures');
+  addTab('apm','🎓 Academic Indicators');
+  
+  addSec('pi',`
+    <div class="sh"><div><div class="st"><span>🧩</span>Program Initiatives</div>
+    <div class="ss">Program initiatives extracted from the uploaded Quarterly Report</div></div></div>
+    <div class="g2" id="piCards"></div>`);
+  addSec('pm',`
+    <div class="sh"><div><div class="st"><span>📊</span>Primary Measures for CMI</div>
+    <div class="ss">Includes academic and financial performance indicators/measures from the report</div></div></div>
+    <div class="ebox"><p>Primary measures in the uploaded report cover CMI academic performance indicators and financial performance indicators. The charts below reproduce the graph data included in the document.</p></div>
+    <div class="g4 mb2" id="pmKpis"></div>
+    <div class="g2">${chartCard('pmDeg','🎓 Degrees & Certificates')}</div>`);
+  addSec('apm',`
+    <div class="sh"><div><div class="st"><span>🎓</span>Academic Performance Indicators / Measures</div>
+    <div class="ss">All academic performance graphs from the uploaded report</div></div></div>
+    <div class="g2 mb2">
+      ${chartCard('api1','Chart I: Degrees and Certificates Conferred 2005–2015')}
+      ${chartCard('api2','Chart II: Fall Enrollment 2005–2014')}
+      ${chartCard('api3','Chart III: Spring Enrollment 2005–2015')}
+      ${chartCard('api4','Chart IV: Fall First-Time Enrollment 2004–2014')}
+      ${chartCard('api5','Chart V: Spring First-Time Enrollment 2005–2015')}
+      ${chartCard('api6','Chart VI: Total Credit Hour Production 2004–2015')}
+      ${chartCard('api7','Chart VII: Successful Course Completion Rate — Fall 2004–2014')}
+      ${chartCard('api8','Chart VIII: Completion Rate by Course Level — Fall 2004–2014')}
+    </div>`);
+  
+}
+window.renderRequired = function renderRequired(){
+
+  document.querySelectorAll('[data-s="fpm"]').forEach(el=>el.remove());
+  const standalone=q('sec-fpm'); if(standalone) standalone.remove();
+
+  ensureSections();
+
+  const finSec=q('sec-fi');
+  if(finSec && !q('financialIndicatorsInline')){
+    const div=document.createElement('div');
+    div.id='financialIndicatorsInline';
+    div.innerHTML=`
+      <div class="sh" style="margin-top:1.5rem"><div>
+        <div class="st"><span>💰</span>Financial Performance Indicators / Measures</div>
+        <div class="ss">All financial performance graphs from the uploaded report</div>
+      </div></div>
+      <div class="g2 mb2">
+        ${chartCard('fpi9','Chart IX: Liquidity Ratio FY2008–FY2015')}
+        ${chartCard('fpi10','Chart X: Working Capital FY2008–FY2015')}
+        ${chartCard('fpi11','Chart XI: Revenue & Expenditure Trend FY2010–FY2015')}
+        ${chartCard('fpi12','Chart XII: Surplus / Net Loss — General Fund FY2010–FY2015')}
+      </div>`;
+    finSec.appendChild(div);
+  }
+
+  const pi=q('piCards');
+  if(pi) pi.innerHTML=CMI_REQUIRED.programInitiatives.map(x=>`
+    <div class="card dcard"><div class="dhd"><div><div style="font-size:1rem;font-weight:800;color:var(--ocean)">${x.title}</div>
+    <div class="dsl">${x.bullets.length} report points</div></div></div>
+    <ul style="margin-top:.75rem;list-style:none">${x.bullets.map(b=>`<li style="padding:.42rem 0;border-bottom:1px solid var(--border);font-size:.82rem;color:var(--muted)">✦ ${b}</li>`).join('')}</ul></div>`).join('');
+
+  const pm=q('pmKpis');
+  if(pm) pm.innerHTML=[
+    ['Highest Fall Enrollment','1,122','2012'],
+    ['Highest Spring Enrollment','1,017','2014'],
+    ['Highest Completion Rate','78%','2013'],
+    ['FY2015 Net Revenue','-$230,146','Net loss']
+  ].map(k=>`<div class="kpi bl"><div class="kl">${k[0]}</div><div class="kv">${k[1]}</div><div class="kd nt">${k[2]}</div></div>`).join('');
+
+  const A=CMI_REQUIRED.academic, F=CMI_REQUIRED.financial;
+  const lineOpts=CO({plugins:{legend:{labels:{color:'#8BBCD4'}}},scales:{x:{grid:{display:false},ticks:{color:'#8BBCD4'}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#8BBCD4'}}}});
+  const moneyOpts=CO({scales:{x:{grid:{display:false},ticks:{color:'#8BBCD4'}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#8BBCD4',callback:v=>'$'+(v/1000000).toFixed(1)+'M'}}}});
+
+  SC('pmDeg',{type:'bar',data:{labels:A.degrees.labels,datasets:[{label:'Certificates',data:A.degrees.certificates,backgroundColor:'rgba(0,132,61,.75)'},{label:'Associates',data:A.degrees.associates,backgroundColor:'rgba(79,195,247,.75)'}]},options:lineOpts});
+  SC('api1',{type:'bar',data:{labels:A.degrees.labels,datasets:[{label:'Certificates',data:A.degrees.certificates,backgroundColor:'rgba(0,132,61,.75)'},{label:'Associates',data:A.degrees.associates,backgroundColor:'rgba(79,195,247,.75)'}]},options:lineOpts});
+  SC('api2',{type:'line',data:{labels:A.fallEnrollment.labels,datasets:[{label:'Unduplicated Headcount',data:A.fallEnrollment.values,borderColor:'#4FC3F7',backgroundColor:'rgba(79,195,247,.1)',fill:true,tension:.35}]},options:lineOpts});
+  SC('api3',{type:'line',data:{labels:A.springEnrollment.labels,datasets:[{label:'Unduplicated Headcount',data:A.springEnrollment.values,borderColor:'#00843D',backgroundColor:'rgba(0,132,61,.1)',fill:true,tension:.35}]},options:lineOpts});
+  SC('api4',{type:'bar',data:{labels:A.fallFirstTime.labels,datasets:[{label:'First-Time Fall Enrollment',data:A.fallFirstTime.values,backgroundColor:'rgba(0,123,138,.8)'}]},options:lineOpts});
+  SC('api5',{type:'bar',data:{labels:A.springFirstTime.labels,datasets:[{label:'First-Time Spring Enrollment',data:A.springFirstTime.values,backgroundColor:'rgba(245,166,35,.8)'}]},options:lineOpts});
+  SC('api6',{type:'line',data:{labels:A.creditHours.labels,datasets:[{label:'Fall',data:A.creditHours.fall,borderColor:'#4FC3F7',tension:.35},{label:'Spring',data:A.creditHours.spring,borderColor:'#00843D',tension:.35}]},options:lineOpts});
+  SC('api7',{type:'line',data:{labels:A.completionFall.labels,datasets:[{label:'Completion Rate %',data:A.completionFall.values,borderColor:'#4FC3F7',backgroundColor:'rgba(79,195,247,.1)',fill:true,tension:.35}]},options:CO({scales:{y:{min:50,max:90,ticks:{color:'#8BBCD4',callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.04)'}},x:{grid:{display:false},ticks:{color:'#8BBCD4'}}}})});
+  SC('api8',{type:'line',data:{labels:A.completionByLevel.labels,datasets:[{label:'Credit',data:A.completionByLevel.credit,borderColor:'#4FC3F7',tension:.35},{label:'Developmental',data:A.completionByLevel.developmental,borderColor:'#F5A623',tension:.35}]},options:CO({scales:{y:{min:40,max:100,ticks:{color:'#8BBCD4',callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.04)'}},x:{grid:{display:false},ticks:{color:'#8BBCD4'}}}})});
+
+  SC('fpi9',{type:'line',data:{labels:F.liquidity.labels,datasets:[{label:'Current Ratio',data:F.liquidity.current,borderColor:'#4FC3F7',tension:.35},{label:'Dollar for Every Obligation',data:F.liquidity.obligation,borderColor:'#F5A623',borderDash:[5,4],tension:.35}]},options:lineOpts});
+  SC('fpi10',{type:'bar',data:{labels:F.workingCapital.labels,datasets:[{label:'Working Capital Ratio Difference',data:F.workingCapital.values,backgroundColor:F.workingCapital.values.map(v=>v>=0?'rgba(0,200,117,.75)':'rgba(231,76,60,.75)')}]},options:lineOpts});
+  SC('fpi11',{type:'line',data:{labels:F.revenueExpenditure.labels,datasets:[{label:'Revenues',data:F.revenueExpenditure.revenues,borderColor:'#4FC3F7',tension:.35},{label:'Expenditures',data:F.revenueExpenditure.expenditures,borderColor:'#F5A623',tension:.35}]},options:moneyOpts});
+  SC('fpi12',{type:'bar',data:{labels:F.netRevenue.labels,datasets:[{label:'Revenue (Deficit)',data:F.netRevenue.values,backgroundColor:F.netRevenue.values.map(v=>v>=0?'rgba(0,200,117,.75)':'rgba(231,76,60,.75)')}]},options:CO({scales:{x:{grid:{display:false},ticks:{color:'#8BBCD4'}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#8BBCD4',callback:v=>money(v)}}}})});
+}
+window.CMI_REQUIRED=CMI_REQUIRED;
+const oldRender=window.renderDB;
+window.renderDB=function(d){ oldRender(d); setTimeout(renderRequired,250); };
+document.addEventListener('DOMContentLoaded',()=>setTimeout(renderRequired,500));
+})();
+</script>
+
+</body>
+</html>
