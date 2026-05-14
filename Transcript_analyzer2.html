@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CMI Transcript GPA Analyzer - Rebuilt</title>
+
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #f4f6f8; color: #222; }
+    .container { max-width: 1280px; margin: auto; padding: 24px; }
+    .card { background: #fff; border-radius: 14px; padding: 20px; margin-bottom: 18px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
+    h1, h2, h3 { margin-top: 0; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+    .metric { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; }
+    .metric-label { font-size: 13px; color: #64748b; }
+    .metric-value { font-size: 22px; font-weight: bold; margin-top: 6px; word-break: break-word; }
+    button { background: #1f2937; color: white; border: none; padding: 11px 16px; border-radius: 10px; cursor: pointer; font-weight: bold; margin-right: 8px; margin-top: 8px; }
+    button:disabled { background: #9ca3af; cursor: not-allowed; }
+    input[type="file"] { padding: 12px; border: 1px solid #94a3b8; border-radius: 10px; background: #f8fafc; width: 100%; box-sizing: border-box; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+    th, td { border: 1px solid #dbe2ea; padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #e5e7eb; position: sticky; top: 0; }
+    .ok { color: #047857; font-weight: bold; }
+    .warn { color: #b45309; font-weight: bold; }
+    .error { color: #b91c1c; font-weight: bold; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .tab { background: #e5e7eb; color: #111827; }
+    .tab.active { background: #111827; color: white; }
+    textarea { width: 100%; height: 220px; font-family: monospace; font-size: 12px; box-sizing: border-box; }
+    .small { color: #64748b; font-size: 13px; }
+    .policy { background: #f8fafc; border-left: 4px solid #1f2937; padding: 12px; border-radius: 8px; margin-top: 12px; }
+  </style>
+</head>
+
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+const GRADE_POINTS = {
+  "A": 4.0,
+  "B+": 3.5,
+  "B": 3.0,
+  "C+": 2.5,
+  "C": 2.0,
+  "D+": 1.5,
+  "D": 1.0,
+  "F": 0.0
+};
+
+const NON_GPA_GRADES = new Set(["P", "NP", "W", "AU", "RPL", "T", "I"]);
+const TERM_RE = /^(FALL|SPRING|SUMMER)\s+\d{4}\/\d{2}$/;
+const TERM_ANY_RE = /\b(FALL|SPRING|SUMMER)\s+\d{4}\/\d{2}\b/g;
+const TERM_SEASON_RE = /^(FALL|SPRING|SUMMER)$/;
+const TERM_YEAR_RE = /^\d{4}\/\d{2}$/;
+const COURSE_RE = /^(\*?[A-Z]{2,4}\s*\d{3}[A-Z]?)\s+(.+?)\s+(A|B\+|B|C\+|C|D\+|D|F|P|NP|W|I|AU|RPL|T)\s+(\d+\.\d{2})\s+(\d+\.\d{2})(?:\s+(R))?$/;
+const EMBEDDED_COURSE_RE = /\*?[A-Z]{2,4}\s*\d{3}[A-Z]?\b/g;
+const TOTAL_CREDITS_RE = /TOTAL CREDITS INCLUDING TRANSFERS:\s*(\d+\.\d{2})/;
+
+function normalizeLine(line) {
+  return String(line || "").replace(/\s+/g, " ").trim();
+}
+
+function round4(value) {
+  if (value === null || value === undefined || value === "") return "";
+  return Math.round(Number(value) * 10000) / 10000;
+}
+
+function round2(value) {
+  if (value === null || value === undefined || value === "") return "";
+  return Math.round(Number(value) * 100) / 100;
+}
+
+function numericTokens(line) {
+  return [...line.matchAll(/\d+\.\d{2,4}/g)].map(m => Number(m[0]));
+}
+
+function termSortKey(term) {
+  const m = String(term || "").match(/^(FALL|SPRING|SUMMER)\s+(\d{4})\/(\d{2})$/);
+  if (!m) return 999999;
+  const seasonOrder = { FALL: 1, SPRING: 2, SUMMER: 3 };
+  return Number(m[2]) * 10 + seasonOrder[m[1]];
+}
+
+
+function termSeason(term) {
+  const m = String(term || "").match(/^(FALL|SPRING|SUMMER)\s+(\d{4})\/(\d{2})$/);
+  return m ? m[1] : "";
+}
+
+function schoolYearFromTerm(term) {
+  const m = String(term || "").match(/^(FALL|SPRING|SUMMER)\s+(\d{4})\/(\d{2})$/);
+  if (!m) return "";
+
+  const startYear = Number(m[2]);
+  const endYY = m[3];
+
+  return `${startYear}/${endYY}`;
+}
+
+function termDisplayOrder(term) {
+  const season = termSeason(term);
+
+  const order = {
+    "FALL": 1,
+    "SPRING": 2,
+    "SUMMER": 3
+  };
+
+  return order[season] || 99;
+}
+
+function addSchoolYearFields(rows) {
+  return rows.map(row => ({
+    "Academic Year": schoolYearFromTerm(row.Term),
+    "Academic Term Order": termDisplayOrder(row.Term),
+    ...row
+  }));
+}
+
+function sortBySchoolYearTerm(rows) {
+  return [...rows].sort((a, b) => {
+    const yearA = schoolYearFromTerm(a.Term);
+    const yearB = schoolYearFromTerm(b.Term);
+
+    if (yearA !== yearB) {
+      return yearA.localeCompare(yearB);
+    }
+
+    const termDiff = termDisplayOrder(a.Term) - termDisplayOrder(b.Term);
+    if (termDiff !== 0) return termDiff;
+
+    return String(a.Course || "").localeCompare(String(b.Course || ""));
+  });
+}
+
+
+function honorListFromGpa(gpa) {
+  if (gpa === "" || gpa === null || gpa === undefined || Number.isNaN(Number(gpa))) return "Not Eligible / No GPA";
+  const v = Number(gpa);
+  if (v === 4.0) return "President's List";
+  if (v >= 3.8 && v <= 3.99) return "Dean's List";
+  if (v >= 3.5 && v <= 3.79) return "Honors List";
+  return "Not Eligible";
+}
+
+function transcriptHonor(line) {
+  if (line === "President's List" || line === "Dean's List" || line === "Honors List") return line;
+  return "";
+}
+
+async function extractPdfLines(file) {
+  const buffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  const lines = [];
+
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+    const content = await page.getTextContent();
+    const items = content.items.map(item => ({
+      text: item.str,
+      x: item.transform[4],
+      y: item.transform[5]
+    })).filter(item => item.text && item.text.trim());
+
+    const viewport = page.getViewport({ scale: 1 });
+    const midpoint = viewport.width / 2;
+    const columns = [[0, midpoint], [midpoint, viewport.width]];
+
+    for (const [x0, x1] of columns) {
+      const colItems = items
+        .filter(item => item.x >= x0 && item.x < x1)
+        .sort((a, b) => (Math.round(b.y / 3) * 3 - Math.round(a.y / 3) * 3) || a.x - b.x);
+
+      const groups = [];
+      for (const item of colItems) {
+        let placed = false;
+        for (const group of groups) {
+          if (Math.abs(group[0].y - item.y) <= 3) {
+            group.push(item);
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) groups.push([item]);
+      }
+
+      groups.sort((a, b) => b[0].y - a[0].y);
+      for (const group of groups) {
+        group.sort((a, b) => a.x - b.x);
+        const line = normalizeLine(group.map(i => i.text).join(" "));
+        if (line) lines.push(line);
+      }
+    }
+  }
+
+  return lines;
+}
+
+function normalizeTermLines(lines) {
+  const rawLines = lines.map(normalizeLine).filter(Boolean);
+  const out = [];
+
+  function pushLine(value, allowTerm = false) {
+    const v = normalizeLine(value);
+    if (!v) return;
+    if (!allowTerm && (TERM_SEASON_RE.test(v) || TERM_YEAR_RE.test(v))) return;
+    out.push(v);
+  }
+
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i];
+
+    if (TERM_SEASON_RE.test(line) && i + 1 < rawLines.length && TERM_YEAR_RE.test(rawLines[i + 1])) {
+      pushLine(`${line} ${rawLines[i + 1]}`, true);
+      i += 1;
+      continue;
+    }
+
+    const trailingSeason = line.match(/\b(FALL|SPRING|SUMMER)$/);
+    if (trailingSeason && i + 1 < rawLines.length && TERM_YEAR_RE.test(rawLines[i + 1])) {
+      pushLine(line.slice(0, trailingSeason.index).trim());
+      pushLine(`${trailingSeason[1]} ${rawLines[i + 1]}`, true);
+      i += 1;
+      continue;
+    }
+
+    const matches = [...line.matchAll(TERM_ANY_RE)];
+    if (matches.length) {
+      let cursor = 0;
+      for (const match of matches) {
+        pushLine(line.slice(cursor, match.index).trim());
+        pushLine(match[0], true);
+        cursor = match.index + match[0].length;
+      }
+      pushLine(line.slice(cursor).trim());
+      continue;
+    }
+
+    pushLine(line);
+  }
+
+  return out;
+}
+
+
+function splitMergedCourseLines(lines) {
+  // Fix merged-course corruption from PDF.js.
+  // Example bad line:
+  //   CS 103 WORD PROCESSING F 3.00 0.00 *MA 070 ELEMENTARY ALGEBRA W 4.00 0.00
+  // This function splits at embedded course codes while preserving non-course lines.
+  const out = [];
+
+  function isCourseStart(text) {
+    return /^\*?[A-Z]{2,4}\s*\d{3}[A-Z]?\b/.test(normalizeLine(text));
+  }
+
+  for (const raw of lines) {
+    const line = normalizeLine(raw);
+    if (!line) continue;
+
+    const matches = [...line.matchAll(EMBEDDED_COURSE_RE)];
+    if (matches.length <= 1 || !isCourseStart(line)) {
+      out.push(line);
+      continue;
+    }
+
+    // Only split when each segment after the first has a grade/credit pattern.
+    const segments = [];
+    for (let i = 0; i < matches.length; i++) {
+      const start = matches[i].index;
+      const end = i + 1 < matches.length ? matches[i + 1].index : line.length;
+      const segment = normalizeLine(line.slice(start, end));
+      if (segment) segments.push(segment);
+    }
+
+    const usable = segments.filter(seg =>
+      /^\*?[A-Z]{2,4}\s*\d{3}[A-Z]?\b/.test(seg) &&
+      /\b(A|B\+|B|C\+|C|D\+|D|F|P|NP|W|I|AU|RPL|T)\s+\d+\.\d{2}\s+\d+\.\d{2}(?:\s+R)?$/.test(seg)
+    );
+
+    if (usable.length >= 2) {
+      usable.forEach(seg => out.push(seg));
+    } else {
+      out.push(line);
+    }
+  }
+
+  return out;
+}
+
+function hasEmbeddedCourseInTitle(title) {
+  return EMBEDDED_COURSE_RE.test(title);
+}
+
+function parseTranscript(lines) {
+  const normalized = splitMergedCourseLines(normalizeTermLines(lines));
+  const courses = [];
+  const summaries = [];
+  const honors = [];
+  const totals = {};
+
+  let currentTerm = "";
+  let lastCourseIndex = null;
+  let summaryState = null;
+
+  function startSummary(term) {
+    summaryState = { term, cumulativeAttempted: null, semesterAdded: false, cumulativeAdded: false };
+  }
+
+  function closeSummary() {
+    if (summaryState && summaryState.semesterAdded && summaryState.cumulativeAdded) summaryState = null;
+  }
+
+  function skipContinuation(line) {
+    const prefixes = [
+      "Course Grade", "Course Credits", "Attempt", "Credits", "Earn", "Grade GPA",
+      "Semester Summary", "Cumulative Summary", "SCOLASTIC", "HONORS",
+      "Monica", "Page ", "A ", "B ", "C ", "D ", "F ", "I ", "P ", "AU ", "R ",
+      "W ", "NP ", "RPL ", "T ", "Student ", "Gender", "Date of Birth", "Address",
+      "COLLEGE", "PO Box", "OFFICIAL", "TOTAL CREDITS", "* Course not included",
+      "Bachelor ", "Mandira", "KI000", "NA,", "05/", "Enrollment History",
+      "President's List", "Dean's List", "Honors List"
+    ];
+    return prefixes.some(p => line.startsWith(p)) || TERM_RE.test(line) || TERM_SEASON_RE.test(line) || TERM_YEAR_RE.test(line);
+  }
+
+  for (const raw of normalized) {
+    const line = normalizeLine(raw);
+
+    if (TERM_RE.test(line)) {
+      currentTerm = line;
+      lastCourseIndex = null;
+      summaryState = null;
+      continue;
+    }
+
+    const totalMatch = line.match(TOTAL_CREDITS_RE);
+    if (totalMatch) totals["Total Credits Including Transfers"] = Number(totalMatch[1]);
+
+    if (!currentTerm) continue;
+
+    const honor = transcriptHonor(line);
+    if (honor) {
+      honors.push({ Term: currentTerm, "Official Honor From Transcript": honor });
+      continue;
+    }
+
+    if (line === "Semester Summary" || line.startsWith("Semester Summary ")) {
+      startSummary(currentTerm);
+      const nums = numericTokens(line);
+      if (nums.length >= 3) {
+        summaries.push({
+          Term: currentTerm,
+          "Summary Type": "Semester Summary",
+          "Attempted Credits": nums[0],
+          "Earned Credits": nums[1],
+          GPA: nums[2]
+        });
+        summaryState.semesterAdded = true;
+      }
+      lastCourseIndex = null;
+      continue;
+    }
+
+    if (line.startsWith("Cumulative Summary")) {
+      if (!summaryState) startSummary(currentTerm);
+      const nums = numericTokens(line);
+      if (nums.length >= 3) {
+        summaries.push({
+          Term: currentTerm,
+          "Summary Type": "Cumulative Summary",
+          "Attempted Credits": nums[0],
+          "Earned Credits": nums[1],
+          GPA: nums[2]
+        });
+        summaryState.cumulativeAdded = true;
+        closeSummary();
+      } else if (nums.length === 1) {
+        summaryState.cumulativeAttempted = nums[0];
+      }
+      lastCourseIndex = null;
+      continue;
+    }
+
+    if (summaryState) {
+      const nums = numericTokens(line);
+
+      if (!summaryState.semesterAdded && nums.length >= 3) {
+        summaries.push({
+          Term: summaryState.term,
+          "Summary Type": "Semester Summary",
+          "Attempted Credits": nums[0],
+          "Earned Credits": nums[1],
+          GPA: nums[2]
+        });
+        summaryState.semesterAdded = true;
+        closeSummary();
+        continue;
+      }
+
+      if (summaryState.semesterAdded && !summaryState.cumulativeAdded) {
+        if (summaryState.cumulativeAttempted !== null && nums.length >= 2) {
+          summaries.push({
+            Term: summaryState.term,
+            "Summary Type": "Cumulative Summary",
+            "Attempted Credits": summaryState.cumulativeAttempted,
+            "Earned Credits": nums[0],
+            GPA: nums[1]
+          });
+          summaryState.cumulativeAdded = true;
+          closeSummary();
+          continue;
+        }
+        if (nums.length >= 3) {
+          summaries.push({
+            Term: summaryState.term,
+            "Summary Type": "Cumulative Summary",
+            "Attempted Credits": nums[0],
+            "Earned Credits": nums[1],
+            GPA: nums[2]
+          });
+          summaryState.cumulativeAdded = true;
+          closeSummary();
+          continue;
+        }
+      }
+    }
+
+    const courseMatch = line.match(COURSE_RE);
+    if (courseMatch) {
+      const rawCourse = courseMatch[1].trim();
+      const excludedByStar = rawCourse.startsWith("*");
+      const course = rawCourse.replace("*", "").replace(/\s+/g, " ").trim();
+      const grade = courseMatch[3].trim();
+      const attempted = Number(courseMatch[4]);
+      const earned = Number(courseMatch[5]);
+      const gradePoint = Object.prototype.hasOwnProperty.call(GRADE_POINTS, grade) ? GRADE_POINTS[grade] : "";
+
+      const parsedTitle = courseMatch[2].trim();
+      const suspiciousMergedRow = hasEmbeddedCourseInTitle(parsedTitle);
+
+      courses.push({
+        Term: currentTerm,
+        Course: course,
+        "Course Title": parsedTitle,
+        Grade: grade,
+        "Attempted Credits": attempted,
+        "Earned Credits": earned,
+        "GPA Value": gradePoint,
+        "Excluded From GPA (*)": excludedByStar,
+        "Non-GPA Grade": !Object.prototype.hasOwnProperty.call(GRADE_POINTS, grade),
+        "Marked Repeat (R)": Boolean(courseMatch[6]),
+        "Suspicious Merged Course Row": suspiciousMergedRow,
+        "Source Line": line
+      });
+
+      lastCourseIndex = courses.length - 1;
+      continue;
+    }
+
+    if (lastCourseIndex !== null && !skipContinuation(line)) {
+      courses[lastCourseIndex]["Course Title"] += " " + line;
+    }
+  }
+
+  return { courses, summaries, honors, totals, normalizedLines: normalized };
+}
+
+function computeCourses(courses) {
+  const sorted = [...courses].sort((a, b) => termSortKey(a.Term) - termSortKey(b.Term));
+  const gradedIndexesByCourse = {};
+
+  sorted.forEach((row, index) => {
+    const isLetter = Object.prototype.hasOwnProperty.call(GRADE_POINTS, row.Grade);
+    const isExcluded = row["Excluded From GPA (*)"];
+    const isNonGpa = NON_GPA_GRADES.has(row.Grade);
+    if (isLetter && !isExcluded && !isNonGpa && !row["Suspicious Merged Course Row"]) {
+      if (!gradedIndexesByCourse[row.Course]) gradedIndexesByCourse[row.Course] = [];
+      gradedIndexesByCourse[row.Course].push(index);
+    }
+  });
+
+  const latestIndexByCourse = {};
+  Object.entries(gradedIndexesByCourse).forEach(([course, indexes]) => {
+    latestIndexByCourse[course] = indexes[indexes.length - 1];
+  });
+
+  const attemptCounts = {};
+  return sorted.map((row, index) => {
+    attemptCounts[row.Course] = (attemptCounts[row.Course] || 0) + 1;
+
+    const isLetter = Object.prototype.hasOwnProperty.call(GRADE_POINTS, row.Grade);
+    const isExcluded = row["Excluded From GPA (*)"];
+    const isNonGpa = NON_GPA_GRADES.has(row.Grade);
+    const gradedAttemptCount = gradedIndexesByCourse[row.Course] ? gradedIndexesByCourse[row.Course].length : 0;
+    const repeatedCourse = gradedAttemptCount > 1;
+    const latestGradedAttempt = latestIndexByCourse[row.Course] === index;
+
+    let counts = false;
+    let reason = "";
+
+    if (row["Suspicious Merged Course Row"]) reason = "Excluded: suspicious merged course row; review extracted text";
+    else if (isExcluded) reason = "Excluded: course marked with *";
+    else if (!isLetter || isNonGpa) reason = `Excluded: ${row.Grade} is not included in GPA`;
+    else if (repeatedCourse && !latestGradedAttempt) reason = "Excluded: replaced by latest graded attempt";
+    else if (row["Earned Credits"] <= 0) reason = "Excluded: no earned credits";
+    else {
+      counts = true;
+      reason = "Included: latest earned letter-grade attempt";
+    }
+
+    const gpaCredits = counts ? row["Earned Credits"] : 0;
+    const qualityPoints = counts ? gpaCredits * Number(row["GPA Value"]) : 0;
+
+    return {
+      ...row,
+      "Attempt Number": attemptCounts[row.Course],
+      "Graded Attempt Count": gradedAttemptCount,
+      "Repeated Course": repeatedCourse,
+      "Latest Graded Attempt": latestGradedAttempt,
+      "Counts In Computed GPA": counts,
+      "Computed GPA Credits": round2(gpaCredits),
+      "Computed Quality Points": round4(qualityPoints),
+      "Inclusion / Exclusion Reason": reason
+    };
+  });
+}
+
+function groupBy(rows, key) {
+  return rows.reduce((acc, row) => {
+    const value = row[key];
+    if (!acc[value]) acc[value] = [];
+    acc[value].push(row);
+    return acc;
+  }, {});
+}
+
+function computeTermSummaries(computedCourses) {
+  const sorted = [...computedCourses].sort((a, b) => termSortKey(a.Term) - termSortKey(b.Term));
+  const terms = [...new Set(sorted.map(r => r.Term))].sort((a, b) => termSortKey(a) - termSortKey(b));
+  const byTerm = groupBy(sorted, "Term");
+
+  return terms.map(term => {
+    const termRows = byTerm[term] || [];
+    const throughRows = sorted.filter(r => termSortKey(r.Term) <= termSortKey(term));
+
+    const termGpaCredits = termRows.reduce((s, r) => s + r["Computed GPA Credits"], 0);
+    const termQp = termRows.reduce((s, r) => s + r["Computed Quality Points"], 0);
+    const cumGpaCredits = throughRows.reduce((s, r) => s + r["Computed GPA Credits"], 0);
+    const cumQp = throughRows.reduce((s, r) => s + r["Computed Quality Points"], 0);
+
+    return {
+      Term: term,
+      "Parsed Term Attempted Credits": round2(termRows.reduce((s, r) => s + r["Attempted Credits"], 0)),
+      "Parsed Term Earned Credits": round2(termRows.reduce((s, r) => s + r["Earned Credits"], 0)),
+      "Computed Term GPA Credits": round2(termGpaCredits),
+      "Computed Term Quality Points": round4(termQp),
+      "Computed Semester GPA": termGpaCredits ? round4(termQp / termGpaCredits) : "",
+      "Computed Semester GPA Computation": termGpaCredits ? `${round4(termQp)} / ${round2(termGpaCredits)} = ${round4(termQp / termGpaCredits).toFixed(4)}` : "",
+      "Parsed Cumulative Attempted Credits": round2(throughRows.reduce((s, r) => s + r["Attempted Credits"], 0)),
+      "Parsed Cumulative Earned Credits": round2(throughRows.reduce((s, r) => s + r["Earned Credits"], 0)),
+      "Computed Cumulative GPA Credits": round2(cumGpaCredits),
+      "Computed Cumulative Quality Points": round4(cumQp),
+      "Computed Cumulative GPA": cumGpaCredits ? round4(cumQp / cumGpaCredits) : 0,
+      "Computed Cumulative GPA Computation": cumGpaCredits ? `${round4(cumQp)} / ${round2(cumGpaCredits)} = ${round4(cumQp / cumGpaCredits).toFixed(4)}` : "0 / 0 = 0.0000"
+    };
+  });
+}
+
+function buildOfficialRows(summaries, computedTermSummaries, honors) {
+  const semesterRows = summaries.filter(r => r["Summary Type"] === "Semester Summary");
+  const cumulativeRows = summaries.filter(r => r["Summary Type"] === "Cumulative Summary");
+  const honorByTerm = {};
+  honors.forEach(h => honorByTerm[h.Term] = h["Official Honor From Transcript"]);
+
+  const cumulative = cumulativeRows.map(row => {
+    const comp = computedTermSummaries.find(r => r.Term === row.Term) || {};
+    const officialQp = row["Earned Credits"] ? row.GPA * row["Earned Credits"] : 0;
+
+    return {
+      Term: row.Term,
+      "Official Cumulative Attempted Credits": row["Attempted Credits"],
+      "Official Cumulative GPA Credits": row["Earned Credits"],
+      "Official Cumulative GPA": row.GPA,
+      "Official Cumulative Quality Points (Back-Calculated)": round4(officialQp),
+      "Official Cumulative GPA Computation": row["Earned Credits"] ? `${round4(officialQp)} / ${round2(row["Earned Credits"])} = ${Number(row.GPA).toFixed(4)}` : "",
+      "Computed Cumulative GPA Credits": comp["Computed Cumulative GPA Credits"] ?? "",
+      "Computed Cumulative Quality Points": comp["Computed Cumulative Quality Points"] ?? "",
+      "Computed Cumulative GPA": comp["Computed Cumulative GPA"] ?? "",
+      "Computed Cumulative GPA Computation": comp["Computed Cumulative GPA Computation"] ?? "",
+      "Cumulative GPA Difference": comp["Computed Cumulative GPA"] !== undefined ? round4(comp["Computed Cumulative GPA"] - row.GPA) : "",
+      "Cumulative GPA Credit Difference": comp["Computed Cumulative GPA Credits"] !== undefined ? round2(comp["Computed Cumulative GPA Credits"] - row["Earned Credits"]) : ""
+    };
+  }).sort((a, b) => termSortKey(a.Term) - termSortKey(b.Term));
+
+  const terms = [...new Set([...semesterRows.map(r => r.Term), ...computedTermSummaries.map(r => r.Term)])]
+    .sort((a, b) => termSortKey(a) - termSortKey(b));
+
+  const termSummary = terms.map(term => {
+    const officialSem = semesterRows.find(r => r.Term === term) || {};
+    const officialCum = cumulative.find(r => r.Term === term) || {};
+    const comp = computedTermSummaries.find(r => r.Term === term) || {};
+    const officialHonor = honorByTerm[term] || honorListFromGpa(officialSem.GPA);
+    const computedHonor = honorListFromGpa(comp["Computed Semester GPA"]);
+
+    return {
+      Term: term,
+      "Official Semester GPA": officialSem.GPA ?? "",
+      "Official Semester Attempted Credits": officialSem["Attempted Credits"] ?? "",
+      "Official Semester Earned Credits": officialSem["Earned Credits"] ?? "",
+      "Computed Semester GPA": comp["Computed Semester GPA"] ?? "",
+      "Computed Semester GPA Computation": comp["Computed Semester GPA Computation"] ?? "",
+      "Semester GPA Difference": officialSem.GPA !== undefined && comp["Computed Semester GPA"] !== undefined ? round4(comp["Computed Semester GPA"] - officialSem.GPA) : "",
+      "Official Cumulative GPA": officialCum["Official Cumulative GPA"] ?? "",
+      "Computed Cumulative GPA": comp["Computed Cumulative GPA"] ?? "",
+      "Cumulative GPA Difference": officialCum["Official Cumulative GPA"] !== undefined && comp["Computed Cumulative GPA"] !== undefined ? round4(comp["Computed Cumulative GPA"] - officialCum["Official Cumulative GPA"]) : "",
+      "Official Honor/List Status": officialHonor,
+      "Computed Honor/List Status": computedHonor,
+      "Honor/List Match": officialHonor === computedHonor ? "Yes" : "Review"
+    };
+  });
+
+  return { cumulative, termSummary };
+}
+
+function validate(tables) {
+  const issues = [];
+  const dash = tables["1_Dashboard"][0];
+
+  if (dash["Final Official Cumulative GPA"] !== "" && Math.abs(Number(dash["GPA Difference"])) > 0.0001) {
+    issues.push({
+      Level: "WARNING",
+      Issue: "Final computed GPA does not match official GPA",
+      Details: `Computed ${dash["Final Computed Cumulative GPA"]}, official ${dash["Final Official Cumulative GPA"]}`
+    });
+  }
+
+  if (dash["Final Official GPA Credits"] !== "" && Number(dash["Final Computed GPA Credits"]) !== Number(dash["Final Official GPA Credits"])) {
+    issues.push({
+      Level: "WARNING",
+      Issue: "Final computed GPA credits do not match official GPA credits",
+      Details: `Computed ${dash["Final Computed GPA Credits"]}, official ${dash["Final Official GPA Credits"]}`
+    });
+  }
+
+  tables["4_Term_Summary"].forEach(row => {
+    if (row["Official Semester GPA"] !== "" && row["Semester GPA Difference"] !== "" && Math.abs(Number(row["Semester GPA Difference"])) > 0.0001) {
+      issues.push({
+        Level: "WARNING",
+        Issue: "Semester GPA mismatch",
+        Term: row.Term,
+        Details: `Computed ${row["Computed Semester GPA"]}, official ${row["Official Semester GPA"]}`
+      });
+    }
+  });
+
+  if (tables["8_Suspicious_Merged_Rows"] && tables["8_Suspicious_Merged_Rows"].length) {
+    issues.push({
+      Level: "WARNING",
+      Issue: "Suspicious merged course rows detected",
+      Details: `${tables["8_Suspicious_Merged_Rows"].length} row(s) were excluded because a second course code appeared inside the parsed title.`
+    });
+  }
+
+  if (!issues.length) {
+    issues.push({
+      Level: "OK",
+      Issue: "No reconciliation warnings",
+      Details: "Official and computed values match within tolerance."
+    });
+  }
+
+  return issues;
+}
+
+function buildTables(parsed) {
+  if (!parsed.courses.length) {
+    throw new Error("No courses were parsed from the PDF. Check the transcript layout or PDF text extraction.");
+  }
+
+  const courseInput = addSchoolYearFields(sortBySchoolYearTerm(parsed.courses));
+  const computedCourses = addSchoolYearFields(sortBySchoolYearTerm(computeCourses(parsed.courses)));
+  const computedTermSummaries = computeTermSummaries(computedCourses);
+  const official = buildOfficialRows(parsed.summaries, computedTermSummaries, parsed.honors || []);
+
+  const finalOfficial = official.cumulative[official.cumulative.length - 1] || null;
+  const finalComputed = computedTermSummaries[computedTermSummaries.length - 1] || null;
+  const repeated = computedCourses.filter(r => r["Repeated Course"]);
+  const excluded = computedCourses.filter(r => !r["Counts In Computed GPA"]);
+  const suspicious = computedCourses.filter(r => r["Suspicious Merged Course Row"]);
+
+  const dashboard = [{
+    "Final Official Cumulative GPA": finalOfficial ? finalOfficial["Official Cumulative GPA"] : "",
+    "Final Official GPA Credits": finalOfficial ? finalOfficial["Official Cumulative GPA Credits"] : "",
+    "Final Official Quality Points (Back-Calculated)": finalOfficial ? finalOfficial["Official Cumulative Quality Points (Back-Calculated)"] : "",
+    "Final Official GPA Computation": finalOfficial ? finalOfficial["Official Cumulative GPA Computation"] : "",
+    "Final Computed Cumulative GPA": finalComputed ? finalComputed["Computed Cumulative GPA"] : "",
+    "Final Computed GPA Credits": finalComputed ? finalComputed["Computed Cumulative GPA Credits"] : "",
+    "Final Computed Quality Points": finalComputed ? finalComputed["Computed Cumulative Quality Points"] : "",
+    "Final Computed GPA Computation": finalComputed ? finalComputed["Computed Cumulative GPA Computation"] : "",
+    "GPA Difference": finalOfficial && finalComputed ? round4(finalComputed["Computed Cumulative GPA"] - finalOfficial["Official Cumulative GPA"]) : "",
+    "GPA Credit Difference": finalOfficial && finalComputed ? round2(finalComputed["Computed Cumulative GPA Credits"] - finalOfficial["Official Cumulative GPA Credits"]) : "",
+    "Total Credits Including Transfers": parsed.totals["Total Credits Including Transfers"] ?? "",
+    "Parsed Course Rows": parsed.courses.length,
+    "Course Input Arrangement": "Sorted by Academic Year using FALL → SPRING → SUMMER order, then course code",
+    "Parsed Official Summary Rows": parsed.summaries.length,
+    "Parsed Terms": computedTermSummaries.length,
+    "Excluded Rows": excluded.length,
+    "Repeated Rows": repeated.length,
+    "Suspicious Merged Rows": suspicious.length,
+    "Formula Used": "Exclude *, P/NP/W/AU/RPL/T/I; count only latest graded attempt; GPA credits use earned credits with letter grades.",
+    "Status": "Computed"
+  }];
+
+  const creditAudit = [{
+    "Raw Parsed Attempted Credits": round2(computedCourses.reduce((s, r) => s + r["Attempted Credits"], 0)),
+    "Raw Parsed Earned Credits": round2(computedCourses.reduce((s, r) => s + r["Earned Credits"], 0)),
+    "Computed GPA Credits": round2(computedCourses.reduce((s, r) => s + r["Computed GPA Credits"], 0)),
+    "Computed Quality Points": round4(computedCourses.reduce((s, r) => s + r["Computed Quality Points"], 0)),
+    "Official Final GPA Credits": finalOfficial ? finalOfficial["Official Cumulative GPA Credits"] : "",
+    "Official Total Credits Including Transfers": parsed.totals["Total Credits Including Transfers"] ?? "",
+    "Computed vs Official GPA Credit Difference": finalOfficial ? round2(computedCourses.reduce((s, r) => s + r["Computed GPA Credits"], 0) - finalOfficial["Official Cumulative GPA Credits"]) : ""
+  }];
+
+  const honorRows = official.termSummary.map(r => ({
+    Term: r.Term,
+    "Official Semester GPA": r["Official Semester GPA"],
+    "Computed Semester GPA": r["Computed Semester GPA"],
+    "Official Honor/List Status": r["Official Honor/List Status"],
+    "Computed Honor/List Status": r["Computed Honor/List Status"],
+    "Honor/List Match": r["Honor/List Match"]
+  }));
+
+  const tables = {
+    "1_Dashboard": dashboard,
+    "2_Course_Input": courseInput,
+    "3_Course_Computation": computedCourses,
+    "4_Term_Summary": official.termSummary,
+    "5_Cumulative_Reconciliation": official.cumulative,
+    "6_Repeated_Courses": repeated,
+    "7_Excluded_From_GPA": excluded,
+    "8_Suspicious_Merged_Rows": suspicious,
+    "9_Credit_Audit": creditAudit,
+    "10_Honor_List_Status": honorRows,
+    "11_Grading_Legend": [
+      { Item: "A", Value: 4.0 },
+      { Item: "B+", Value: 3.5 },
+      { Item: "B", Value: 3.0 },
+      { Item: "C+", Value: 2.5 },
+      { Item: "C", Value: 2.0 },
+      { Item: "D+", Value: 1.5 },
+      { Item: "D", Value: 1.0 },
+      { Item: "F", Value: 0.0 },
+      {},
+      { Item: "President's List", Value: "Semester GPA = 4.0000" },
+      { Item: "Dean's List", Value: "Semester GPA 3.8000 to 3.9900" },
+      { Item: "Honors List", Value: "Semester GPA 3.5000 to 3.7900" }
+    ],
+    "12_Normalized_Text_Lines": parsed.normalizedLines.map((line, i) => ({ Row: i + 1, Line: line }))
+  };
+
+  tables["Validation_Check"] = validate(tables);
+  tables["1_Dashboard"][0]["Status"] = tables["Validation_Check"].some(v => v.Level === "WARNING" || v.Level === "ERROR")
+    ? "Review"
+    : "Reconciled";
+
+  return tables;
+}
+
+function exportWorkbook(tables) {
+  const wb = XLSX.utils.book_new();
+  Object.entries(tables).forEach(([name, data]) => {
+    const ws = XLSX.utils.json_to_sheet(data.length ? data : [{}]);
+    XLSX.utils.book_append_sheet(wb, ws, name.substring(0, 31));
+  });
+  XLSX.writeFile(wb, "transcript_analysis_rebuilt.xlsx");
+}
+
+function TableView({ rows }) {
+  if (!rows || !rows.length) return <p className="small">No records.</p>;
+  const columns = Array.from(new Set(rows.flatMap(row => Object.keys(row))));
+
+  return (
+    <div style={{ overflowX: "auto", maxHeight: "650px" }}>
+      <table>
+        <thead>
+          <tr>{columns.map(col => <th key={col}>{col}</th>)}</tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={i}>{columns.map(col => <td key={col}>{String(row[col] ?? "")}</td>)}</tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function App() {
+  const [fileName, setFileName] = React.useState("");
+  const [lines, setLines] = React.useState([]);
+  const [tables, setTables] = React.useState(null);
+  const [activeTab, setActiveTab] = React.useState("1_Dashboard");
+  const [error, setError] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
+
+  async function handleFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setFileName(file.name);
+    setError("");
+    setLoading(true);
+    setTables(null);
+    setLines([]);
+
+    try {
+      const extractedLines = await extractPdfLines(file);
+      setLines(extractedLines);
+      const parsed = parseTranscript(extractedLines);
+      const builtTables = buildTables(parsed);
+      setTables(builtTables);
+      setActiveTab("1_Dashboard");
+    } catch (err) {
+      setError((err && err.message) ? err.message : String(err));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const dashboard = tables ? tables["1_Dashboard"][0] : null;
+  const validation = tables ? tables["Validation_Check"] : [];
+  const hasWarnings = validation.some(v => v.Level === "WARNING");
+  const hasErrors = validation.some(v => v.Level === "ERROR");
+
+  return (
+    <div className="container">
+      <div className="card">
+        <h1>CMI Transcript GPA Analyzer - Rebuilt</h1>
+        <p className="small">
+          Upload a transcript PDF. This rebuilt version separates official transcript summaries from computed GPA values so reconciliation is easier to audit. Course Input is arranged by academic year using FALL → SPRING → SUMMER ordering.
+        </p>
+
+        <div className="grid">
+          <div>
+            <label><strong>Transcript PDF</strong></label>
+            <input type="file" accept="application/pdf" onChange={handleFile} />
+          </div>
+          <div className="metric">
+            <div className="metric-label">Status</div>
+            <div className={hasErrors ? "metric-value error" : hasWarnings ? "metric-value warn" : "metric-value ok"}>
+              {loading ? "Reading..." : dashboard ? dashboard["Status"] : "Ready"}
+            </div>
+          </div>
+        </div>
+
+        <div className="policy">
+          <strong>Computation policy</strong>
+          <div className="small">
+            Exclude courses marked <strong>*</strong> and grades <strong>P, NP, W, AU, RPL, T, I</strong>.
+            Use <strong>earned credits with letter grades</strong> for GPA credits.
+            For repeated courses, count only the <strong>latest graded attempt</strong>.
+            Official cumulative GPA computation is back-calculated from the transcript's official cumulative GPA and official GPA credits. Merged course rows are split before parsing; suspicious merged rows are excluded and listed for review.
+          </div>
+        </div>
+
+        {fileName && <p className="small">Selected file: <strong>{fileName}</strong></p>}
+        {loading && <p className="warn">Reading and analyzing PDF...</p>}
+        {error && <p className="error">{error}</p>}
+      </div>
+
+      {dashboard && (
+        <div className="card">
+          <h2>Computation Result</h2>
+          <div className="grid">
+            <div className="metric">
+              <div className="metric-label">Official Cumulative GPA</div>
+              <div className="metric-value">{Number(dashboard["Final Official Cumulative GPA"]).toFixed(4)}</div>
+            </div>
+            <div className="metric">
+              <div className="metric-label">Computed Cumulative GPA</div>
+              <div className="metric-value">{Number(dashboard["Final Computed Cumulative GPA"]).toFixed(4)}</div>
+            </div>
+            <div className="metric">
+              <div className="metric-label">GPA Difference</div>
+              <div className="metric-value">{Number(dashboard["GPA Difference"]).toFixed(4)}</div>
+            </div>
+            <div className="metric">
+              <div className="metric-label">Official GPA Computation</div>
+              <div className="metric-value" style={{fontSize: "16px"}}>{dashboard["Final Official GPA Computation"]}</div>
+            </div>
+            <div className="metric">
+              <div className="metric-label">Computed GPA Computation</div>
+              <div className="metric-value" style={{fontSize: "16px"}}>{dashboard["Final Computed GPA Computation"]}</div>
+            </div>
+            <div className="metric">
+              <div className="metric-label">GPA Credit Difference</div>
+              <div className="metric-value">{dashboard["GPA Credit Difference"]}</div>
+            </div>
+          </div>
+
+          <button onClick={() => exportWorkbook(tables)}>Export Excel Workbook</button>
+        </div>
+      )}
+
+      {tables && (
+        <div className="card">
+          <h2>Workbook Tabs</h2>
+          <div className="tabs">
+            {Object.keys(tables).map(name => (
+              <button
+                key={name}
+                className={activeTab === name ? "tab active" : "tab"}
+                onClick={() => setActiveTab(name)}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+
+          <h3>{activeTab}</h3>
+          <TableView rows={tables[activeTab]} />
+        </div>
+      )}
+
+      {lines.length > 0 && (
+        <div className="card">
+          <h2>Extracted PDF Text Lines</h2>
+          <p className="small">Raw text from PDF.js for troubleshooting.</p>
+          <textarea readOnly value={lines.join("\n")} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
