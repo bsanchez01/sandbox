@@ -185,6 +185,16 @@ function parseCourses(lines, gradeScale) {
   return dedupeCourses(courses);
 }
 function isDevelopmental(courseNumber) { return String(courseNumber).trim().startsWith("0"); }
+function buildCourseGpaFormula(course, includeInGpa, reasons) {
+  if (!includeInGpa) {
+    return `Excluded from GPA: ${reasons.join("; ")}. GPA credits = 0; quality points = 0.`;
+  }
+  const credits = round4(course.gpa_credits);
+  const points = Number(course.grade_points).toFixed(2);
+  const qp = round4(course.calculated_quality_points || 0);
+  return `Included in GPA: attempted credits (${credits}) × grade points (${points}) = quality points (${qp}). Overall GPA = total quality points ÷ total GPA credits.`;
+}
+
 function applyRules(courses) {
   const latestByCourse = {};
   const validAttemptCounts = {};
@@ -203,12 +213,14 @@ function applyRules(courses) {
     if (isDevelopmental(c.course_number)) reasons.push("Developmental Education course; course number starts with 0");
     if (VALID_LETTER_GRADES.has(c.grade) && latestByCourse[c.course_id] !== i) reasons.push("repeated course; earlier graded attempt excluded");
     if (VALID_LETTER_GRADES.has(c.grade) && c.grade_points === null) reasons.push("grade missing from grade-point scale");
+    const includeInGpa = reasons.length === 0;
     return {
       ...c,
       latest_graded_attempt: latest,
-      include_in_gpa: reasons.length === 0,
+      include_in_gpa: includeInGpa,
+      "GPA Formula": buildCourseGpaFormula(c, includeInGpa, reasons),
       exclusion_reason: reasons.join("; "),
-      repeat_action: validAttemptCounts[c.course_id] > 1 ? (reasons.length === 0 ? "counted latest graded attempt" : "excluded earlier graded attempt") : ""
+      repeat_action: validAttemptCounts[c.course_id] > 1 ? (includeInGpa ? "counted latest graded attempt" : "excluded earlier graded attempt") : ""
     };
   });
 }
@@ -218,6 +230,35 @@ function totals(courses) {
   const qps = round4(included.reduce((s, c) => s + (c.calculated_quality_points || 0), 0));
   const gpa = credits ? round4(qps / credits) : null;
   return { credits, qps, gpa };
+}
+
+function termSortKey(term) {
+  const m = String(term || "").match(/^(FALL|SPRING|SUMMER|WINTER)\s+(\d{4})\/(\d{2})$/i);
+  if (!m) return 99999999;
+  const seasonOrder = { FALL: 1, WINTER: 2, SPRING: 3, SUMMER: 4 };
+  return Number(m[2]) * 10 + (seasonOrder[m[1].toUpperCase()] || 9);
+}
+function buildSemesterSummaryGpa(courses) {
+  const terms = Array.from(new Set(courses.map(c => c.term || "No Term Found"))).sort((a, b) => termSortKey(a) - termSortKey(b));
+  return terms.map(term => {
+    const termRows = courses.filter(c => (c.term || "No Term Found") === term);
+    const included = termRows.filter(c => c.include_in_gpa);
+    const excluded = termRows.filter(c => !c.include_in_gpa);
+    const credits = round4(included.reduce((s, c) => s + c.gpa_credits, 0));
+    const qps = round4(included.reduce((s, c) => s + (c.calculated_quality_points || 0), 0));
+    const gpa = credits ? round4(qps / credits) : "";
+    return {
+      Term: term,
+      "Included GPA Course Rows": included.length,
+      "Excluded Course Rows": excluded.length,
+      "Semester GPA Credits": credits,
+      "Semester Quality Points": qps,
+      "Semester GPA": gpa,
+      "Semester GPA Formula": credits ? `${qps} ÷ ${credits} = ${Number(gpa).toFixed(4)}` : "No included GPA credits for this term",
+      "Included Courses": included.map(c => `${c.course_id} (${c.grade}: ${c.gpa_credits} × ${c.grade_points} = ${c.calculated_quality_points})`).join("; "),
+      "Excluded Courses": excluded.map(c => `${c.course_id} (${c.grade}: ${c.exclusion_reason || "excluded"})`).join("; ")
+    };
+  });
 }
 function buildTables(courses, rawText, transcriptGpa) {
   const { credits, qps, gpa } = totals(courses);
@@ -243,6 +284,7 @@ function buildTables(courses, rawText, transcriptGpa) {
   const rawExtract = rawText.split(/\n/).map(line => ({ "Raw extracted text line": line }));
   return {
     Summary: summary,
+    Semester_Summary_GPA: buildSemesterSummaryGpa(courses),
     Courses: courses,
     Included_GPA: included,
     Exclusions: excluded,
