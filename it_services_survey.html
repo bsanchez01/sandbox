@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IT Services Survey Analysis Report</title>
+
+  <!-- CDN-only dependencies: React, ReactDOM, Babel, SheetJS, Chart.js -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      --navy:#073763; --navy2:#0b4f78; --teal:#008c95; --teal2:#00a6a6;
+      --white:#fff; --gray50:#f7fafc; --gray100:#edf2f7; --gray200:#e2e8f0;
+      --gray500:#64748b; --gray700:#334155; --gray900:#0f172a;
+      --success:#0f766e; --warning:#b45309; --danger:#b91c1c;
+      --shadow:0 10px 25px rgba(7,55,99,.10); --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(180deg,#f4f8fb 0%,#eef5f6 100%);color:var(--gray900);font-size:16px;line-height:1.5}
+    .page{max-width:1420px;margin:0 auto;padding:24px}
+    .hero{background:linear-gradient(135deg,var(--navy),var(--teal));color:var(--white);border-radius:26px;padding:30px;box-shadow:var(--shadow);display:grid;grid-template-columns:1fr auto;gap:18px;align-items:center}
+    .hero h1{margin:0;font-size:clamp(1.8rem,4vw,3rem);letter-spacing:-.03em}
+    .hero p{margin:6px 0 0;font-size:clamp(1rem,2vw,1.2rem);opacity:.9}
+    .upload-box{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);border-radius:18px;padding:16px;min-width:310px}
+    .file-label,.export-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;font-weight:850;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease,background .2s ease}
+    .file-label{width:100%;padding:12px 16px;background:var(--white);color:var(--navy)}
+    .file-label:hover,.export-button:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,0,0,.15)}
+    input[type=file]{display:none}
+    .file-name{margin-top:10px;font-size:.9rem;opacity:.95;word-break:break-word}
+    .export-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .export-button{padding:11px 14px;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.18);color:var(--white);min-width:136px}
+    .export-button:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+    .export-note{margin-top:8px;font-size:.82rem;opacity:.9}
+    .notice,.error{margin:22px 0;border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);background:var(--white);border-left:6px solid var(--teal)}
+    .error{border-left-color:var(--danger);color:var(--danger)}
+    .toolbar{margin:20px 0;display:grid;grid-template-columns:minmax(220px,1fr) 260px;gap:14px}
+    input,select,button{font:inherit;border:1px solid var(--gray200);border-radius:12px;padding:11px 13px;background:var(--white);color:var(--gray900)}
+    input:focus,select:focus,button:focus{outline:3px solid rgba(0,140,149,.2);border-color:var(--teal)}
+    button{cursor:pointer;font-weight:700}
+    .grid{display:grid;gap:18px}
+    .cards{grid-template-columns:repeat(5,minmax(160px,1fr));margin:20px 0}
+    .two-col{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+    .card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid rgba(226,232,240,.8);padding:20px;min-width:0}
+    .metric-label{color:var(--gray500);font-weight:800;text-transform:uppercase;letter-spacing:.06em;font-size:.78rem}
+    .metric-value{margin-top:8px;color:var(--navy);font-size:clamp(1.6rem,3vw,2.4rem);font-weight:900;letter-spacing:-.04em}
+    .metric-note{margin-top:4px;color:var(--gray500);font-size:.9rem}
+    .section-title{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}
+    .section-title h2{margin:0;color:var(--navy);font-size:1.25rem}
+    .section-title span{color:var(--gray500);font-size:.92rem}
+    .chart-wrap{position:relative;height:320px}
+    .chart-wrap.tall{height:520px}
+    table{width:100%;border-collapse:collapse;font-size:.94rem}
+    th,td{padding:11px 10px;border-bottom:1px solid var(--gray100);text-align:left;vertical-align:top}
+    th{color:var(--navy);background:var(--gray50);font-weight:900;cursor:pointer;user-select:none}
+    tr:hover td{background:#fbfdff}.right{text-align:right}
+    .rank-card{display:grid;grid-template-columns:42px 1fr auto;gap:12px;align-items:center;padding:13px;border-radius:14px;margin-bottom:10px;border:1px solid var(--gray100);background:var(--gray50)}
+    .rank-num{width:42px;height:42px;border-radius:999px;display:grid;place-items:center;font-weight:900;color:#fff;background:var(--teal)}
+    .rank-card.low .rank-num{background:var(--warning)}
+    .rank-name{font-weight:850;color:var(--gray900)}.rank-score{font-weight:900;color:var(--navy)}
+    .comments-list{display:grid;gap:10px;max-height:460px;overflow:auto;padding-right:4px}
+    .comment{border:1px solid var(--gray100);background:var(--gray50);border-radius:14px;padding:13px}
+    .comment-meta{color:var(--gray500);font-size:.86rem;font-weight:800;margin-bottom:6px}
+    .theme-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:#e6fffb;color:var(--success);font-weight:800;margin:4px 6px 4px 0;font-size:.88rem}
+    .footer{text-align:center;color:var(--gray500);padding:26px 0 10px;font-size:.9rem}
+    @media print{
+      body{background:#fff}.page{max-width:none;padding:0}.hero,.card,.notice,.error{box-shadow:none}
+      .upload-box,.toolbar,.export-actions,.export-note,.footer{display:none!important}
+      .hero{border-radius:0;margin-bottom:12px}.card{break-inside:avoid;page-break-inside:avoid}
+      .grid{gap:12px}.cards{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}
+      .comments-list{max-height:none;overflow:visible}.chart-wrap{height:280px}.chart-wrap.tall{height:380px}
+    }
+    @media (max-width:1100px){.cards{grid-template-columns:repeat(2,minmax(160px,1fr))}.two-col{grid-template-columns:1fr}}
+    @media (max-width:760px){.page{padding:14px}.hero{grid-template-columns:1fr;padding:22px}.upload-box{min-width:0}.toolbar{grid-template-columns:1fr}.cards{grid-template-columns:1fr}.chart-wrap{height:280px}.chart-wrap.tall{height:420px}table{font-size:.86rem}th,td{padding:9px 7px}}
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useEffect, useMemo, useRef, useState } = React;
+
+    const RATING_MAP = {
+      "very satisfied":5, "very satified":5, "excellent":5, "very good":5, "strongly agree":5,
+      "satisfied":4, "good":4, "agree":4,
+      "neutral":3, "average":3, "neither satisfied nor dissatisfied":3,
+      "not satisfied":2, "dissatisfied":2, "poor":2, "disagree":2,
+      "very dissatisfied":1, "very poor":1, "strongly disagree":1,
+      "not applicable":null, "n/a":null, "na":null, "":null
+    };
+
+    const THEME_KEYWORDS = {
+      "WiFi / Internet":["wifi","wi-fi","internet","network","connection","speed","slow","lan","starlink"],
+      "Help Desk / Response Time":["helpdesk","help desk","ticket","respond","response","fast","quick","time","wait"],
+      "Communication":["communication","communicate","update","follow up","explain","clear","hello","kind"],
+      "Printing":["print","printer","printing"],
+      "Moodle / SONIS":["moodle","sonis","lms"],
+      "Equipment / Labs":["computer","lab","dten","zoom","equipment","projector","laptop","tablet"],
+      "Email / Google Apps":["email","gmail","google","drive"],
+      "Website":["website","web","cmi.edu"],
+      "Telephone Support":["telephone","phone","extension","calls"]
+    };
+
+    function normalize(value){ return String(value ?? "").trim(); }
+
+    function ratingValue(value){
+      if (value === null || value === undefined) return null;
+      if (typeof value === "number" && isFinite(value)) return value >= 1 && value <= 5 ? value : null;
+      const text = normalize(value).toLowerCase();
+      if (Object.prototype.hasOwnProperty.call(RATING_MAP, text)) return RATING_MAP[text];
+      const numeric = Number(text.match(/\d+(\.\d+)?/)?.[0]);
+      return numeric >= 1 && numeric <= 5 ? numeric : null;
+    }
+
+    function avg(values){
+      const nums = values.map(ratingValue).filter(v => v !== null && !isNaN(v));
+      return nums.length ? nums.reduce((a,b) => a + b, 0) / nums.length : null;
+    }
+
+    function shortLabel(header){
+      const bracket = String(header).match(/\[(.*?)\]/);
+      let label = bracket ? bracket[1] : String(header);
+      label = label
+        .replace(/^\d+\.\s*/, "")
+        .replace(/How satisfied are you with the following IT services provided by CMI\?\s*/i, "")
+        .replace(/How satisfied are you on the following IT Services\?\s*/i, "")
+        .replace(/How satisfied are you with the following aspects of IT support\?\s*/i, "")
+        .replace(/How well did the IT staff handle your request\?\s*/i, "")
+        .replace(/The IT staff.?s /i, "")
+        .replace(/ability to /i, "")
+        .replace(/level of /i, "")
+        .replace(/\(.*?\)/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+      return label || String(header).slice(0, 60);
+    }
+
+    function detectColumns(headers, rows){
+      const lower = h => String(h).toLowerCase();
+      const typeCol = headers.find(h => /type of cmi user|respondent|role|user type/.test(lower(h))) || headers[1] || headers[0];
+
+      const ratingCols = headers.filter(h => {
+        const sample = rows.slice(0, Math.min(30, rows.length)).map(r => r[h]);
+        const filled = sample.filter(v => normalize(v) !== "").length;
+        const count = sample.filter(v => ratingValue(v) !== null).length;
+        return filled > 0 && count >= Math.max(2, Math.ceil(filled * 0.35));
+      });
+
+      const supportCols = ratingCols.filter(h =>
+        /support|staff|issue|request|service quality|professional|friendly|communicat|resolve|technical|responsiveness|knowledge/i.test(h) &&
+        !/following IT services|IT Services\? \[|Internet|WiFi|Moodle|SONIS|Zoom|Printing|Website|Google|Telephone|Computer Labs|Campus TV|4G|Faculty/i.test(h)
+      );
+
+      const serviceCols = ratingCols.filter(h =>
+        /Internet|WiFi|LAN|Help Desk|Ticket|Chat|Moodle|SONIS|Zoom|DTEN|Computer Labs|Printing|Campus TV|Website|Email|Google|telephone|4G|Faculty|Network Services/i.test(h)
+      );
+
+      const overallCol = ratingCols.find(h => /overall satisfaction/i.test(h)) || ratingCols.find(h => /overall quality/i.test(h));
+
+      const commentCols = headers.filter(h => {
+        const textyHeader = /comment|suggest|feedback|improve|recommend|open/i.test(h);
+        const sampleText = rows.slice(0, 30).some(r => {
+          const value = normalize(r[h]);
+          return value.split(/\s+/).length >= 4 && ratingValue(value) === null;
+        });
+        return textyHeader || (sampleText && !ratingCols.includes(h) && h !== typeCol);
+      });
+
+      return { typeCol, ratingCols, supportCols, serviceCols, overallCol, commentCols };
+    }
+
+    function aggregateByType(rows, typeCol){
+      const counts = {};
+      rows.forEach(r => {
+        const key = normalize(r[typeCol]) || "Other / Blank";
+        counts[key] = (counts[key] || 0) + 1;
+      });
+      return Object.entries(counts).sort((a,b) => b[1] - a[1]).map(([type,count]) => ({ type, count }));
+    }
+
+    function averagesFor(rows, cols){
+      return cols.map(col => ({
+        column: col,
+        label: shortLabel(col),
+        average: avg(rows.map(r => r[col])),
+        responses: rows.map(r => ratingValue(r[col])).filter(v => v !== null).length
+      })).filter(x => x.average !== null).sort((a,b) => b.average - a.average);
+    }
+
+    function findThemes(comments){
+      const counts = {};
+      comments.forEach(c => {
+        const text = c.text.toLowerCase();
+        Object.entries(THEME_KEYWORDS).forEach(([theme, words]) => {
+          if (words.some(w => text.includes(w))) counts[theme] = (counts[theme] || 0) + 1;
+        });
+      });
+      return Object.entries(counts).sort((a,b) => b[1] - a[1]).slice(0, 8).map(([theme,count]) => ({ theme, count }));
+    }
+
+    function useChart(canvasRef, config, deps){
+      useEffect(() => {
+        if (!canvasRef.current || !config) return;
+        const chart = new Chart(canvasRef.current, config);
+        return () => chart.destroy();
+      }, deps);
+    }
+
+    function PieChart({ data }){
+      const ref = useRef(null);
+      useChart(ref, {
+        type: "pie",
+        data: {
+          labels: data.map(d => d.type),
+          datasets: [{ data: data.map(d => d.count), backgroundColor: ["#073763","#008c95","#00a6a6","#8bbdcc","#64748b","#b45309"] }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "bottom" } } }
+      }, [JSON.stringify(data)]);
+      return <canvas ref={ref} aria-label="Respondent demographics pie chart"></canvas>;
+    }
+
+    function BarChart({ data, horizontal=false }){
+      const ref = useRef(null);
+      useChart(ref, {
+        type: "bar",
+        data: {
+          labels: data.map(d => d.label),
+          datasets: [{ label: "Average rating", data: data.map(d => Number(d.average.toFixed(2))), backgroundColor: "#008c95", borderColor: "#073763", borderWidth: 1 }]
+        },
+        options: {
+          indexAxis: horizontal ? "y" : "x",
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { x: { beginAtZero: true, max: horizontal ? 5 : undefined }, y: { beginAtZero: true, max: horizontal ? undefined : 5 } },
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `Average: ${ctx.raw} / 5` } } }
+        }
+      }, [JSON.stringify(data), horizontal]);
+      return <canvas ref={ref} aria-label="Ratings bar chart"></canvas>;
+    }
+
+    function SortableTable({ rows }){
+      const [sort, setSort] = useState({ key:"average", dir:"desc" });
+      const sorted = useMemo(() => [...rows].sort((a,b) => {
+        const av = a[sort.key], bv = b[sort.key];
+        const result = typeof av === "number" ? av - bv : String(av).localeCompare(String(bv));
+        return sort.dir === "asc" ? result : -result;
+      }), [rows, sort]);
+      const click = key => setSort(s => ({ key, dir: s.key === key && s.dir === "desc" ? "asc" : "desc" }));
+      return (
+        <table>
+          <thead><tr><th onClick={() => click("label")}>Category</th><th onClick={() => click("average")} className="right">Average</th><th onClick={() => click("responses")} className="right">Rated responses</th></tr></thead>
+          <tbody>{sorted.map(r => <tr key={r.column}><td>{r.label}</td><td className="right">{r.average.toFixed(2)}</td><td className="right">{r.responses}</td></tr>)}</tbody>
+        </table>
+      );
+    }
+
+    function App(){
+      const initialData = window.__INITIAL_SURVEY_DATA__ || {};
+      const [fileName, setFileName] = useState(initialData.fileName || "");
+      const [error, setError] = useState("");
+      const [rows, setRows] = useState(initialData.rows || []);
+      const [headers, setHeaders] = useState(initialData.headers || []);
+      const [search, setSearch] = useState("");
+      const [typeFilter, setTypeFilter] = useState("All");
+
+      function savePdf(){
+        if (!rows.length) { setError("Upload an Excel file before saving the dashboard as PDF."); return; }
+        setError("");
+        setTimeout(() => window.print(), 100);
+      }
+
+      function saveHtml(){
+        if (!rows.length) { setError("Upload an Excel file before saving the dashboard as HTML."); return; }
+        try {
+          const clone = document.documentElement.cloneNode(true);
+
+          clone.querySelectorAll("script[data-dashboard-state]").forEach(node => node.remove());
+          const oldRoot = clone.querySelector("#root");
+          if (oldRoot) oldRoot.innerHTML = "";
+
+          const stateScript = document.createElement("script");
+          stateScript.setAttribute("data-dashboard-state", "true");
+          stateScript.textContent = "window.__INITIAL_SURVEY_DATA__ = " + JSON.stringify({ fileName, headers, rows }).replace(/</g, "\\u003c") + ";";
+          clone.querySelector("body").insertBefore(stateScript, clone.querySelector("#root"));
+
+          const html = "<!DOCTYPE html>\n" + clone.outerHTML;
+          const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          const safeName = (fileName || "it-services-survey-analysis-report").replace(/\.[^.]+$/, "").replace(/[^a-z0-9_-]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase();
+          a.href = url;
+          a.download = `${safeName || "it-services-survey-analysis-report"}-dashboard.html`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+        } catch (err) {
+          setError(`Could not save the HTML dashboard. ${err.message || err}`);
+        }
+      }
+
+      function handleUpload(event){
+        const file = event.target.files[0];
+        if (!file) return;
+        setFileName(file.name);
+        setError("");
+        const reader = new FileReader();
+        reader.onload = e => {
+          try {
+            const workbook = XLSX.read(new Uint8Array(e.target.result), { type:"array", cellDates:true });
+            const firstSheet = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[firstSheet];
+            const jsonRows = XLSX.utils.sheet_to_json(sheet, { defval:"" });
+            if (!jsonRows.length) throw new Error("The first worksheet does not contain readable survey responses.");
+            setHeaders(Object.keys(jsonRows[0]));
+            setRows(jsonRows);
+          } catch (err) {
+            setRows([]);
+            setHeaders([]);
+            setError(`Could not read the Excel file. ${err.message || err}`);
+          }
+        };
+        reader.onerror = () => setError("Could not read the file. Please try a valid .xlsx or .xls file.");
+        reader.readAsArrayBuffer(file);
+      }
+
+      const detected = useMemo(() => detectColumns(headers, rows), [headers, rows]);
+      const types = useMemo(() => aggregateByType(rows, detected.typeCol).map(d => d.type), [rows, detected.typeCol]);
+      const filteredRows = useMemo(() => rows.filter(r => {
+        const matchesType = typeFilter === "All" || normalize(r[detected.typeCol]) === typeFilter;
+        const q = search.toLowerCase().trim();
+        const matchesSearch = !q || Object.values(r).some(v => String(v).toLowerCase().includes(q));
+        return matchesType && matchesSearch;
+      }), [rows, search, typeFilter, detected.typeCol]);
+
+      const demographics = useMemo(() => aggregateByType(filteredRows, detected.typeCol), [filteredRows, detected.typeCol]);
+      const support = useMemo(() => averagesFor(filteredRows, detected.supportCols), [filteredRows, detected.supportCols]);
+      const services = useMemo(() => averagesFor(filteredRows, detected.serviceCols), [filteredRows, detected.serviceCols]);
+      const allRatings = useMemo(() => averagesFor(filteredRows, detected.ratingCols), [filteredRows, detected.ratingCols]);
+      const overallAverage = useMemo(() => {
+        if (detected.overallCol) return avg(filteredRows.map(r => r[detected.overallCol]));
+        return avg(filteredRows.flatMap(r => detected.ratingCols.map(c => r[c])));
+      }, [filteredRows, detected]);
+
+      const comments = useMemo(() => filteredRows.flatMap((r, idx) =>
+        detected.commentCols.map(col => ({ text: normalize(r[col]), col, type: normalize(r[detected.typeCol]) || "Unknown", idx: idx + 1 }))
+      ).filter(c => c.text && c.text.length > 2 && c.text !== "-"), [filteredRows, detected]);
+
+      const themes = useMemo(() => findThemes(comments), [comments]);
+      const highest = services[0] || allRatings[0];
+      const lowest = [...services].reverse()[0] || [...allRatings].reverse()[0];
+      const top3 = services.slice(0, 3);
+      const bottom3 = [...services].sort((a,b) => a.average - b.average).slice(0, 3);
+
+      return (
+        <div className="page">
+          <header className="hero">
+            <div>
+              <h1>IT Services Survey Analysis Report</h1>
+              <p>College of the Marshall Islands IT Department</p>
+            </div>
+            <div className="upload-box">
+              <label className="file-label">Upload Excel File<input type="file" accept=".xlsx,.xls" onChange={handleUpload} /></label>
+              <div className="file-name">{fileName || "No file selected"}</div>
+              <div className="export-actions" aria-label="Export dashboard options">
+                <button className="export-button" type="button" onClick={savePdf} disabled={!rows.length}>Save PDF</button>
+                <button className="export-button" type="button" onClick={saveHtml} disabled={!rows.length}>Save HTML</button>
+              </div>
+              <div className="export-note">PDF uses your browser print dialog. HTML embeds the uploaded survey data.</div>
+            </div>
+          </header>
+
+          {error && <div className="error">{error}</div>}
+          {!rows.length && !error && <div className="notice">Upload the IT Services Survey Excel file to begin.</div>}
+
+          {!!rows.length && <>
+            <div className="toolbar">
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search/filter responses, comments, or values..." aria-label="Search responses" />
+              <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} aria-label="Filter by respondent type">
+                <option>All</option>{types.map(t => <option key={t}>{t}</option>)}
+              </select>
+            </div>
+
+            <section className="grid cards">
+              <div className="card"><div className="metric-label">Total responses</div><div className="metric-value">{filteredRows.length}</div><div className="metric-note">Filtered from {rows.length}</div></div>
+              <div className="card"><div className="metric-label">Respondent types</div><div className="metric-value">{demographics.length}</div><div className="metric-note">Role/type groups</div></div>
+              <div className="card"><div className="metric-label">Highest-rated IT service</div><div className="metric-value" style={{fontSize:"1.25rem"}}>{highest?.label || "N/A"}</div><div className="metric-note">{highest ? `${highest.average.toFixed(2)} / 5` : "No rating data"}</div></div>
+              <div className="card"><div className="metric-label">Lowest-rated IT service</div><div className="metric-value" style={{fontSize:"1.25rem"}}>{lowest?.label || "N/A"}</div><div className="metric-note">{lowest ? `${lowest.average.toFixed(2)} / 5` : "No rating data"}</div></div>
+              <div className="card"><div className="metric-label">Overall satisfaction average</div><div className="metric-value">{overallAverage ? overallAverage.toFixed(2) : "N/A"}</div><div className="metric-note">5-point scale</div></div>
+            </section>
+
+            <section className="grid two-col">
+              <div className="card"><div className="section-title"><h2>Respondent Demographics</h2><span>Count by role/type</span></div><div className="chart-wrap"><PieChart data={demographics} /></div></div>
+              <div className="card">
+                <div className="section-title"><h2>Demographics Table</h2><span>Count and share</span></div>
+                <table><thead><tr><th>Respondent Type</th><th className="right">Count</th><th className="right">Share</th></tr></thead>
+                <tbody>{demographics.map(d => <tr key={d.type}><td>{d.type}</td><td className="right">{d.count}</td><td className="right">{filteredRows.length ? ((d.count / filteredRows.length) * 100).toFixed(1) : 0}%</td></tr>)}</tbody></table>
+              </div>
+            </section>
+
+            <section className="grid two-col" style={{marginTop:18}}>
+              <div className="card"><div className="section-title"><h2>IT Support Performance</h2><span>Average rating by support category</span></div><div className="chart-wrap"><BarChart data={support} /></div></div>
+              <div className="card"><div className="section-title"><h2>Support Performance Table</h2><span>Sortable</span></div><SortableTable rows={support} /></div>
+            </section>
+
+            <section className="card" style={{marginTop:18}}>
+              <div className="section-title"><h2>IT Services Satisfaction</h2><span>Ranked average satisfaction score</span></div>
+              <div className="grid two-col"><div className="chart-wrap tall"><BarChart data={services} horizontal={true} /></div><div><SortableTable rows={services} /></div></div>
+            </section>
+
+            <section className="grid two-col" style={{marginTop:18}}>
+              <div className="card"><div className="section-title"><h2>Top 3 Strengths</h2><span>Highest-rated services</span></div>{top3.map((r,i) => <div className="rank-card" key={r.column}><div className="rank-num">{i+1}</div><div className="rank-name">{r.label}</div><div className="rank-score">{r.average.toFixed(2)}</div></div>)}</div>
+              <div className="card"><div className="section-title"><h2>Top 3 Improvement Areas</h2><span>Lowest-rated services</span></div>{bottom3.map((r,i) => <div className="rank-card low" key={r.column}><div className="rank-num">{i+1}</div><div className="rank-name">{r.label}</div><div className="rank-score">{r.average.toFixed(2)}</div></div>)}</div>
+            </section>
+
+            <section className="grid two-col" style={{marginTop:18}}>
+              <div className="card"><div className="section-title"><h2>Common Feedback Themes</h2><span>Keyword grouped</span></div>{themes.length ? themes.map(t => <span className="theme-chip" key={t.theme}>{t.theme}: {t.count}</span>) : <p>No recurring themes detected from the current filter.</p>}</div>
+              <div className="card"><div className="section-title"><h2>Open-Ended Feedback</h2><span>{comments.length} comments</span></div><div className="comments-list">{comments.length ? comments.map((c,i) => <div className="comment" key={i}><div className="comment-meta">{c.type} · {shortLabel(c.col)}</div><div>{c.text}</div></div>) : <p>No comments found for the current filter.</p>}</div></div>
+            </section>
+          </>}
+
+          <div className="footer">Single-file browser dashboard · Data stays in your browser · Built for CMI IT Services Survey review</div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
