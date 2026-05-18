@@ -38,12 +38,12 @@
     .export-note{margin-top:8px;font-size:.82rem;opacity:.9}
     .notice,.error{margin:22px 0;border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);background:var(--white);border-left:6px solid var(--teal)}
     .error{border-left-color:var(--danger);color:var(--danger)}
-    .toolbar{margin:20px 0;display:grid;grid-template-columns:minmax(220px,1fr) 260px;gap:14px}
+    .toolbar{margin:20px 0;display:grid;grid-template-columns:minmax(220px,1fr) 240px 240px;gap:14px}
     input,select,button{font:inherit;border:1px solid var(--gray200);border-radius:12px;padding:11px 13px;background:var(--white);color:var(--gray900)}
     input:focus,select:focus,button:focus{outline:3px solid rgba(0,140,149,.2);border-color:var(--teal)}
     button{cursor:pointer;font-weight:700}
     .grid{display:grid;gap:18px}
-    .cards{grid-template-columns:repeat(5,minmax(160px,1fr));margin:20px 0}
+    .cards{grid-template-columns:repeat(6,minmax(150px,1fr));margin:20px 0}
     .two-col{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
     .card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid rgba(226,232,240,.8);padding:20px;min-width:0}
     .metric-label{color:var(--gray500);font-weight:800;text-transform:uppercase;letter-spacing:.06em;font-size:.78rem}
@@ -142,6 +142,7 @@
     function detectColumns(headers, rows){
       const lower = h => String(h).toLowerCase();
       const typeCol = headers.find(h => /type of cmi user|respondent|role|user type/.test(lower(h))) || headers[1] || headers[0];
+      const genderCol = headers.find(h => /(^|\b)(gender|sex)(\b|$)/i.test(String(h)) || /male|female|nonbinary|non-binary/i.test(String(h)));
 
       const ratingCols = headers.filter(h => {
         const sample = rows.slice(0, Math.min(30, rows.length)).map(r => r[h]);
@@ -167,13 +168,14 @@
           const value = normalize(r[h]);
           return value.split(/\s+/).length >= 4 && ratingValue(value) === null;
         });
-        return textyHeader || (sampleText && !ratingCols.includes(h) && h !== typeCol);
+        return textyHeader || (sampleText && !ratingCols.includes(h) && h !== typeCol && h !== genderCol);
       });
 
-      return { typeCol, ratingCols, supportCols, serviceCols, overallCol, commentCols };
+      return { typeCol, genderCol, ratingCols, supportCols, serviceCols, overallCol, commentCols };
     }
 
     function aggregateByType(rows, typeCol){
+      if (!typeCol) return [];
       const counts = {};
       rows.forEach(r => {
         const key = normalize(r[typeCol]) || "Other / Blank";
@@ -266,6 +268,7 @@
       const [headers, setHeaders] = useState(initialData.headers || []);
       const [search, setSearch] = useState("");
       const [typeFilter, setTypeFilter] = useState("All");
+      const [genderFilter, setGenderFilter] = useState("All");
 
       function savePdf(){
         if (!rows.length) { setError("Upload an Excel file before saving the dashboard as PDF."); return; }
@@ -330,14 +333,17 @@
 
       const detected = useMemo(() => detectColumns(headers, rows), [headers, rows]);
       const types = useMemo(() => aggregateByType(rows, detected.typeCol).map(d => d.type), [rows, detected.typeCol]);
+      const genders = useMemo(() => detected.genderCol ? aggregateByType(rows, detected.genderCol).map(d => d.type) : [], [rows, detected.genderCol]);
       const filteredRows = useMemo(() => rows.filter(r => {
         const matchesType = typeFilter === "All" || normalize(r[detected.typeCol]) === typeFilter;
+        const matchesGender = !detected.genderCol || genderFilter === "All" || normalize(r[detected.genderCol]) === genderFilter;
         const q = search.toLowerCase().trim();
         const matchesSearch = !q || Object.values(r).some(v => String(v).toLowerCase().includes(q));
-        return matchesType && matchesSearch;
-      }), [rows, search, typeFilter, detected.typeCol]);
+        return matchesType && matchesGender && matchesSearch;
+      }), [rows, search, typeFilter, genderFilter, detected.typeCol, detected.genderCol]);
 
       const demographics = useMemo(() => aggregateByType(filteredRows, detected.typeCol), [filteredRows, detected.typeCol]);
+      const genderDemographics = useMemo(() => detected.genderCol ? aggregateByType(filteredRows, detected.genderCol) : [], [filteredRows, detected.genderCol]);
       const support = useMemo(() => averagesFor(filteredRows, detected.supportCols), [filteredRows, detected.supportCols]);
       const services = useMemo(() => averagesFor(filteredRows, detected.serviceCols), [filteredRows, detected.serviceCols]);
       const allRatings = useMemo(() => averagesFor(filteredRows, detected.ratingCols), [filteredRows, detected.ratingCols]);
@@ -383,11 +389,15 @@
               <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} aria-label="Filter by respondent type">
                 <option>All</option>{types.map(t => <option key={t}>{t}</option>)}
               </select>
+              <select value={genderFilter} onChange={e => setGenderFilter(e.target.value)} aria-label="Filter by gender" disabled={!detected.genderCol}>
+                <option>All</option>{genders.map(g => <option key={g}>{g}</option>)}
+              </select>
             </div>
 
             <section className="grid cards">
               <div className="card"><div className="metric-label">Total responses</div><div className="metric-value">{filteredRows.length}</div><div className="metric-note">Filtered from {rows.length}</div></div>
               <div className="card"><div className="metric-label">Respondent types</div><div className="metric-value">{demographics.length}</div><div className="metric-note">Role/type groups</div></div>
+              <div className="card"><div className="metric-label">Gender groups</div><div className="metric-value">{detected.genderCol ? genderDemographics.length : "N/A"}</div><div className="metric-note">{detected.genderCol ? "Detected: " + shortLabel(detected.genderCol) : "No gender column detected"}</div></div>
               <div className="card"><div className="metric-label">Highest-rated IT service</div><div className="metric-value" style={{fontSize:"1.25rem"}}>{highest?.label || "N/A"}</div><div className="metric-note">{highest ? `${highest.average.toFixed(2)} / 5` : "No rating data"}</div></div>
               <div className="card"><div className="metric-label">Lowest-rated IT service</div><div className="metric-value" style={{fontSize:"1.25rem"}}>{lowest?.label || "N/A"}</div><div className="metric-note">{lowest ? `${lowest.average.toFixed(2)} / 5` : "No rating data"}</div></div>
               <div className="card"><div className="metric-label">Overall satisfaction average</div><div className="metric-value">{overallAverage ? overallAverage.toFixed(2) : "N/A"}</div><div className="metric-note">5-point scale</div></div>
@@ -401,6 +411,15 @@
                 <tbody>{demographics.map(d => <tr key={d.type}><td>{d.type}</td><td className="right">{d.count}</td><td className="right">{filteredRows.length ? ((d.count / filteredRows.length) * 100).toFixed(1) : 0}%</td></tr>)}</tbody></table>
               </div>
             </section>
+
+            {detected.genderCol && <section className="grid two-col" style={{marginTop:18}}>
+              <div className="card"><div className="section-title"><h2>Gender Demographics</h2><span>Count by gender</span></div><div className="chart-wrap"><PieChart data={genderDemographics} /></div></div>
+              <div className="card">
+                <div className="section-title"><h2>Gender Table</h2><span>Count and share</span></div>
+                <table><thead><tr><th>Gender</th><th className="right">Count</th><th className="right">Share</th></tr></thead>
+                <tbody>{genderDemographics.map(d => <tr key={d.type}><td>{d.type}</td><td className="right">{d.count}</td><td className="right">{filteredRows.length ? ((d.count / filteredRows.length) * 100).toFixed(1) : 0}%</td></tr>)}</tbody></table>
+              </div>
+            </section>}
 
             <section className="grid two-col" style={{marginTop:18}}>
               <div className="card"><div className="section-title"><h2>IT Support Performance</h2><span>Average rating by support category</span></div><div className="chart-wrap"><BarChart data={support} /></div></div>
