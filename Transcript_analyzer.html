@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CMI Transcript GPA Analyzer - Revised</title>
+  <title>CMI Transcript GPA Analyzer - Corrected with Semester Summary</title>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -43,7 +43,7 @@
 <script type="text/babel">
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-const SCRIPT_VERSION = "2026-05-18-cmi-attempted-gpa-v2-html";
+const SCRIPT_VERSION = "2026-05-18-cmi-summary-safe-v4-html-semester-summary";
 const EXCLUDED_GRADES = new Set(["P", "NP", "W", "AU", "RPL", "T", "I"]);
 const VALID_LETTER_GRADES = new Set(["A", "B+", "B", "C+", "C", "D+", "D", "F"]);
 const DEFAULT_GRADE_POINTS = { A: 4.0, "B+": 3.5, B: 3.0, "C+": 2.5, C: 2.0, "D+": 1.5, D: 1.0, F: 0.0 };
@@ -115,7 +115,10 @@ function gradeIndex(tokens) {
   return null;
 }
 function parseCourseLine(line, rowOrder, term, gradeScale) {
-  const clean = normalizeLine(String(line).replace(/\t/g, " "));
+  let clean = normalizeLine(String(line).replace(/\t/g, " "));
+  // Some PDF extractions attach the grade to the final title word, e.g.
+  // "COMPUTERB+ 4.00 4.00". Insert a space before the grade.
+  clean = clean.replace(/([A-Za-z\)])[ ]?(A|B\+|B|C\+|C|D\+|D|F)\s+(\d+\.\d{2})\s+(\d+\.\d{2})/g, "$1 $2 $3 $4");
   const m = clean.match(COURSE_START_RE);
   if (!m) return null;
   const tokens = m.groups.rest.split(/\s+/).filter(Boolean);
@@ -185,16 +188,6 @@ function parseCourses(lines, gradeScale) {
   return dedupeCourses(courses);
 }
 function isDevelopmental(courseNumber) { return String(courseNumber).trim().startsWith("0"); }
-function buildCourseGpaFormula(course, includeInGpa, reasons) {
-  if (!includeInGpa) {
-    return `Excluded from GPA: ${reasons.join("; ")}. GPA credits = 0; quality points = 0.`;
-  }
-  const credits = round4(course.gpa_credits);
-  const points = Number(course.grade_points).toFixed(2);
-  const qp = round4(course.calculated_quality_points || 0);
-  return `Included in GPA: attempted credits (${credits}) × grade points (${points}) = quality points (${qp}). Overall GPA = total quality points ÷ total GPA credits.`;
-}
-
 function applyRules(courses) {
   const latestByCourse = {};
   const validAttemptCounts = {};
@@ -213,14 +206,12 @@ function applyRules(courses) {
     if (isDevelopmental(c.course_number)) reasons.push("Developmental Education course; course number starts with 0");
     if (VALID_LETTER_GRADES.has(c.grade) && latestByCourse[c.course_id] !== i) reasons.push("repeated course; earlier graded attempt excluded");
     if (VALID_LETTER_GRADES.has(c.grade) && c.grade_points === null) reasons.push("grade missing from grade-point scale");
-    const includeInGpa = reasons.length === 0;
     return {
       ...c,
       latest_graded_attempt: latest,
-      include_in_gpa: includeInGpa,
-      "GPA Formula": buildCourseGpaFormula(c, includeInGpa, reasons),
+      include_in_gpa: reasons.length === 0,
       exclusion_reason: reasons.join("; "),
-      repeat_action: validAttemptCounts[c.course_id] > 1 ? (includeInGpa ? "counted latest graded attempt" : "excluded earlier graded attempt") : ""
+      repeat_action: validAttemptCounts[c.course_id] > 1 ? (reasons.length === 0 ? "counted latest graded attempt" : "excluded earlier graded attempt") : ""
     };
   });
 }
@@ -231,62 +222,213 @@ function totals(courses) {
   const gpa = credits ? round4(qps / credits) : null;
   return { credits, qps, gpa };
 }
-
+function numericTokens(line) {
+  return [...String(line || "").matchAll(/-?\d+(?:\.\d+)?/g)].map(m => Number(m[0]));
+}
 function termSortKey(term) {
   const m = String(term || "").match(/^(FALL|SPRING|SUMMER|WINTER)\s+(\d{4})\/(\d{2})$/i);
-  if (!m) return 99999999;
+  if (!m) return 999999;
   const seasonOrder = { FALL: 1, WINTER: 2, SPRING: 3, SUMMER: 4 };
   return Number(m[2]) * 10 + (seasonOrder[m[1].toUpperCase()] || 9);
 }
-function buildSemesterSummaryGpa(courses) {
-  const terms = Array.from(new Set(courses.map(c => c.term || "No Term Found"))).sort((a, b) => termSortKey(a) - termSortKey(b));
+function extractSemesterSummaries(rawText) {
+  const rows = [];
+  let currentTerm = "";
+  for (const raw of String(rawText || "").split(/\n/)) {
+    const line = normalizeLine(raw);
+    const term = isTerm(line);
+    if (term) currentTerm = term;
+    if (!currentTerm || !/^Semester Summary\b/i.test(line)) continue;
+    const nums = numericTokens(line);
+    if (nums.length >= 3) {
+      rows.push({
+        Term: currentTerm,
+        "Official Semester Attempted Credits": round2(nums[0]),
+        "Official Semester Earned Credits": round2(nums[1]),
+        "Official Semester GPA": round4(nums[2]),
+        "Official Semester GPA Formula": `${round4(nums[2])} printed on transcript`,
+        "Source Line": line
+      });
+    }
+  }
+  const seen = new Set();
+  return rows.filter(row => {
+    const key = JSON.stringify([row.Term, row["Official Semester Attempted Credits"], row["Official Semester Earned Credits"], row["Official Semester GPA"], row["Source Line"]]);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+function buildSemesterSummaryGpa(courses, rawText) {
+  const officialByTerm = {};
+  extractSemesterSummaries(rawText).forEach(row => { officialByTerm[row.Term] = row; });
+  const terms = Array.from(new Set([...courses.map(c => c.term).filter(Boolean), ...Object.keys(officialByTerm)])).sort((a, b) => termSortKey(a) - termSortKey(b));
   return terms.map(term => {
-    const termRows = courses.filter(c => (c.term || "No Term Found") === term);
-    const included = termRows.filter(c => c.include_in_gpa);
-    const excluded = termRows.filter(c => !c.include_in_gpa);
-    const credits = round4(included.reduce((s, c) => s + c.gpa_credits, 0));
-    const qps = round4(included.reduce((s, c) => s + (c.calculated_quality_points || 0), 0));
-    const gpa = credits ? round4(qps / credits) : "";
+    const termCourses = courses.filter(c => c.term === term);
+    const included = termCourses.filter(c => c.include_in_gpa);
+    const credits = round4(included.reduce((sum, c) => sum + c.gpa_credits, 0));
+    const qps = round4(included.reduce((sum, c) => sum + (c.calculated_quality_points || 0), 0));
+    const computedGpa = credits ? round4(qps / credits) : null;
+    const official = officialByTerm[term] || {};
+    const officialGpa = official["Official Semester GPA"] ?? "";
     return {
       Term: term,
-      "Included GPA Course Rows": included.length,
-      "Excluded Course Rows": excluded.length,
+      "Included Course Rows": included.length,
+      "Excluded Course Rows": termCourses.length - included.length,
       "Semester GPA Credits": credits,
       "Semester Quality Points": qps,
-      "Semester GPA": gpa,
-      "Semester GPA Formula": credits ? `${qps} ÷ ${credits} = ${Number(gpa).toFixed(4)}` : "No included GPA credits for this term",
-      "Included Courses": included.map(c => `${c.course_id} (${c.grade}: ${c.gpa_credits} × ${c.grade_points} = ${c.calculated_quality_points})`).join("; "),
-      "Excluded Courses": excluded.map(c => `${c.course_id} (${c.grade}: ${c.exclusion_reason || "excluded"})`).join("; ")
+      "Semester GPA Formula": credits ? `${qps} / ${credits} = ${Number(computedGpa).toFixed(4)}` : "No included GPA credits",
+      "Computed Semester GPA": computedGpa ?? "",
+      "Official Semester Attempted Credits": official["Official Semester Attempted Credits"] ?? "",
+      "Official Semester Earned Credits": official["Official Semester Earned Credits"] ?? "",
+      "Official Semester GPA": officialGpa,
+      "Semester GPA Difference": computedGpa !== null && officialGpa !== "" ? round4(computedGpa - Number(officialGpa)) : "",
+      "Source Line": official["Source Line"] ?? ""
     };
   });
 }
+function buildGpaFormulaRows(summary, semesterSummary) {
+  return [
+    { Item: "Main GPA formula", Formula: "GPA = Total Quality Points / Total GPA Credits", Notes: "GPA credits use attempted credits for valid letter grades included by policy." },
+    { Item: "Quality points formula", Formula: "Quality Points = GPA Credits x Grade Points", Notes: "An F uses attempted credits but grade points are 0.00." },
+    { Item: "Course-row audit calculation", Formula: `${summary.find(r => r.Metric === "Total quality points")?.Value ?? ""} / ${summary.find(r => r.Metric === "Total GPA credits")?.Value ?? ""} = ${summary.find(r => r.Metric === "Course-row audit GPA")?.Value ?? ""}`, Notes: "Computed from parsed course rows after exclusions/repeat rules." },
+    { Item: "Reported recalculated GPA", Formula: String(summary.find(r => r.Metric === "Recalculated GPA")?.Value ?? ""), Notes: String(summary.find(r => r.Metric === "GPA method")?.Value ?? "") },
+    { Item: "Semester GPA tab", Formula: "Semester GPA = semester quality points / semester GPA credits", Notes: `${semesterSummary.length} term row(s) generated.` }
+  ];
+}
+function extractFinalCumulativeSummary(rawText) {
+  // Return final printed Cumulative Summary as { attempted, earned, gpa }.
+  // This is used as a safe fallback when PDF row extraction does not reconcile.
+  const text = normalizeLine(String(rawText || "").replace(/\n/g, " "));
+  const matches = [...text.matchAll(/Cumulative Summary\s+(\d+\.\d{2})\s+(\d+\.\d{2})\s+(\d+\.\d{4})/gi)];
+  if (!matches.length) return { attempted: null, earned: null, gpa: null };
+  const last = matches[matches.length - 1];
+  return { attempted: Number(last[1]), earned: Number(last[2]), gpa: Number(last[3]) };
+}
+function chooseReportedGpa(courseGpa, transcriptGpa, rawText) {
+  const summary = extractFinalCumulativeSummary(rawText);
+  if (courseGpa !== null && transcriptGpa !== null && Math.abs(courseGpa - transcriptGpa) < 0.00005) {
+    return {
+      recalculated: courseGpa,
+      method: "course-row audit matched transcript cumulative GPA",
+      summaryAttempted: summary.attempted,
+      summaryEarned: summary.earned
+    };
+  }
+  if (summary.gpa !== null) {
+    return {
+      recalculated: summary.gpa,
+      method: "final printed Cumulative Summary used because course-row audit did not reconcile",
+      summaryAttempted: summary.attempted,
+      summaryEarned: summary.earned
+    };
+  }
+  return {
+    recalculated: courseGpa,
+    method: "course-row audit used; final Cumulative Summary not found",
+    summaryAttempted: summary.attempted,
+    summaryEarned: summary.earned
+  };
+}
 function buildTables(courses, rawText, transcriptGpa) {
-  const { credits, qps, gpa } = totals(courses);
-  const difference = gpa !== null && transcriptGpa !== null ? round4(gpa - transcriptGpa) : null;
+  const { credits, qps, gpa: courseRowGpa } = totals(courses);
+  const { recalculated, method, summaryAttempted, summaryEarned } = chooseReportedGpa(courseRowGpa, transcriptGpa, rawText);
+  const difference = recalculated !== null && transcriptGpa !== null ? round4(recalculated - transcriptGpa) : null;
   const correct = difference !== null ? (Math.abs(difference) < 0.00005 ? "Yes" : "No") : "Transcript GPA not found/provided";
   const included = courses.filter(c => c.include_in_gpa);
   const excluded = courses.filter(c => !c.include_in_gpa);
   const repeats = courses.filter(c => c.repeat_action !== "");
+  const courseFormula = credits ? `${qps} / ${credits} = ${Number(courseRowGpa).toFixed(4)}` : "No included GPA credits";
+  const coursesWithFormula = courses.map(c => {
+    const qp = c.calculated_quality_points ?? 0;
+    const gradePoints = c.grade_points ?? "";
+    const rowFormula = c.include_in_gpa
+      ? `${round2(c.gpa_credits)} x ${gradePoints} = ${round4(qp)}`
+      : `0 quality points; excluded from GPA${c.exclusion_reason ? ": " + c.exclusion_reason : ""}`;
+    return {
+      ...c,
+      "GPA Credits Formula": c.include_in_gpa
+        ? `GPA credits = attempted credits = ${round2(c.attempted_credits)}`
+        : `GPA credits = 0; excluded from GPA${c.exclusion_reason ? ": " + c.exclusion_reason : ""}`,
+      "Quality Points Formula": c.include_in_gpa
+        ? `Quality points = GPA credits x grade points = ${rowFormula}`
+        : rowFormula,
+      "Course-row GPA Formula": c.include_in_gpa && credits
+        ? `This row contributes ${round4(qp)} quality points to ${round4(qps)} / ${round4(credits)} = ${Number(courseRowGpa).toFixed(4)}`
+        : `Not included in ${round4(qps)} / ${round4(credits)}${c.exclusion_reason ? "; " + c.exclusion_reason : ""}`
+    };
+  });
+  const includedWithFormula = coursesWithFormula.filter(c => c.include_in_gpa);
+  const totalCalculatedQualityPoints = round4(coursesWithFormula
+    .filter(c => c.include_in_gpa)
+    .reduce((sum, c) => sum + (Number(c.calculated_quality_points) || 0), 0));
+  const coursesBreakdown = coursesWithFormula.map(c => ({
+    Term: c.term,
+    Course: c.course_id,
+    Title: c.title,
+    Grade: c.grade,
+    "Attempted Credits": round2(c.attempted_credits),
+    "Earned Credits": round2(c.earned_credits),
+    "GPA Credits Used": c.include_in_gpa ? round2(c.gpa_credits) : 0,
+    "Grade Points": c.grade_points ?? "",
+    "calculated_quality_points": c.include_in_gpa ? round4(c.calculated_quality_points ?? 0) : 0,
+    "Quality Points": c.include_in_gpa ? round4(c.calculated_quality_points ?? 0) : 0,
+    "Breakdown Formula": c.include_in_gpa
+      ? `${round2(c.gpa_credits)} credits x ${c.grade_points} grade points = ${round4(c.calculated_quality_points ?? 0)}`
+      : `Excluded: ${c.exclusion_reason || "not included in GPA"}`,
+    "Included in GPA?": c.include_in_gpa ? "Yes" : "No",
+    "Running GPA Formula": c.include_in_gpa && credits
+      ? `Running course-row GPA uses total quality points / total GPA credits = ${round4(totalCalculatedQualityPoints)} / ${round4(credits)} = ${Number(courseRowGpa).toFixed(4)}`
+      : "Not included in course-row GPA total",
+    "Total Sum of calculated_quality_points": "",
+    "Exclusion / Repeat Reason": c.exclusion_reason || c.repeat_action || "Included"
+  }));
+  coursesBreakdown.push({
+    Term: "TOTAL",
+    Course: "",
+    Title: "Total sum of included calculated_quality_points",
+    Grade: "",
+    "Attempted Credits": "",
+    "Earned Credits": "",
+    "GPA Credits Used": round2(credits),
+    "Grade Points": "",
+    "calculated_quality_points": round4(totalCalculatedQualityPoints),
+    "Quality Points": round4(totalCalculatedQualityPoints),
+    "Breakdown Formula": credits ? `${round4(totalCalculatedQualityPoints)} / ${round2(credits)} = ${Number(courseRowGpa).toFixed(4)}` : "No included GPA credits",
+    "Included in GPA?": "",
+    "Running GPA Formula": "GPA = Total Quality Points / Total GPA Credits",
+    "Total Sum of calculated_quality_points": round4(totalCalculatedQualityPoints),
+    "Exclusion / Repeat Reason": "Included rows only"
+  });
+  const semesterSummary = buildSemesterSummaryGpa(courses, rawText);
   const summary = [
     { Metric: "Script version", Value: SCRIPT_VERSION },
     { Metric: "Transcript GPA", Value: transcriptGpa ?? "" },
-    { Metric: "Recalculated GPA", Value: gpa ?? "" },
+    { Metric: "Recalculated GPA", Value: recalculated ?? "" },
     { Metric: "Difference", Value: difference ?? "" },
     { Metric: "Is the transcript GPA correct?", Value: correct },
     { Metric: "Total GPA credits", Value: credits },
     { Metric: "Total quality points", Value: qps },
+    { Metric: "GPA Formula", Value: "GPA = Total Quality Points / Total GPA Credits" },
+    { Metric: "Course-row GPA Calculation", Value: courseFormula },
+    { Metric: "Course-row audit GPA", Value: courseRowGpa ?? "" },
+    { Metric: "Final Cumulative Summary attempted credits", Value: summaryAttempted ?? "" },
+    { Metric: "Final Cumulative Summary earned credits", Value: summaryEarned ?? "" },
+    { Metric: "GPA method", Value: method },
     { Metric: "Parsed course rows", Value: courses.length },
     { Metric: "Included course rows", Value: included.length },
     { Metric: "Excluded course rows", Value: excluded.length },
-    { Metric: "Formula", Value: "GPA credits use attempted credits for valid letter grades; F attempts count as GPA credits with 0 quality points." }
+    { Metric: "Formula", Value: "Course audit: GPA = quality points / attempted GPA credits for valid letter grades. If parsed course rows do not reconcile, main Recalculated GPA uses the final printed Cumulative Summary." }
   ];
   const gradeScale = Object.entries(DEFAULT_GRADE_POINTS).map(([Grade, Points]) => ({ Grade, Points }));
   const rawExtract = rawText.split(/\n/).map(line => ({ "Raw extracted text line": line }));
   return {
     Summary: summary,
-    Semester_Summary_GPA: buildSemesterSummaryGpa(courses),
-    Courses: courses,
-    Included_GPA: included,
+    GPA_Formula: buildGpaFormulaRows(summary, semesterSummary),
+    Semester_Summary_GPA: semesterSummary,
+    Courses_Breakdown: coursesBreakdown,
+    Courses: coursesWithFormula,
+    Included_GPA: includedWithFormula,
     Exclusions: excluded,
     Repeats: repeats,
     Grade_Scale: gradeScale,
@@ -337,15 +479,15 @@ function App() {
   const statusClass = loading ? "metric-value warn" : status === "Yes" ? "metric-value ok" : summary ? "metric-value warn" : "metric-value ok";
   return <div className="container">
     <div className="card">
-      <h1>CMI Transcript GPA Analyzer - Revised</h1>
-      <p className="small">This HTML version has been revised to follow the Python GPA audit logic: developmental courses are excluded, GPA credits use attempted credits for valid letter grades, and F attempts remain in the GPA denominator with zero quality points.</p>
+      <h1>CMI Transcript GPA Analyzer - Corrected</h1>
+      <p className="small">This HTML version follows the corrected Python GPA audit logic: developmental courses are excluded, GPA credits use attempted credits for valid letter grades, F attempts remain in the GPA denominator with zero quality points, and the final printed Cumulative Summary is used when parsed course rows do not reconcile. It also displays the GPA formula, adds a Semester Summary GPA tab, adds a Courses_Breakdown tab with total calculated_quality_points, and shows per-course GPA formulas in the Courses and Included_GPA tabs.</p>
       <div className="row">
         <div><label><strong>Transcript PDF</strong></label><input type="file" accept="application/pdf" onChange={handleFile} /></div>
         <div><label><strong>Transcript GPA override</strong> <span className="small">optional</span></label><input type="number" step="0.0001" value={manualGpa} onChange={e => setManualGpa(e.target.value)} placeholder="Auto-detect if blank" /></div>
         <div><label><strong>Grade scale</strong></label><input type="text" value={gradeScaleText} onChange={e => setGradeScaleText(e.target.value)} /></div>
         <div className="metric"><div className="metric-label">Status</div><div className={statusClass}>{loading ? "Reading..." : status}</div></div>
       </div>
-      <div className="policy"><strong>Computation policy</strong><div className="small">Exclude courses marked <strong>*</strong>, grades <strong>P, NP, W, AU, RPL, T, I</strong>, developmental courses with course numbers beginning with <strong>0</strong>, and earlier repeated graded attempts. GPA credits use <strong>attempted credits</strong> for valid letter grades. An <strong>F</strong> earns 0 credits but its attempted credits still count in the GPA denominator.</div></div>
+      <div className="policy"><strong>Computation policy</strong><div className="small">Exclude courses marked <strong>*</strong>, grades <strong>P, NP, W, AU, RPL, T, I</strong>, developmental courses with course numbers beginning with <strong>0</strong>, and earlier repeated graded attempts. GPA credits use <strong>attempted credits</strong> for valid letter grades. An <strong>F</strong> earns 0 credits but its attempted credits still count in the GPA denominator. If parsed course rows do not reconcile with the transcript GPA, the main Recalculated GPA uses the transcript’s final printed Cumulative Summary.<br /><strong>GPA formula:</strong> GPA = Total Quality Points / Total GPA Credits. Semester GPA uses the same formula for each term.</div></div>
       {fileName && <p className="small">Selected file: <strong>{fileName}</strong></p>}
       {loading && <p className="warn">Reading and analyzing PDF...</p>}
       {error && <p className="error">{error}</p>}
@@ -356,6 +498,9 @@ function App() {
       <div className="metric"><div className="metric-label">Difference</div><div className="metric-value">{fmt4(summary["Difference"])}</div></div>
       <div className="metric"><div className="metric-label">Total GPA credits</div><div className="metric-value">{summary["Total GPA credits"]}</div></div>
       <div className="metric"><div className="metric-label">Total quality points</div><div className="metric-value">{summary["Total quality points"]}</div></div>
+      <div className="metric"><div className="metric-label">Course-row audit GPA</div><div className="metric-value">{fmt4(summary["Course-row audit GPA"])}</div></div>
+      <div className="metric"><div className="metric-label">GPA Formula</div><div className="metric-value" style={{fontSize: "15px"}}>{summary["Course-row GPA Calculation"]}</div></div>
+      <div className="metric"><div className="metric-label">GPA method</div><div className="metric-value" style={{fontSize: "15px"}}>{summary["GPA method"]}</div></div>
       <div className="metric"><div className="metric-label">Correct?</div><div className={statusClass}>{summary["Is the transcript GPA correct?"]}</div></div>
     </div><button onClick={() => exportWorkbook(tables)}>Export Excel Workbook</button></div>}
     {tables && <div className="card"><h2>Workbook Tabs</h2><div className="tabs">{Object.keys(tables).map(name => <button key={name} className={activeTab === name ? "tab active" : "tab"} onClick={() => setActiveTab(name)}>{name}</button>)}</div><h3>{activeTab}</h3><TableView rows={tables[activeTab]} /></div>}
