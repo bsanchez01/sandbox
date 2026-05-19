@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CMI Transcript GPA Analyzer /title>
+  <title>CMI Transcript GPA Analyzer - Corrected</title>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -576,8 +576,8 @@ function App() {
   const statusClass = loading ? "metric-value warn" : status === "Yes" ? "metric-value ok" : summary ? "metric-value warn" : "metric-value ok";
   return <div className="container">
     <div className="card">
-      <h1>CMI Transcript GPA Analyzer - Corrected</h1>
-      <p className="small">This HTML version follows the corrected Python GPA audit logic: developmental courses are excluded, GPA credits use attempted credits for valid letter grades, F attempts remain in the GPA denominator with zero quality points, and the final printed Cumulative Summary is used when parsed course rows do not reconcile. It also displays the GPA formula, adds a Courses_Breakdown tab with total calculated_quality_points, and shows per-course GPA formulas in the Courses and Included_GPA tabs.</p>
+      <h1>CMI Transcript GPA Analyzer</h1>
+      <p className="small">This HTML version follows the Python GPA audit logic: developmental courses are excluded, GPA credits use attempted credits for valid letter grades, F attempts remain in the GPA denominator with zero quality points, and the final printed Cumulative Summary is used when parsed course rows do not reconcile. It also displays the GPA formula, adds a Courses_Breakdown tab with total calculated_quality_points, and shows per-course GPA formulas in the Courses and Included_GPA tabs.</p>
       <div className="row">
         <div><label><strong>Transcript PDF</strong></label><input type="file" accept="application/pdf" onChange={handleFile} /></div>
         <div><label><strong>Transcript GPA override</strong> <span className="small">optional</span></label><input type="number" step="0.0001" value={manualGpa} onChange={e => setManualGpa(e.target.value)} placeholder="Auto-detect if blank" /></div>
