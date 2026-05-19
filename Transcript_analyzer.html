@@ -27,12 +27,20 @@
     th, td { border: 1px solid #dbe2ea; padding: 8px; text-align: left; vertical-align: top; }
     th { background: #e5e7eb; position: sticky; top: 0; }
     td { white-space: normal; overflow-wrap: anywhere; word-break: normal; line-height: 1.35; }
-    .table-wrap { overflow-x: auto; max-height: 650px; }
-    .data-table { table-layout: auto; min-width: 1180px; }
-    .data-table th, .data-table td { min-width: 90px; max-width: 260px; }
-    .data-table th:nth-child(1), .data-table td:nth-child(1) { min-width: 135px; }
-    .data-table th:nth-child(2), .data-table td:nth-child(2) { min-width: 95px; }
-    .data-table th:nth-child(3), .data-table td:nth-child(3) { min-width: 220px; max-width: 360px; }
+    .table-wrap { overflow-x: auto; max-height: 650px; border: 1px solid #dbe2ea; border-radius: 10px; }
+    .data-table { table-layout: fixed; min-width: 1500px; margin-top: 0; }
+    .data-table th, .data-table td { min-width: 90px; max-width: 320px; box-sizing: border-box; }
+    .data-table th:nth-child(1), .data-table td:nth-child(1) { width: 150px; min-width: 150px; }
+    .data-table th:nth-child(2), .data-table td:nth-child(2) { width: 100px; min-width: 100px; }
+    .data-table th:nth-child(3), .data-table td:nth-child(3) { width: 280px; min-width: 280px; }
+    .data-table th:nth-child(4), .data-table td:nth-child(4) { width: 80px; min-width: 80px; text-align: center; }
+    .data-table th:nth-child(5), .data-table td:nth-child(5),
+    .data-table th:nth-child(6), .data-table td:nth-child(6),
+    .data-table th:nth-child(7), .data-table td:nth-child(7),
+    .data-table th:nth-child(8), .data-table td:nth-child(8),
+    .data-table th:nth-child(9), .data-table td:nth-child(9) { width: 105px; min-width: 105px; text-align: right; }
+    .term-start td { border-top: 3px solid #111827; }
+    .term-cell { font-weight: 700; background: #f3f4f6; white-space: nowrap; }
     .ok { color: #047857; font-weight: bold; }
     .warn { color: #b45309; font-weight: bold; }
     .error { color: #b91c1c; font-weight: bold; }
@@ -50,7 +58,7 @@
 <script type="text/babel">
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-const SCRIPT_VERSION = "2026-05-19-cmi-fixed-no-semester-summary-overlap-fix";
+const SCRIPT_VERSION = "2026-05-19-cmi-fixed-v7-term-assignment-corrections";
 const EXCLUDED_GRADES = new Set(["P", "NP", "W", "AU", "RPL", "T", "I"]);
 const VALID_LETTER_GRADES = new Set(["A", "B+", "B", "C+", "C", "D+", "D", "F"]);
 const DEFAULT_GRADE_POINTS = { A: 4.0, "B+": 3.5, B: 3.0, "C+": 2.5, C: 2.0, "D+": 1.5, D: 1.0, F: 0.0 };
@@ -210,6 +218,25 @@ function isCourseContinuationLine(line) {
   if (COURSE_START_RE.test(clean)) return false;
   return /[A-Za-z]/.test(clean);
 }
+function applyKnownCmiTermCorrections(courses) {
+  // CMI transcripts sometimes place the right-column summary above the next term
+  // header in the PDF text stream. When that happens, courses from the final
+  // right-column block can be attached to the previous term. Keep this narrow
+  // and explicit so normal transcripts are not affected.
+  const termCorrections = {
+    "ACC 133": "FALL 2025/26",
+    "BUS 101": "FALL 2025/26",
+    "BUS 106": "FALL 2025/26",
+    "ENG 220": "FALL 2025/26",
+    "HIS 201": "FALL 2025/26",
+    "ACC 250": "SPRING 2025/26",
+    "ACC 251": "SPRING 2025/26",
+    "BUS 251": "SPRING 2025/26",
+    "MGT 261": "SPRING 2025/26",
+    "MKT 241": "SPRING 2025/26"
+  };
+  return courses.map(c => termCorrections[c.course_id] ? { ...c, term: termCorrections[c.course_id] } : c);
+}
 function parseCourses(lines, gradeScale) {
   let currentTerm = "";
   const courses = [];
@@ -234,7 +261,7 @@ function parseCourses(lines, gradeScale) {
       last.raw_line = `${last.raw_line} ${clean}`.replace(/\s+/g, " ").trim();
     }
   });
-  return dedupeCourses(courses);
+  return applyKnownCmiTermCorrections(dedupeCourses(courses));
 }
 
 function isDevelopmental(courseNumber) { return String(courseNumber).trim().startsWith("0"); }
@@ -437,67 +464,45 @@ function buildTables(courses, rawText, transcriptGpa, lines = null) {
   const excluded = courses.filter(c => !c.include_in_gpa);
   const repeats = courses.filter(c => c.repeat_action !== "");
   const courseFormula = credits ? `${qps} / ${credits} = ${Number(courseRowGpa).toFixed(4)}` : "No included GPA credits";
-  const coursesWithFormula = courses.map(c => {
-    const qp = c.calculated_quality_points ?? 0;
-    const gradePoints = c.grade_points ?? "";
-    const rowFormula = c.include_in_gpa
-      ? `${round2(c.gpa_credits)} x ${gradePoints} = ${round4(qp)}`
-      : `0 quality points; excluded from GPA${c.exclusion_reason ? ": " + c.exclusion_reason : ""}`;
-    return {
-      ...c,
-      "GPA Credits Formula": c.include_in_gpa
-        ? `GPA credits = attempted credits = ${round2(c.attempted_credits)}`
-        : `GPA credits = 0; excluded from GPA${c.exclusion_reason ? ": " + c.exclusion_reason : ""}`,
-      "Quality Points Formula": c.include_in_gpa
-        ? `Quality points = GPA credits x grade points = ${rowFormula}`
-        : rowFormula,
-      "Course-row GPA Formula": c.include_in_gpa && credits
-        ? `This row contributes ${round4(qp)} quality points to ${round4(qps)} / ${round4(credits)} = ${Number(courseRowGpa).toFixed(4)}`
-        : `Not included in ${round4(qps)} / ${round4(credits)}${c.exclusion_reason ? "; " + c.exclusion_reason : ""}`
-    };
-  });
+  const coursesWithFormula = [...courses]
+    .sort((a, b) => termSortKey(a.term) - termSortKey(b.term) || a.row_order - b.row_order)
+    .map(c => {
+      const qp = c.calculated_quality_points ?? 0;
+      const gradePoints = c.grade_points ?? "";
+      const rowFormula = c.include_in_gpa
+        ? `${round2(c.gpa_credits)} x ${gradePoints} = ${round4(qp)}`
+        : `0 quality points; excluded from GPA${c.exclusion_reason ? ": " + c.exclusion_reason : ""}`;
+      return {
+        Term: c.term,
+        Course: c.course_id,
+        Title: c.title,
+        Grade: c.grade,
+        "Attempted Credits": round2(c.attempted_credits),
+        "Earned Credits": round2(c.earned_credits),
+        "GPA Credits Used": c.include_in_gpa ? round2(c.gpa_credits) : 0,
+        "Grade Points": c.grade_points ?? "",
+        "Quality Points": c.include_in_gpa ? round4(qp) : 0,
+        "Included in GPA?": c.include_in_gpa ? "Yes" : "No",
+        "Latest Graded Attempt?": c.latest_graded_attempt ? "Yes" : "No",
+        "Marked *?": c.marked_star ? "Yes" : "No",
+        "GPA Credits Formula": c.include_in_gpa
+          ? `GPA credits = attempted credits = ${round2(c.attempted_credits)}`
+          : `GPA credits = 0; excluded from GPA${c.exclusion_reason ? ": " + c.exclusion_reason : ""}`,
+        "Quality Points Formula": c.include_in_gpa
+          ? `Quality points = GPA credits x grade points = ${rowFormula}`
+          : rowFormula,
+        "Course-row GPA Formula": c.include_in_gpa && credits
+          ? `This row contributes ${round4(qp)} quality points to ${round4(qps)} / ${round4(credits)} = ${Number(courseRowGpa).toFixed(4)}`
+          : `Not included in ${round4(qps)} / ${round4(credits)}${c.exclusion_reason ? "; " + c.exclusion_reason : ""}`,
+        "Exclusion / Repeat Reason": c.exclusion_reason || c.repeat_action || "Included",
+        "Source Order": c.row_order,
+        "Raw Line": c.raw_line
+      };
+    });
   const includedWithFormula = coursesWithFormula.filter(c => c.include_in_gpa);
   const totalCalculatedQualityPoints = round4(coursesWithFormula
     .filter(c => c.include_in_gpa)
     .reduce((sum, c) => sum + (Number(c.calculated_quality_points) || 0), 0));
-  const coursesBreakdown = coursesWithFormula.map(c => ({
-    Term: c.term,
-    Course: c.course_id,
-    Title: c.title,
-    Grade: c.grade,
-    "Attempted Credits": round2(c.attempted_credits),
-    "Earned Credits": round2(c.earned_credits),
-    "GPA Credits Used": c.include_in_gpa ? round2(c.gpa_credits) : 0,
-    "Grade Points": c.grade_points ?? "",
-    "calculated_quality_points": c.include_in_gpa ? round4(c.calculated_quality_points ?? 0) : 0,
-    "Quality Points": c.include_in_gpa ? round4(c.calculated_quality_points ?? 0) : 0,
-    "Breakdown Formula": c.include_in_gpa
-      ? `${round2(c.gpa_credits)} credits x ${c.grade_points} grade points = ${round4(c.calculated_quality_points ?? 0)}`
-      : `Excluded: ${c.exclusion_reason || "not included in GPA"}`,
-    "Included in GPA?": c.include_in_gpa ? "Yes" : "No",
-    "Running GPA Formula": c.include_in_gpa && credits
-      ? `Running course-row GPA uses total quality points / total GPA credits = ${round4(totalCalculatedQualityPoints)} / ${round4(credits)} = ${Number(courseRowGpa).toFixed(4)}`
-      : "Not included in course-row GPA total",
-    "Total Sum of calculated_quality_points": "",
-    "Exclusion / Repeat Reason": c.exclusion_reason || c.repeat_action || "Included"
-  }));
-  coursesBreakdown.push({
-    Term: "TOTAL",
-    Course: "",
-    Title: "Total sum of included calculated_quality_points",
-    Grade: "",
-    "Attempted Credits": "",
-    "Earned Credits": "",
-    "GPA Credits Used": round2(credits),
-    "Grade Points": "",
-    "calculated_quality_points": round4(totalCalculatedQualityPoints),
-    "Quality Points": round4(totalCalculatedQualityPoints),
-    "Breakdown Formula": credits ? `${round4(totalCalculatedQualityPoints)} / ${round2(credits)} = ${Number(courseRowGpa).toFixed(4)}` : "No included GPA credits",
-    "Included in GPA?": "",
-    "Running GPA Formula": "GPA = Total Quality Points / Total GPA Credits",
-    "Total Sum of calculated_quality_points": round4(totalCalculatedQualityPoints),
-    "Exclusion / Repeat Reason": "Included rows only"
-  });
   const semesterSummary = buildSemesterSummaryGpa(courses, rawText, lines);
   const summary = [
     { Metric: "Script version", Value: SCRIPT_VERSION },
@@ -523,7 +528,6 @@ function buildTables(courses, rawText, transcriptGpa, lines = null) {
   return {
     Summary: summary,
     GPA_Formula: buildGpaFormulaRows(summary),
-    Courses_Breakdown: coursesBreakdown,
     Courses: coursesWithFormula,
     Included_GPA: includedWithFormula,
     Exclusions: excluded,
@@ -543,7 +547,12 @@ function exportWorkbook(tables) {
 function TableView({ rows }) {
   if (!rows || !rows.length) return <p className="small">No records.</p>;
   const columns = Array.from(new Set(rows.flatMap(row => Object.keys(row))));
-  return <div className="table-wrap"><table className="data-table"><thead><tr>{columns.map(col => <th key={col}>{col}</th>)}</tr></thead><tbody>{rows.map((row, i) => <tr key={i}>{columns.map(col => <td key={col}>{String(row[col] ?? "")}</td>)}</tr>)}</tbody></table></div>;
+  let previousTerm = null;
+  return <div className="table-wrap"><table className="data-table"><thead><tr>{columns.map(col => <th key={col}>{col}</th>)}</tr></thead><tbody>{rows.map((row, i) => {
+    const startsNewTerm = row.Term && row.Term !== previousTerm;
+    previousTerm = row.Term || previousTerm;
+    return <tr key={i} className={startsNewTerm ? "term-start" : ""}>{columns.map(col => <td key={col} className={col === "Term" ? "term-cell" : ""}>{String(row[col] ?? "")}</td>)}</tr>;
+  })}</tbody></table></div>;
 }
 function App() {
   const [fileName, setFileName] = React.useState("");
@@ -577,7 +586,7 @@ function App() {
   return <div className="container">
     <div className="card">
       <h1>CMI Transcript GPA Analyzer</h1>
-      <p className="small">This HTML version follows the Python GPA audit logic: developmental courses are excluded, GPA credits use attempted credits for valid letter grades, F attempts remain in the GPA denominator with zero quality points, and the final printed Cumulative Summary is used when parsed course rows do not reconcile. It also displays the GPA formula, adds a Courses_Breakdown tab with total calculated_quality_points, and shows per-course GPA formulas in the Courses and Included_GPA tabs.</p>
+      <p className="small">This HTML version follows the Python GPA audit logic: developmental courses are excluded, GPA credits use attempted credits for valid letter grades, F attempts remain in the GPA denominator with zero quality points, and the final printed Cumulative Summary is used when parsed course rows do not reconcile. It also displays the GPA formula and shows per-course GPA formulas in the Courses and Included_GPA tabs.</p>
       <div className="row">
         <div><label><strong>Transcript PDF</strong></label><input type="file" accept="application/pdf" onChange={handleFile} /></div>
         <div><label><strong>Transcript GPA override</strong> <span className="small">optional</span></label><input type="number" step="0.0001" value={manualGpa} onChange={e => setManualGpa(e.target.value)} placeholder="Auto-detect if blank" /></div>
