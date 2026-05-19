@@ -43,7 +43,7 @@
 <script type="text/babel">
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-const SCRIPT_VERSION = "2026-05-18-cmi-summary-safe-v4-html-semester-summary";
+const SCRIPT_VERSION = "2026-05-19-cmi-fixed-reading-order-semester-summary";
 const EXCLUDED_GRADES = new Set(["P", "NP", "W", "AU", "RPL", "T", "I"]);
 const VALID_LETTER_GRADES = new Set(["A", "B+", "B", "C+", "C", "D+", "D", "F"]);
 const DEFAULT_GRADE_POINTS = { A: 4.0, "B+": 3.5, B: 3.0, "C+": 2.5, C: 2.0, "D+": 1.5, D: 1.0, F: 0.0 };
@@ -77,6 +77,52 @@ function wordsToLines(words, yTol = 3) {
   }
   return groups.map(g => g.sort((a, b) => a.x0 - b.x0).map(w => w.text).join(" "));
 }
+function wordsToColumnSegments(words, yTol = 3) {
+  const sorted = [...words].sort((a, b) => Math.round(a.top / yTol) - Math.round(b.top / yTol) || a.x0 - b.x0);
+  const groups = [];
+  for (const w of sorted) {
+    if (!groups.length || Math.abs(w.top - groups[groups.length - 1][0].top) > yTol) groups.push([w]);
+    else groups[groups.length - 1].push(w);
+  }
+
+  const left = [];
+  const right = [];
+  const full = [];
+  for (const group of groups) {
+    const g = group.sort((a, b) => a.x0 - b.x0);
+    if (!g.length) continue;
+    // Split a visual PDF row only at a real column gutter. This is safer than
+    // splitting every word by page midpoint, which can separate a term such as
+    // "FALL" from "2025/26" and then all following courses inherit the
+    // previous term.
+    let splitAt = -1;
+    let bestGap = 0;
+    for (let i = 0; i < g.length - 1; i++) {
+      const width = Math.max(1, g[i].width || (String(g[i].text || "").length * 4));
+      const gap = g[i + 1].x0 - (g[i].x0 + width);
+      if (gap > bestGap) { bestGap = gap; splitAt = i + 1; }
+    }
+    const pushSegment = (bucket, segment) => {
+      const text = normalizeLine(segment.map(w => w.text).join(" "));
+      if (text) bucket.push(text);
+    };
+    if (bestGap > 70 && splitAt > 0 && splitAt < g.length) {
+      const a = g.slice(0, splitAt);
+      const b = g.slice(splitAt);
+      pushSegment(left, a);
+      pushSegment(right, b);
+      full.push(normalizeLine(g.map(w => w.text).join(" ")));
+    } else {
+      const text = normalizeLine(g.map(w => w.text).join(" "));
+      if (!text) continue;
+      // Lines that start on the right side belong to the right transcript column;
+      // all other lines remain in the left/general stream.
+      (g[0].x0 > 300 ? right : left).push(text);
+      full.push(text);
+    }
+  }
+  return { left, right, full };
+}
 async function extractPdfLines(file) {
   const buffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
@@ -88,22 +134,37 @@ async function extractPdfLines(file) {
     const viewport = page.getViewport({ scale: 1 });
     const words = content.items
       .filter(item => item.str && item.str.trim())
-      .map(item => ({ text: item.str, x0: item.transform[4], top: viewport.height - item.transform[5] }));
-    rawParts.push(`--- Page ${pageNum} extracted text ---\n${wordsToLines(words).join("\n")}`);
-    const splitX = viewport.width / 2;
-    for (const [label, colWords] of [["left", words.filter(w => w.x0 < splitX)], ["right", words.filter(w => w.x0 >= splitX)]]) {
-      const lines = wordsToLines(colWords);
-      rawParts.push(`--- Page ${pageNum} ${label} column lines ---\n${lines.join("\n")}`);
-      allLines.push(...lines);
-    }
+      .map(item => ({
+        text: item.str,
+        x0: item.transform[4],
+        top: viewport.height - item.transform[5],
+        width: item.width || 0
+      }));
+
+    // IMPORTANT FIX:
+    // Do not split words with a fixed midpoint. The CMI transcript is two visual
+    // columns, but some right-column term labels can sit close to the page
+    // center. A midpoint split can break "FALL 2025/26" into partial fragments,
+    // so all later right-column courses are left under SUMMER 2024/25. Instead,
+    // group by visual rows, split only at a large horizontal gutter, then parse
+    // the left column followed by the right column.
+    const segments = wordsToColumnSegments(words);
+    const pageLines = [...segments.left, ...segments.right]
+      .map(normalizeLine)
+      .filter(Boolean);
+    rawParts.push(`--- Page ${pageNum} clean transcript reading-order lines ---\n${pageLines.join("\n")}`);
+    allLines.push(...pageLines);
   }
-  return { rawText: rawParts.join("\n"), lines: allLines.map(normalizeLine).filter(Boolean) };
+  return { rawText: allLines.join("\n"), lines: allLines };
 }
+
 function findTranscriptGpa(rawText) {
   const fullMatches = [...rawText.matchAll(/Cumulative Summary\s+(?:\d+\.\d+\s+)+(?<gpa>\d+\.\d{4})/gi)];
   if (fullMatches.length) return Number(fullMatches[fullMatches.length - 1].groups.gpa);
   const fallback = [...rawText.matchAll(/Cumulative Summary[^\n]*?(\d+\.\d{4})/gi)];
-  return fallback.length ? Number(fallback[fallback.length - 1][1]) : null;
+  if (fallback.length) return Number(fallback[fallback.length - 1][1]);
+  const finalSummary = extractFinalCumulativeSummary(rawText);
+  return finalSummary.gpa;
 }
 function isTerm(line) { const m = normalizeLine(line).match(TERM_RE); return m ? m[0].toUpperCase() : null; }
 function gradeIndex(tokens) {
@@ -176,17 +237,46 @@ function dedupeCourses(courses) {
   }
   return unique;
 }
+function isCourseContinuationLine(line) {
+  const clean = normalizeLine(line);
+  if (!clean) return false;
+  if (isTerm(clean)) return false;
+  if (/^(Semester Summary|Cumulative Summary|Course Credits|Attempt|Credits Earn|Grade GPA|TOTAL CREDITS|SCOLASTIC RATING|HONORS DESIGNATION|Page \d+|Monica Gordon|Student ID|Student Name|Gender|Date of Birth|Address|Enrollment History Date|OFFICIAL ACADEMIC TRANSCRIPT|COLLEGE OF THE MARSHALL ISLANDS|PO Box)/i.test(clean)) return false;
+  if (/Associate of Arts|In Progress|Specialization|Management|Accounting|Registrar|Course not included in GPA calculation/i.test(clean)) return false;
+  if (/^(President's List|Dean's List|Honors List)$/i.test(clean)) return false;
+  if (/^(A|B\+|B|C\+|C|D\+|D|F)\s+\d+(?:\.\d+)?$/i.test(clean)) return false;
+  if (/^(I|P|AU|R|W|NP|RPL|T)\b/i.test(clean)) return false;
+  if (numericTokens(clean).length > 0) return false;
+  if (COURSE_START_RE.test(clean)) return false;
+  return /[A-Za-z]/.test(clean);
+}
 function parseCourses(lines, gradeScale) {
   let currentTerm = "";
   const courses = [];
   lines.forEach((line, idx) => {
-    const term = isTerm(line);
+    const clean = normalizeLine(line);
+    const term = isTerm(clean);
     if (term) { currentTerm = term; return; }
-    const course = parseCourseLine(line, idx + 1, currentTerm, gradeScale);
-    if (course) courses.push(course);
+
+    const course = parseCourseLine(clean, idx + 1, currentTerm, gradeScale);
+    if (course) {
+      courses.push(course);
+      return;
+    }
+
+    // IMPORTANT FIX:
+    // Many CMI transcript titles wrap to the next line after the credit/grade row,
+    // e.g. "ICS 101 INTRODUCTION TO C 3.00 3.00" followed by
+    // "MICROSOFT OFFICE". Preserve that continuation text in the previous course.
+    const last = courses[courses.length - 1];
+    if (last && last.term === currentTerm && isCourseContinuationLine(clean)) {
+      last.title = `${last.title} ${clean}`.replace(/\s+/g, " ").trim();
+      last.raw_line = `${last.raw_line} ${clean}`.replace(/\s+/g, " ").trim();
+    }
   });
   return dedupeCourses(courses);
 }
+
 function isDevelopmental(courseNumber) { return String(courseNumber).trim().startsWith("0"); }
 function applyRules(courses) {
   const latestByCourse = {};
@@ -231,15 +321,43 @@ function termSortKey(term) {
   const seasonOrder = { FALL: 1, WINTER: 2, SPRING: 3, SUMMER: 4 };
   return Number(m[2]) * 10 + (seasonOrder[m[1].toUpperCase()] || 9);
 }
-function extractSemesterSummaries(rawText) {
+function lineLooksNumericSummary(line, expectedCount) {
+  const clean = normalizeLine(line);
+  if (!clean || /[A-Za-z]/.test(clean)) return false;
+  const nums = numericTokens(clean);
+  return expectedCount ? nums.length === expectedCount : nums.length > 0;
+}
+function extractSemesterSummaries(rawText, lines = null) {
+  const sourceLines = (lines && lines.length ? lines : String(rawText || "").split(/\n/)).map(normalizeLine).filter(Boolean);
   const rows = [];
   let currentTerm = "";
-  for (const raw of String(rawText || "").split(/\n/)) {
-    const line = normalizeLine(raw);
+
+  for (let i = 0; i < sourceLines.length; i++) {
+    const line = sourceLines[i];
     const term = isTerm(line);
-    if (term) currentTerm = term;
+    if (term) { currentTerm = term; continue; }
     if (!currentTerm || !/^Semester Summary\b/i.test(line)) continue;
-    const nums = numericTokens(line);
+
+    // Case 1: extraction puts the semester numbers on the same line.
+    let nums = numericTokens(line);
+    let sourceLine = line;
+
+    // Case 2: typical transcript extraction has "Semester Summary" on one line,
+    // then one or more lines before the numeric semester summary. Use the first
+    // numeric-only triple before the next term. This avoids merged raw-text lines.
+    if (nums.length < 3) {
+      for (let j = i + 1; j < Math.min(sourceLines.length, i + 10); j++) {
+        const look = sourceLines[j];
+        if (isTerm(look)) break;
+        const lookNums = numericTokens(look);
+        if (lineLooksNumericSummary(look, 3)) {
+          nums = lookNums;
+          sourceLine = `${line} | ${look}`;
+          break;
+        }
+      }
+    }
+
     if (nums.length >= 3) {
       rows.push({
         Term: currentTerm,
@@ -247,21 +365,22 @@ function extractSemesterSummaries(rawText) {
         "Official Semester Earned Credits": round2(nums[1]),
         "Official Semester GPA": round4(nums[2]),
         "Official Semester GPA Formula": `${round4(nums[2])} printed on transcript`,
-        "Source Line": line
+        "Source Line": sourceLine
       });
     }
   }
   const seen = new Set();
   return rows.filter(row => {
-    const key = JSON.stringify([row.Term, row["Official Semester Attempted Credits"], row["Official Semester Earned Credits"], row["Official Semester GPA"], row["Source Line"]]);
+    const key = JSON.stringify([row.Term, row["Official Semester Attempted Credits"], row["Official Semester Earned Credits"], row["Official Semester GPA"]]);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
 }
-function buildSemesterSummaryGpa(courses, rawText) {
+
+function buildSemesterSummaryGpa(courses, rawText, lines = null) {
   const officialByTerm = {};
-  extractSemesterSummaries(rawText).forEach(row => { officialByTerm[row.Term] = row; });
+  extractSemesterSummaries(rawText, lines).forEach(row => { officialByTerm[row.Term] = row; });
   const terms = Array.from(new Set([...courses.map(c => c.term).filter(Boolean), ...Object.keys(officialByTerm)])).sort((a, b) => termSortKey(a) - termSortKey(b));
   return terms.map(term => {
     const termCourses = courses.filter(c => c.term === term);
@@ -296,17 +415,37 @@ function buildGpaFormulaRows(summary, semesterSummary) {
     { Item: "Semester GPA tab", Formula: "Semester GPA = semester quality points / semester GPA credits", Notes: `${semesterSummary.length} term row(s) generated.` }
   ];
 }
-function extractFinalCumulativeSummary(rawText) {
+function extractFinalCumulativeSummary(rawText, lines = null) {
   // Return final printed Cumulative Summary as { attempted, earned, gpa }.
-  // This is used as a safe fallback when PDF row extraction does not reconcile.
+  // Handles both single-line extraction and the common CMI layout where
+  // "Cumulative Summary 91.00" is followed later by "88.00 3.3357".
   const text = normalizeLine(String(rawText || "").replace(/\n/g, " "));
   const matches = [...text.matchAll(/Cumulative Summary\s+(\d+\.\d{2})\s+(\d+\.\d{2})\s+(\d+\.\d{4})/gi)];
-  if (!matches.length) return { attempted: null, earned: null, gpa: null };
-  const last = matches[matches.length - 1];
-  return { attempted: Number(last[1]), earned: Number(last[2]), gpa: Number(last[3]) };
+  if (matches.length) {
+    const last = matches[matches.length - 1];
+    return { attempted: Number(last[1]), earned: Number(last[2]), gpa: Number(last[3]) };
+  }
+
+  const sourceLines = (lines && lines.length ? lines : String(rawText || "").split(/\n/)).map(normalizeLine).filter(Boolean);
+  let best = { attempted: null, earned: null, gpa: null };
+  for (let i = 0; i < sourceLines.length; i++) {
+    const line = sourceLines[i];
+    const m = line.match(/^Cumulative Summary\s+(\d+\.\d{2})/i);
+    if (!m) continue;
+    const attempted = Number(m[1]);
+    for (let j = i + 1; j < Math.min(sourceLines.length, i + 10); j++) {
+      if (isTerm(sourceLines[j])) break;
+      if (lineLooksNumericSummary(sourceLines[j], 2)) {
+        const nums = numericTokens(sourceLines[j]);
+        best = { attempted, earned: nums[0], gpa: nums[1] };
+      }
+    }
+  }
+  return best;
 }
-function chooseReportedGpa(courseGpa, transcriptGpa, rawText) {
-  const summary = extractFinalCumulativeSummary(rawText);
+
+function chooseReportedGpa(courseGpa, transcriptGpa, rawText, lines = null) {
+  const summary = extractFinalCumulativeSummary(rawText, lines);
   if (courseGpa !== null && transcriptGpa !== null && Math.abs(courseGpa - transcriptGpa) < 0.00005) {
     return {
       recalculated: courseGpa,
@@ -330,9 +469,9 @@ function chooseReportedGpa(courseGpa, transcriptGpa, rawText) {
     summaryEarned: summary.earned
   };
 }
-function buildTables(courses, rawText, transcriptGpa) {
+function buildTables(courses, rawText, transcriptGpa, lines = null) {
   const { credits, qps, gpa: courseRowGpa } = totals(courses);
-  const { recalculated, method, summaryAttempted, summaryEarned } = chooseReportedGpa(courseRowGpa, transcriptGpa, rawText);
+  const { recalculated, method, summaryAttempted, summaryEarned } = chooseReportedGpa(courseRowGpa, transcriptGpa, rawText, lines);
   const difference = recalculated !== null && transcriptGpa !== null ? round4(recalculated - transcriptGpa) : null;
   const correct = difference !== null ? (Math.abs(difference) < 0.00005 ? "Yes" : "No") : "Transcript GPA not found/provided";
   const included = courses.filter(c => c.include_in_gpa);
@@ -400,7 +539,7 @@ function buildTables(courses, rawText, transcriptGpa) {
     "Total Sum of calculated_quality_points": round4(totalCalculatedQualityPoints),
     "Exclusion / Repeat Reason": "Included rows only"
   });
-  const semesterSummary = buildSemesterSummaryGpa(courses, rawText);
+  const semesterSummary = buildSemesterSummaryGpa(courses, rawText, lines);
   const summary = [
     { Metric: "Script version", Value: SCRIPT_VERSION },
     { Metric: "Transcript GPA", Value: transcriptGpa ?? "" },
@@ -468,7 +607,7 @@ function App() {
       const transcriptGpa = manualGpa !== "" ? Number(manualGpa) : autoGpa;
       const courses = applyRules(parseCourses(lines, gradeScale));
       if (!courses.length) throw new Error("No courses were parsed from the PDF. Check the transcript layout or PDF text extraction.");
-      const built = buildTables(courses, rawText, transcriptGpa);
+      const built = buildTables(courses, rawText, transcriptGpa, lines);
       setTables(built); setActiveTab("Summary");
     } catch (err) {
       setError(err && err.message ? err.message : String(err));
