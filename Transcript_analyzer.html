@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CMI Transcript GPA Analyzer - Corrected with Semester Summary</title>
+  <title>CMI Transcript GPA Analyzer - Corrected</title>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -26,6 +26,13 @@
     table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
     th, td { border: 1px solid #dbe2ea; padding: 8px; text-align: left; vertical-align: top; }
     th { background: #e5e7eb; position: sticky; top: 0; }
+    td { white-space: normal; overflow-wrap: anywhere; word-break: normal; line-height: 1.35; }
+    .table-wrap { overflow-x: auto; max-height: 650px; }
+    .data-table { table-layout: auto; min-width: 1180px; }
+    .data-table th, .data-table td { min-width: 90px; max-width: 260px; }
+    .data-table th:nth-child(1), .data-table td:nth-child(1) { min-width: 135px; }
+    .data-table th:nth-child(2), .data-table td:nth-child(2) { min-width: 95px; }
+    .data-table th:nth-child(3), .data-table td:nth-child(3) { min-width: 220px; max-width: 360px; }
     .ok { color: #047857; font-weight: bold; }
     .warn { color: #b45309; font-weight: bold; }
     .error { color: #b91c1c; font-weight: bold; }
@@ -43,7 +50,7 @@
 <script type="text/babel">
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-const SCRIPT_VERSION = "2026-05-19-cmi-fixed-reading-order-semester-summary";
+const SCRIPT_VERSION = "2026-05-19-cmi-fixed-no-semester-summary-overlap-fix";
 const EXCLUDED_GRADES = new Set(["P", "NP", "W", "AU", "RPL", "T", "I"]);
 const VALID_LETTER_GRADES = new Set(["A", "B+", "B", "C+", "C", "D+", "D", "F"]);
 const DEFAULT_GRADE_POINTS = { A: 4.0, "B+": 3.5, B: 3.0, "C+": 2.5, C: 2.0, "D+": 1.5, D: 1.0, F: 0.0 };
@@ -77,52 +84,6 @@ function wordsToLines(words, yTol = 3) {
   }
   return groups.map(g => g.sort((a, b) => a.x0 - b.x0).map(w => w.text).join(" "));
 }
-function wordsToColumnSegments(words, yTol = 3) {
-  const sorted = [...words].sort((a, b) => Math.round(a.top / yTol) - Math.round(b.top / yTol) || a.x0 - b.x0);
-  const groups = [];
-  for (const w of sorted) {
-    if (!groups.length || Math.abs(w.top - groups[groups.length - 1][0].top) > yTol) groups.push([w]);
-    else groups[groups.length - 1].push(w);
-  }
-
-  const left = [];
-  const right = [];
-  const full = [];
-  for (const group of groups) {
-    const g = group.sort((a, b) => a.x0 - b.x0);
-    if (!g.length) continue;
-    // Split a visual PDF row only at a real column gutter. This is safer than
-    // splitting every word by page midpoint, which can separate a term such as
-    // "FALL" from "2025/26" and then all following courses inherit the
-    // previous term.
-    let splitAt = -1;
-    let bestGap = 0;
-    for (let i = 0; i < g.length - 1; i++) {
-      const width = Math.max(1, g[i].width || (String(g[i].text || "").length * 4));
-      const gap = g[i + 1].x0 - (g[i].x0 + width);
-      if (gap > bestGap) { bestGap = gap; splitAt = i + 1; }
-    }
-    const pushSegment = (bucket, segment) => {
-      const text = normalizeLine(segment.map(w => w.text).join(" "));
-      if (text) bucket.push(text);
-    };
-    if (bestGap > 70 && splitAt > 0 && splitAt < g.length) {
-      const a = g.slice(0, splitAt);
-      const b = g.slice(splitAt);
-      pushSegment(left, a);
-      pushSegment(right, b);
-      full.push(normalizeLine(g.map(w => w.text).join(" ")));
-    } else {
-      const text = normalizeLine(g.map(w => w.text).join(" "));
-      if (!text) continue;
-      // Lines that start on the right side belong to the right transcript column;
-      // all other lines remain in the left/general stream.
-      (g[0].x0 > 300 ? right : left).push(text);
-      full.push(text);
-    }
-  }
-  return { left, right, full };
-}
 async function extractPdfLines(file) {
   const buffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
@@ -134,27 +95,27 @@ async function extractPdfLines(file) {
     const viewport = page.getViewport({ scale: 1 });
     const words = content.items
       .filter(item => item.str && item.str.trim())
-      .map(item => ({
-        text: item.str,
-        x0: item.transform[4],
-        top: viewport.height - item.transform[5],
-        width: item.width || 0
-      }));
+      .map(item => ({ text: item.str, x0: item.transform[4], top: viewport.height - item.transform[5] }));
 
     // IMPORTANT FIX:
-    // Do not split words with a fixed midpoint. The CMI transcript is two visual
-    // columns, but some right-column term labels can sit close to the page
-    // center. A midpoint split can break "FALL 2025/26" into partial fragments,
-    // so all later right-column courses are left under SUMMER 2024/25. Instead,
-    // group by visual rows, split only at a large horizontal gutter, then parse
-    // the left column followed by the right column.
-    const segments = wordsToColumnSegments(words);
-    const pageLines = [...segments.left, ...segments.right]
-      .map(normalizeLine)
-      .filter(Boolean);
-    rawParts.push(`--- Page ${pageNum} clean transcript reading-order lines ---\n${pageLines.join("\n")}`);
-    allLines.push(...pageLines);
+    // CMI transcripts can be visually two-column. Do not parse the merged full-page
+    // text because that can combine unrelated left/right rows on the same y-axis.
+    // Instead, parse each column in reading order, but use only this clean column
+    // stream for course and summary extraction. The old version also mixed a
+    // full-page raw extraction with column extractions, which duplicated and merged
+    // Semester Summary lines.
+    const splitX = viewport.width / 2;
+    const columns = [words.filter(w => w.x0 < splitX), words.filter(w => w.x0 >= splitX)];
+    columns.forEach((colWords, colIndex) => {
+      const colLines = wordsToLines(colWords).map(normalizeLine).filter(Boolean);
+      if (colLines.length) {
+        rawParts.push(`--- Page ${pageNum} column ${colIndex + 1} reading-order lines ---\n${colLines.join("\n")}`);
+        allLines.push(...colLines);
+      }
+    });
   }
+  // rawText intentionally mirrors the clean reading-order lines. Avoid including
+  // merged full-page text because summary parsing depends on non-duplicated rows.
   return { rawText: allLines.join("\n"), lines: allLines };
 }
 
@@ -241,8 +202,7 @@ function isCourseContinuationLine(line) {
   const clean = normalizeLine(line);
   if (!clean) return false;
   if (isTerm(clean)) return false;
-  if (/^(Semester Summary|Cumulative Summary|Course Credits|Attempt|Credits Earn|Grade GPA|TOTAL CREDITS|SCOLASTIC RATING|HONORS DESIGNATION|Page \d+|Monica Gordon|Student ID|Student Name|Gender|Date of Birth|Address|Enrollment History Date|OFFICIAL ACADEMIC TRANSCRIPT|COLLEGE OF THE MARSHALL ISLANDS|PO Box)/i.test(clean)) return false;
-  if (/Associate of Arts|In Progress|Specialization|Management|Accounting|Registrar|Course not included in GPA calculation/i.test(clean)) return false;
+  if (/^(Semester Summary|Cumulative Summary|Course Credits|Attempt|Credits Earn|Grade GPA|TOTAL CREDITS|SCOLASTIC RATING|HONORS DESIGNATION|Page \d+|Monica Gordon)/i.test(clean)) return false;
   if (/^(President's List|Dean's List|Honors List)$/i.test(clean)) return false;
   if (/^(A|B\+|B|C\+|C|D\+|D|F)\s+\d+(?:\.\d+)?$/i.test(clean)) return false;
   if (/^(I|P|AU|R|W|NP|RPL|T)\b/i.test(clean)) return false;
@@ -406,13 +366,12 @@ function buildSemesterSummaryGpa(courses, rawText, lines = null) {
     };
   });
 }
-function buildGpaFormulaRows(summary, semesterSummary) {
+function buildGpaFormulaRows(summary) {
   return [
     { Item: "Main GPA formula", Formula: "GPA = Total Quality Points / Total GPA Credits", Notes: "GPA credits use attempted credits for valid letter grades included by policy." },
     { Item: "Quality points formula", Formula: "Quality Points = GPA Credits x Grade Points", Notes: "An F uses attempted credits but grade points are 0.00." },
     { Item: "Course-row audit calculation", Formula: `${summary.find(r => r.Metric === "Total quality points")?.Value ?? ""} / ${summary.find(r => r.Metric === "Total GPA credits")?.Value ?? ""} = ${summary.find(r => r.Metric === "Course-row audit GPA")?.Value ?? ""}`, Notes: "Computed from parsed course rows after exclusions/repeat rules." },
-    { Item: "Reported recalculated GPA", Formula: String(summary.find(r => r.Metric === "Recalculated GPA")?.Value ?? ""), Notes: String(summary.find(r => r.Metric === "GPA method")?.Value ?? "") },
-    { Item: "Semester GPA tab", Formula: "Semester GPA = semester quality points / semester GPA credits", Notes: `${semesterSummary.length} term row(s) generated.` }
+    { Item: "Reported recalculated GPA", Formula: String(summary.find(r => r.Metric === "Recalculated GPA")?.Value ?? ""), Notes: String(summary.find(r => r.Metric === "GPA method")?.Value ?? "") }
   ];
 }
 function extractFinalCumulativeSummary(rawText, lines = null) {
@@ -563,8 +522,7 @@ function buildTables(courses, rawText, transcriptGpa, lines = null) {
   const rawExtract = rawText.split(/\n/).map(line => ({ "Raw extracted text line": line }));
   return {
     Summary: summary,
-    GPA_Formula: buildGpaFormulaRows(summary, semesterSummary),
-    Semester_Summary_GPA: semesterSummary,
+    GPA_Formula: buildGpaFormulaRows(summary),
     Courses_Breakdown: coursesBreakdown,
     Courses: coursesWithFormula,
     Included_GPA: includedWithFormula,
@@ -585,7 +543,7 @@ function exportWorkbook(tables) {
 function TableView({ rows }) {
   if (!rows || !rows.length) return <p className="small">No records.</p>;
   const columns = Array.from(new Set(rows.flatMap(row => Object.keys(row))));
-  return <div style={{ overflowX: "auto", maxHeight: "650px" }}><table><thead><tr>{columns.map(col => <th key={col}>{col}</th>)}</tr></thead><tbody>{rows.map((row, i) => <tr key={i}>{columns.map(col => <td key={col}>{String(row[col] ?? "")}</td>)}</tr>)}</tbody></table></div>;
+  return <div className="table-wrap"><table className="data-table"><thead><tr>{columns.map(col => <th key={col}>{col}</th>)}</tr></thead><tbody>{rows.map((row, i) => <tr key={i}>{columns.map(col => <td key={col}>{String(row[col] ?? "")}</td>)}</tr>)}</tbody></table></div>;
 }
 function App() {
   const [fileName, setFileName] = React.useState("");
@@ -619,7 +577,7 @@ function App() {
   return <div className="container">
     <div className="card">
       <h1>CMI Transcript GPA Analyzer - Corrected</h1>
-      <p className="small">This HTML version follows the corrected Python GPA audit logic: developmental courses are excluded, GPA credits use attempted credits for valid letter grades, F attempts remain in the GPA denominator with zero quality points, and the final printed Cumulative Summary is used when parsed course rows do not reconcile. It also displays the GPA formula, adds a Semester Summary GPA tab, adds a Courses_Breakdown tab with total calculated_quality_points, and shows per-course GPA formulas in the Courses and Included_GPA tabs.</p>
+      <p className="small">This HTML version follows the corrected Python GPA audit logic: developmental courses are excluded, GPA credits use attempted credits for valid letter grades, F attempts remain in the GPA denominator with zero quality points, and the final printed Cumulative Summary is used when parsed course rows do not reconcile. It also displays the GPA formula, adds a Courses_Breakdown tab with total calculated_quality_points, and shows per-course GPA formulas in the Courses and Included_GPA tabs.</p>
       <div className="row">
         <div><label><strong>Transcript PDF</strong></label><input type="file" accept="application/pdf" onChange={handleFile} /></div>
         <div><label><strong>Transcript GPA override</strong> <span className="small">optional</span></label><input type="number" step="0.0001" value={manualGpa} onChange={e => setManualGpa(e.target.value)} placeholder="Auto-detect if blank" /></div>
