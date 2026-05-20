@@ -507,7 +507,7 @@
 
     <section class="card">
       <h3>Top 20 Faculty Fail / Pass Comparison by Highest Fail Rate</h3>
-      <p style="margin:4px 0 10px;color:var(--gray-500)">Faculty are ranked by highest fail rate. Each bar label includes both fail rate and pass rate.</p>
+      <p style="margin:4px 0 10px;color:var(--gray-500)">Faculty are ranked by highest fail rate. Fail bars are pink; pass bars are sky blue. Each label includes both fail rate and pass rate.</p>
       <div class="chart-wrap"><canvas id="facultyVolumeChart"></canvas></div>
     </section>
 
@@ -802,10 +802,20 @@
       makeChart("gradeChart", "bar", Object.keys(gradeCounts), [{ label: "Records", data: Object.values(gradeCounts) }]);
 
       const passFail = { Pass: rows.filter(isPass).length, Fail: rows.filter(isFail).length, Other: rows.filter(r => !isPass(r) && !isFail(r)).length };
-      makeChart("passFailChart", "doughnut", Object.keys(passFail), [{ label: "Records", data: Object.values(passFail) }]);
+      makeChart("passFailChart", "doughnut", Object.keys(passFail), [{
+        label: "Records",
+        data: Object.values(passFail),
+        backgroundColor: ["#8ecaf0", "#ffa6bd", "#cbd5e1"],
+        borderColor: ["#8ecaf0", "#ffa6bd", "#cbd5e1"]
+      }]);
 
       const completion = { Completed: rows.filter(isCompleted).length, "Not Completed": rows.filter(r => !isCompleted(r)).length };
-      makeChart("completionChart", "pie", Object.keys(completion), [{ label: "Records", data: Object.values(completion) }]);
+      makeChart("completionChart", "pie", Object.keys(completion), [{
+        label: "Records",
+        data: Object.values(completion),
+        backgroundColor: ["#8ecaf0", "#cbd5e1"],
+        borderColor: ["#8ecaf0", "#cbd5e1"]
+      }]);
 
       const courses = summarize(rows, "Course").filter(r => r.completed >= 5);
       const facultyAll = summarize(rows, "Faculty").filter(r => r.completed >= 5);
@@ -850,6 +860,35 @@
 
     function makeChart(id, type, labels, datasets, percentAxis = false, stacked = false) {
       if (state.charts[id]) state.charts[id].destroy();
+
+      // Consistent CMI dashboard chart colors:
+      // Fail/fail-rate = pink, Pass/pass-rate = sky blue.
+      const CHART_COLORS = {
+        pass: "#8ecaf0",
+        fail: "#ffa6bd",
+        other: "#cbd5e1"
+      };
+
+      datasets = datasets.map(dataset => {
+        const label = String(dataset.label || "").toLowerCase();
+        const isFail = label.includes("fail");
+        const isPass = label.includes("pass");
+        const color = isFail ? CHART_COLORS.fail : isPass ? CHART_COLORS.pass : CHART_COLORS.other;
+
+        // Preserve explicitly provided multi-segment colors for pie/doughnut charts.
+        if (Array.isArray(dataset.backgroundColor)) {
+          return dataset;
+        }
+
+        return {
+          ...dataset,
+          backgroundColor: color,
+          borderColor: color,
+          hoverBackgroundColor: color,
+          hoverBorderColor: color
+        };
+      });
+
       const ctx = $(id);
       state.charts[id] = new Chart(ctx, {
         type,
