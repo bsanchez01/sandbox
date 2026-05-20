@@ -1,11 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CMI FY2025-2026 Quarterly Summary Report</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=DM+Sans:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg: #eef0f8;
@@ -29,23 +29,24 @@
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;display:flex;min-height:100vh;}
 
 /* SIDEBAR */
-.sidebar{width:220px;min-width:220px;background:var(--sidebar);position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;z-index:200;}
+.sidebar{width:230px;min-width:230px;background:var(--sidebar);position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;z-index:200;}
 .sidebar::before{content:'';position:absolute;inset:0;opacity:0.07;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg stroke='%23ffffff' stroke-width='2' fill='none'%3E%3Cline x1='0' y1='0' x2='80' y2='80'/%3E%3Cline x1='80' y1='0' x2='0' y2='80'/%3E%3Cline x1='40' y1='-20' x2='40' y2='100'/%3E%3Cline x1='-20' y1='40' x2='100' y2='40'/%3E%3C/g%3E%3C/svg%3E");pointer-events:none;z-index:0;}
 .sidebar>*{position:relative;z-index:1;}
-.sidebar-logo{padding:26px 22px 20px;border-bottom:1px solid rgba(255,255,255,0.12);}
-.si-eyebrow{font-size:9px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:8px;}
-.si-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;line-height:1.3;color:#fff;}
-.si-title em{color:#7db3ff;font-style:italic;}
-.si-sub{font-size:10px;color:rgba(255,255,255,0.35);margin-top:5px;letter-spacing:0.06em;}
-.sidebar-meta{padding:14px 22px;border-bottom:1px solid rgba(255,255,255,0.08);}
-.sm-label{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.4);}
-.sm-val{font-size:13px;font-weight:600;color:#fff;margin-top:2px;}
-.sidebar-nav{flex:1;padding:10px 0;}
-.nav-item{display:flex;align-items:center;justify-content:space-between;padding:11px 22px;cursor:pointer;color:rgba(255,255,255,0.5);font-size:13px;font-weight:500;border:none;background:none;width:100%;text-align:left;border-left:3px solid transparent;transition:all 0.15s;}
-.nav-item:hover{color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.07);}
-.nav-item.active{color:#fff;background:rgba(125,179,255,0.15);border-left-color:#7db3ff;font-weight:600;}
-.nav-num{font-size:10px;font-weight:700;color:rgba(255,255,255,0.2);letter-spacing:0.06em;}
-.nav-item.active .nav-num{color:rgba(125,179,255,0.75);}
+.sidebar-logo{padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.12);}
+.si-eyebrow{font-family:'IBM Plex Sans',sans-serif;font-size:9px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:6px;}
+.si-title{font-family:'IBM Plex Sans',sans-serif;font-size:15px;font-weight:700;line-height:1.4;color:#ffffff;letter-spacing:0.01em;}
+.si-title em{color:#7db3ff;font-style:normal;font-weight:300;}
+.si-sub{font-family:'IBM Plex Sans',sans-serif;font-size:10px;color:rgba(255,255,255,0.45);margin-top:4px;letter-spacing:0.04em;}
+.sidebar-meta{padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.08);}
+.sm-label{font-family:'IBM Plex Sans',sans-serif;font-size:9px;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.55);}
+.sm-val{font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:600;color:#ffffff;margin-top:3px;letter-spacing:0.01em;}
+.sidebar-nav{flex:1;padding:8px 0;}
+.nav-section-label{font-family:'IBM Plex Sans',sans-serif;font-size:9px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.38);padding:14px 20px 5px;}
+.nav-item{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;cursor:pointer;color:rgba(255,255,255,0.72);font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:400;border:none;background:none;width:100%;text-align:left;border-left:3px solid transparent;transition:all 0.15s;letter-spacing:0.01em;}
+.nav-item:hover{color:#ffffff;background:rgba(255,255,255,0.08);}
+.nav-item.active{color:#ffffff;background:rgba(125,179,255,0.18);border-left-color:#7db3ff;font-weight:600;}
+.nav-num{font-family:'IBM Plex Sans',sans-serif;font-size:10px;font-weight:500;color:rgba(255,255,255,0.28);letter-spacing:0.06em;}
+.nav-item.active .nav-num{color:rgba(125,179,255,0.85);}
 
 /* PAGE */
 .page-wrap{flex:1;min-width:0;display:flex;flex-direction:column;}
@@ -241,6 +242,7 @@ main{padding:30px 44px 64px;}
     <div class="sm-val">FY 2026 · YTD</div>
   </div>
   <nav class="sidebar-nav">
+    <div class="nav-section-label">Navigation</div>
     <button class="nav-item active" onclick="showTab('quarterly',this)"><span>Quarterly Highlights</span><span class="nav-num">01</span></button>
     <button class="nav-item" onclick="showTab('overview',this)"><span>SP26 Enrollment Report</span><span class="nav-num">02</span></button>
     <button class="nav-item" onclick="showTab('academic',this)"><span>Academic Programs</span><span class="nav-num">03</span></button>
@@ -1467,4 +1469,3 @@ function showTab(id, btn) {
 </script>
 </body>
 </html>
-
