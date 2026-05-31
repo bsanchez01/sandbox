@@ -864,6 +864,708 @@ button, .nav-item, .module-card, .hotspot-btn { touch-action: manipulation; }
 .share-send-btn:hover { background:#106ebe; }
 .share-send-btn:disabled { background:#c8c6c4; cursor:not-allowed; }
 
+
+/* ══════════════════════════════════════════════════════════════
+   OUTLOOK SIMULATION STYLES
+══════════════════════════════════════════════════════════════ */
+.ol-sim {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  margin: 16px 0;
+  position: relative;
+}
+.ol-title-bar {
+  background: #201f1e;
+  padding: 7px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ol-tb-dot { width: 11px; height: 11px; border-radius: 50%; }
+.ol-tb-name { font-size: 11px; color: #aaa; margin-left: 6px; }
+
+/* Task instruction strip */
+.ol-task-strip {
+  background: linear-gradient(135deg, #0f2744, #1a3a5c);
+  padding: 10px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border-bottom: 1px solid rgba(0,120,212,0.3);
+}
+.ol-task-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+.ol-task-body { flex: 1; }
+.ol-task-kicker {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.ol-task-desc { font-size: 12px; color: #e8f0fe; line-height: 1.5; }
+.ol-tasklist { margin-top: 6px; display: flex; flex-direction: column; gap: 3px; }
+.ol-taskitem {
+  font-size: 11px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ol-taskitem.done { color: #22c55e; }
+.ol-taskitem-ic { font-size: 10px; }
+
+/* Shell: nav + folder + list + read */
+.ol-shell { display: flex; height: 480px; }
+.ol-left-nav {
+  width: 50px;
+  background: #f3f2f1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 8px;
+  gap: 3px;
+  border-right: 1px solid #e1dfdd;
+  flex-shrink: 0;
+}
+.ol-nav-btn {
+  width: 38px; height: 38px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background .15s;
+  color: #605e5c;
+  border: none;
+  background: transparent;
+  position: relative;
+}
+.ol-nav-btn:hover { background: #e8e6e3; }
+.ol-nav-btn.act { background: #deecf9; color: #0078d4; }
+.ol-nav-btn[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 46px; top: 50%; transform: translateY(-50%);
+  background: #201f1e; color: #fff;
+  font-size: 10px; padding: 3px 8px;
+  border-radius: 4px; white-space: nowrap;
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s; z-index: 99;
+}
+.ol-nav-btn:hover[data-tooltip]::after { opacity: 1; }
+
+.ol-folders {
+  width: 190px;
+  background: #faf9f8;
+  border-right: 1px solid #e1dfdd;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.ol-folders::-webkit-scrollbar { width: 3px; }
+.ol-folders::-webkit-scrollbar-thumb { background: #e1dfdd; }
+.ol-folder-section {
+  padding: 8px 12px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #605e5c;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.ol-folder-item {
+  padding: 6px 12px 6px 18px;
+  font-size: 12px;
+  color: #323130;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 0;
+  transition: background .12s;
+  user-select: none;
+}
+.ol-folder-item:hover { background: #e8e6e3; }
+.ol-folder-item.sel { background: #deecf9; font-weight: 600; color: #0078d4; }
+.ol-folder-badge {
+  margin-left: auto;
+  background: #0078d4;
+  color: #fff;
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.ol-msglist {
+  width: 260px;
+  border-right: 1px solid #e1dfdd;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.ol-msglist-hdr {
+  padding: 8px 12px;
+  border-bottom: 1px solid #e1dfdd;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  background: #fff;
+}
+.ol-msglist-title { font-size: 13px; font-weight: 700; color: #323130; }
+.ol-msglist-filter { font-size: 11px; color: #0078d4; cursor: pointer; }
+.ol-msgs { flex: 1; overflow-y: auto; }
+.ol-msgs::-webkit-scrollbar { width: 3px; }
+.ol-msg-row {
+  padding: 9px 12px;
+  border-bottom: 1px solid #f0eeec;
+  cursor: pointer;
+  transition: background .12s;
+  position: relative;
+}
+.ol-msg-row:hover { background: #f5f5f5; }
+.ol-msg-row.sel { background: #deecf9; }
+.ol-msg-row.unread .ol-msg-from { font-weight: 700; }
+.ol-msg-row.unread::before {
+  content: '';
+  position: absolute;
+  left: 4px; top: 50%;
+  transform: translateY(-50%);
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #0078d4;
+}
+.ol-msg-r1 { display: flex; justify-content: space-between; margin-bottom: 2px; }
+.ol-msg-from { font-size: 12px; color: #323130; }
+.ol-msg-time { font-size: 10px; color: #605e5c; }
+.ol-msg-subj { font-size: 11px; color: #323130; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ol-msg-prev { font-size: 10px; color: #605e5c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.ol-readpane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+}
+.ol-readpane-toolbar {
+  padding: 7px 12px;
+  border-bottom: 1px solid #e1dfdd;
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  background: #faf9f8;
+}
+.ol-rbtn {
+  padding: 4px 10px;
+  border: 1px solid #c8c6c4;
+  border-radius: 3px;
+  font-size: 11px;
+  background: #fff;
+  cursor: pointer;
+  color: #323130;
+  font-family: 'Segoe UI', sans-serif;
+  transition: background .12s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.ol-rbtn:hover { background: #f0eeec; }
+.ol-rbtn.pri { background: #0078d4; color: #fff; border-color: #0078d4; }
+.ol-rbtn.pri:hover { background: #106ebe; }
+.ol-rbtn:disabled { opacity: .4; cursor: not-allowed; }
+.ol-read-hdr {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e1dfdd;
+  flex-shrink: 0;
+}
+.ol-read-subj { font-size: 17px; font-weight: 600; color: #323130; margin-bottom: 6px; }
+.ol-read-meta { font-size: 11px; color: #605e5c; line-height: 1.8; }
+.ol-read-meta strong { color: #323130; }
+.ol-read-body {
+  flex: 1;
+  padding: 14px 16px;
+  font-size: 12px;
+  color: #323130;
+  line-height: 1.75;
+  overflow-y: auto;
+}
+.ol-read-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a19f9d;
+  font-size: 12px;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Compose window */
+.ol-compose-wrap {
+  position: absolute;
+  bottom: 0; right: 0;
+  width: 100%;
+  background: #fff;
+  border-top: 1px solid #e1dfdd;
+  z-index: 20;
+  display: none;
+  flex-direction: column;
+  max-height: 360px;
+}
+.ol-compose-wrap.open { display: flex; }
+.ol-compose-topbar {
+  background: #0078d4;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.ol-compose-title { color: #fff; font-size: 12px; font-weight: 600; }
+.ol-compose-x { color: rgba(255,255,255,.8); cursor: pointer; font-size: 16px; background: none; border: none; }
+.ol-compose-x:hover { color: #fff; }
+.ol-compose-field {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #e1dfdd;
+  padding: 5px 12px;
+  gap: 7px;
+  flex-shrink: 0;
+}
+.ol-compose-lbl { font-size: 11px; color: #605e5c; min-width: 48px; flex-shrink: 0; }
+.ol-compose-inp {
+  flex: 1;
+  font-size: 12px;
+  color: #323130;
+  border: none;
+  outline: none;
+  font-family: 'Segoe UI', sans-serif;
+  background: transparent;
+}
+.ol-compose-inp::placeholder { color: #a19f9d; }
+.ol-compose-format {
+  padding: 4px 12px;
+  border-bottom: 1px solid #e1dfdd;
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  background: #faf9f8;
+}
+.ol-fmt-btn {
+  width: 24px; height: 24px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  font-size: 11px;
+  background: transparent;
+  cursor: pointer;
+  color: #323130;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Segoe UI', sans-serif;
+}
+.ol-fmt-btn:hover { background: #e8e6e3; border-color: #c8c6c4; }
+.ol-compose-body {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #323130;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: 'Segoe UI', sans-serif;
+  line-height: 1.65;
+  min-height: 100px;
+}
+.ol-compose-footer {
+  padding: 7px 12px;
+  border-top: 1px solid #e1dfdd;
+  background: #faf9f8;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+/* Calendar */
+.ol-cal-shell { display: flex; height: 520px; }
+.ol-cal-side {
+  width: 200px;
+  background: #faf9f8;
+  border-right: 1px solid #e1dfdd;
+  padding: 14px;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+.ol-cal-mini-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.ol-cal-mini-title { font-size: 12px; font-weight: 700; color: #323130; }
+.ol-cal-mini-nav {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #605e5c;
+  font-size: 13px;
+  padding: 2px;
+}
+.ol-cal-mini-nav:hover { color: #0078d4; }
+.ol-cal-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+.ol-cal-dow { font-size: 9px; color: #605e5c; padding: 2px 0; font-weight: 700; }
+.ol-cal-d {
+  font-size: 10px;
+  color: #323130;
+  padding: 2px;
+  border-radius: 50%;
+  cursor: pointer;
+  width: 20px; height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+}
+.ol-cal-d:hover { background: #f0eeec; }
+.ol-cal-d.today { background: #0078d4; color: #fff; font-weight: 700; }
+.ol-cal-d.other { color: #c8c6c4; }
+.ol-cal-d.has-event { border: 2px solid #0078d4; }
+.ol-cal-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.ol-cal-toolbar {
+  padding: 8px 14px;
+  border-bottom: 1px solid #e1dfdd;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  background: #faf9f8;
+}
+.ol-cal-nav-btn {
+  padding: 4px 10px;
+  border: 1px solid #c8c6c4;
+  border-radius: 3px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 11px;
+  color: #323130;
+  font-family: 'Segoe UI', sans-serif;
+}
+.ol-cal-nav-btn:hover { background: #f0eeec; }
+.ol-cal-title { font-size: 13px; font-weight: 700; color: #323130; flex: 1; text-align: center; }
+.ol-cal-week-wrap { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+.ol-cal-week-hdr {
+  display: grid;
+  grid-template-columns: 52px repeat(5, 1fr);
+  border-bottom: 1px solid #e1dfdd;
+  flex-shrink: 0;
+  background: #faf9f8;
+}
+.ol-cal-wh-cell {
+  padding: 6px 4px;
+  text-align: center;
+  border-right: 1px solid #e1dfdd;
+}
+.ol-cal-wh-day { font-size: 10px; color: #605e5c; font-weight: 700; }
+.ol-cal-wh-date { font-size: 15px; font-weight: 700; color: #323130; }
+.ol-cal-wh-date.today-d {
+  background: #0078d4;
+  color: #fff;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+}
+.ol-cal-grid {
+  display: grid;
+  grid-template-columns: 52px repeat(5, 1fr);
+  flex: 1;
+}
+.ol-cal-time-cell {
+  height: 44px;
+  padding: 2px 6px;
+  font-size: 9px;
+  color: #a19f9d;
+  border-bottom: 1px solid #f0eeec;
+  border-right: 1px solid #e1dfdd;
+  display: flex;
+  align-items: flex-start;
+  background: #faf9f8;
+}
+.ol-cal-slot {
+  height: 44px;
+  border-bottom: 1px solid #f0eeec;
+  border-right: 1px solid #e1dfdd;
+  cursor: pointer;
+  transition: background .12s;
+  position: relative;
+}
+.ol-cal-slot:hover { background: #f5f5f5; }
+.ol-cal-slot.drop-target { background: rgba(0,120,212,.08); border: 2px dashed #0078d4; }
+.ol-cal-event {
+  position: absolute;
+  left: 2px; right: 2px;
+  border-radius: 3px;
+  padding: 2px 5px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  overflow: hidden;
+  z-index: 5;
+  line-height: 1.4;
+}
+.ol-cal-event.blue { background: #deecf9; border-left: 3px solid #0078d4; color: #0078d4; }
+.ol-cal-event.green { background: #dff6dd; border-left: 3px solid #107c10; color: #107c10; }
+.ol-cal-event.orange { background: #fff4ce; border-left: 3px solid #ca5010; color: #ca5010; }
+
+/* New event form panel */
+.ol-newevent-panel {
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 320px;
+  background: #fff;
+  border-left: 1px solid #e1dfdd;
+  z-index: 25;
+  display: none;
+  flex-direction: column;
+  box-shadow: -4px 0 16px rgba(0,0,0,.12);
+}
+.ol-newevent-panel.open { display: flex; }
+.ol-newevent-hdr {
+  background: #0078d4;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.ol-newevent-title { color: #fff; font-size: 13px; font-weight: 600; }
+.ol-newevent-close { background: none; border: none; color: rgba(255,255,255,.8); cursor: pointer; font-size: 16px; }
+.ol-newevent-close:hover { color: #fff; }
+.ol-newevent-body { flex: 1; overflow-y: auto; padding: 14px; }
+.ol-newevent-field { margin-bottom: 12px; }
+.ol-newevent-lbl { font-size: 10px; font-weight: 700; color: #605e5c; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
+.ol-newevent-inp {
+  width: 100%;
+  padding: 6px 9px;
+  border: 1px solid #c8c6c4;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: 'Segoe UI', sans-serif;
+  color: #323130;
+  outline: none;
+  transition: border .15s;
+}
+.ol-newevent-inp:focus { border-color: #0078d4; }
+.ol-newevent-row { display: flex; gap: 8px; }
+.ol-newevent-row .ol-newevent-field { flex: 1; }
+.ol-newevent-footer {
+  padding: 10px 14px;
+  border-top: 1px solid #e1dfdd;
+  display: flex;
+  gap: 7px;
+  flex-shrink: 0;
+  background: #faf9f8;
+}
+.ol-sched-assistant {
+  background: #f0f8ff;
+  border: 1px solid #c7e0f4;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-top: 8px;
+}
+.ol-sched-title { font-size: 10px; font-weight: 700; color: #0078d4; margin-bottom: 8px; text-transform: uppercase; }
+.ol-sched-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: 10px;
+  color: #323130;
+}
+.ol-sched-name { min-width: 80px; font-weight: 600; }
+.ol-sched-bar { flex: 1; height: 16px; border-radius: 3px; overflow: hidden; display: flex; }
+.ol-sched-seg { height: 100%; }
+.ol-sched-free { background: #dff6dd; }
+.ol-sched-busy { background: #deecf9; }
+.ol-sched-mtg  { background: #0078d4; }
+
+/* Rules wizard */
+.ol-rules-panel {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e1dfdd;
+  margin: 14px 0;
+  font-family: 'Segoe UI', sans-serif;
+}
+.ol-rules-hdr {
+  background: #f3f2f1;
+  padding: 10px 16px;
+  border-bottom: 1px solid #e1dfdd;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ol-rules-title { font-size: 13px; font-weight: 700; color: #323130; }
+.ol-rules-body { padding: 16px; }
+.ol-rules-step-hdr { font-size: 11px; font-weight: 700; color: #0078d4; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px; }
+.ol-rules-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.ol-rules-lbl { font-size: 12px; color: #323130; min-width: 100px; }
+.ol-rules-sel {
+  flex: 1;
+  padding: 5px 8px;
+  border: 1px solid #c8c6c4;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: 'Segoe UI', sans-serif;
+  color: #323130;
+  background: #fff;
+  cursor: pointer;
+  outline: none;
+}
+.ol-rules-sel:focus { border-color: #0078d4; }
+.ol-rules-inp {
+  flex: 1;
+  padding: 5px 8px;
+  border: 1px solid #c8c6c4;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: 'Segoe UI', sans-serif;
+  color: #323130;
+  outline: none;
+}
+.ol-rules-inp:focus { border-color: #0078d4; }
+.ol-rules-preview {
+  background: #f0f8ff;
+  border: 1px solid #c7e0f4;
+  border-radius: 5px;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: #0078d4;
+  margin-top: 8px;
+  font-style: italic;
+}
+.ol-rules-footer {
+  padding: 10px 16px;
+  border-top: 1px solid #e1dfdd;
+  display: flex;
+  gap: 8px;
+  background: #faf9f8;
+}
+
+/* Contacts */
+.ol-contact-form {
+  background: #fff;
+  padding: 16px;
+  font-family: 'Segoe UI', sans-serif;
+}
+.ol-contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.ol-contact-field { }
+.ol-contact-lbl { font-size: 10px; font-weight: 700; color: #605e5c; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 3px; }
+.ol-contact-inp {
+  width: 100%;
+  padding: 6px 9px;
+  border: 1px solid #c8c6c4;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: 'Segoe UI', sans-serif;
+  color: #323130;
+  outline: none;
+  transition: border .15s;
+}
+.ol-contact-inp:focus { border-color: #0078d4; }
+.ol-contact-inp.valid { border-color: #107c10; }
+.ol-contact-inp.invalid { border-color: #a4262c; }
+.ol-contact-footer {
+  padding: 10px 0 0;
+  display: flex;
+  gap: 7px;
+  border-top: 1px solid #e1dfdd;
+  margin-top: 12px;
+}
+
+/* Tasks pane */
+.ol-tasks-pane {
+  background: #fff;
+  font-family: 'Segoe UI', sans-serif;
+}
+.ol-tasks-toolbar {
+  padding: 8px 14px;
+  border-bottom: 1px solid #e1dfdd;
+  display: flex;
+  gap: 6px;
+  background: #faf9f8;
+}
+.ol-task-list { }
+.ol-task-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border-bottom: 1px solid #f0eeec;
+  cursor: pointer;
+  transition: background .12s;
+}
+.ol-task-item:hover { background: #f5f5f5; }
+.ol-task-cb {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid #c8c6c4;
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s;
+}
+.ol-task-cb.checked { background: #107c10; border-color: #107c10; color: #fff; font-size: 10px; }
+.ol-task-text { flex: 1; }
+.ol-task-name { font-size: 12px; color: #323130; }
+.ol-task-name.done { text-decoration: line-through; color: #a19f9d; }
+.ol-task-due { font-size: 10px; color: #605e5c; }
+.ol-task-due.overdue { color: #a4262c; font-weight: 700; }
+.ol-task-flag { font-size: 14px; cursor: pointer; }
+
+/* Sim result bar */
+.ol-sim-result {
+  padding: 12px 16px;
+  display: none;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid rgba(16,124,16,.25);
+  background: rgba(16,124,16,.07);
+}
+.ol-sim-result.show { display: flex; }
+.ol-sim-result.wrong { background: rgba(164,38,44,.07); border-top-color: rgba(164,38,44,.25); }
+.ol-sim-result-txt { font-size: 12px; color: var(--text); line-height: 1.5; }
+
 </style>
 </head>
 <body>
@@ -2052,113 +2754,526 @@ window.checkKC1 = function(btn, correct, fbId) {
 // MODULE 2 LESSONS
 function renderL2_1() {
   setLessonBody(`
-    <div class="lesson-section">
-      <div class="section-tag">Lesson 2.1 — Outlook</div>
-      <h2 class="section-h">Outlook Navigation</h2>
-      <p class="section-p">Outlook is your professional command center. Before you can be productive, you need to know where everything lives. Click each panel to explore.</p>
+<div class="lesson-section">
+  <div class="section-tag">Lesson 2.1 — Outlook</div>
+  <h2 class="section-h">Navigating Outlook</h2>
+  <p class="section-p">Outlook is your RMI government communication hub. Every panel has a specific purpose — learn them here by clicking through a realistic simulation, then practise in your real account.</p>
+</div>
+
+<div class="lesson-section">
+  <div class="ol-sim">
+    <div class="ol-title-bar">
+      <div class="ol-tb-dot" style="background:#ff5f57"></div>
+      <div class="ol-tb-dot" style="background:#ffbd2e"></div>
+      <div class="ol-tb-dot" style="background:#28c840"></div>
+      <span class="ol-tb-name">Outlook — j.smith@rmi.gov.mh</span>
     </div>
-    <div class="lesson-section">
-      <h3 style="font-size:18px;font-weight:600;color:var(--text-bright);margin-bottom:16px">🔍 Click to Explore: Outlook Interface</h3>
-      <div class="hotspot-grid" id="outlook-nav-grid"></div>
+    <div class="ol-task-strip">
+      <div class="ol-task-icon">🎯</div>
+      <div class="ol-task-body">
+        <div class="ol-task-kicker">Navigation Tasks — complete all 4</div>
+        <div class="ol-tasklist">
+          <div class="ol-taskitem" id="t21-1"><span class="ol-taskitem-ic">○</span> Click <strong>Drafts</strong> in the folder pane</div>
+          <div class="ol-taskitem" id="t21-2"><span class="ol-taskitem-ic">○</span> Open the email from <strong>Director Heine</strong></div>
+          <div class="ol-taskitem" id="t21-3"><span class="ol-taskitem-ic">○</span> Click <strong>Reply</strong> in the reading pane toolbar</div>
+          <div class="ol-taskitem" id="t21-4"><span class="ol-taskitem-ic">○</span> Close compose and click the <strong>Calendar</strong> nav icon</div>
+        </div>
+      </div>
     </div>
-    <div class="lesson-section">
-      <h3 style="font-size:18px;font-weight:600;color:var(--text-bright);margin-bottom:16px">⌨️ Essential Outlook Shortcuts</h3>
-      <table class="compare-table">
-        <tr><th>Action</th><th>Windows</th><th>Mac</th></tr>
-        <tr><td>New Email</td><td><code>Ctrl+N</code></td><td><code>Cmd+N</code></td></tr>
-        <tr><td>Reply</td><td><code>Ctrl+R</code></td><td><code>Cmd+R</code></td></tr>
-        <tr><td>Reply All</td><td><code>Ctrl+Shift+R</code></td><td><code>Cmd+Shift+R</code></td></tr>
-        <tr><td>Forward</td><td><code>Ctrl+F</code></td><td><code>Cmd+J</code></td></tr>
-        <tr><td>Send</td><td><code>Ctrl+Enter</code></td><td><code>Cmd+Return</code></td></tr>
-        <tr><td>Search</td><td><code>Ctrl+E</code></td><td><code>Cmd+Option+F</code></td></tr>
-        <tr><td>New Appointment</td><td><code>Ctrl+Shift+A</code></td><td><code>Cmd+Shift+A</code></td></tr>
-      </table>
+    <div class="ol-shell">
+      <!-- Left nav -->
+      <div class="ol-left-nav">
+        <button class="ol-nav-btn act" id="ol-nav-mail" data-tooltip="Mail" onclick="ol21Nav('mail',this)">📧</button>
+        <button class="ol-nav-btn" id="ol-nav-cal" data-tooltip="Calendar" onclick="ol21Nav('cal',this)">📅</button>
+        <button class="ol-nav-btn" id="ol-nav-ppl" data-tooltip="People" onclick="ol21Nav('ppl',this)">👥</button>
+        <button class="ol-nav-btn" id="ol-nav-tasks" data-tooltip="Tasks" onclick="ol21Nav('tasks',this)">✅</button>
+      </div>
+      <!-- Folders -->
+      <div class="ol-folders">
+        <div class="ol-folder-section">Favourites</div>
+        <div class="ol-folder-item sel" id="fold-inbox">📥 Inbox <span class="ol-folder-badge">9</span></div>
+        <div class="ol-folder-item" id="fold-drafts" onclick="ol21ClickDrafts()">📝 Drafts <span class="ol-folder-badge">2</span></div>
+        <div class="ol-folder-item">📤 Sent Items</div>
+        <div class="ol-folder-section">My Folders</div>
+        <div class="ol-folder-item">📁 Action Required</div>
+        <div class="ol-folder-item">📁 Ministry Projects</div>
+        <div class="ol-folder-item">📁 HR &amp; Leave</div>
+        <div class="ol-folder-item">📰 Newsletters</div>
+        <div class="ol-folder-item">🗑️ Deleted Items</div>
+        <div class="ol-folder-item">⚠️ Junk Email <span class="ol-folder-badge" style="background:#a4262c">3</span></div>
+      </div>
+      <!-- Message list -->
+      <div class="ol-msglist">
+        <div class="ol-msglist-hdr">
+          <span class="ol-msglist-title">Inbox</span>
+          <span class="ol-msglist-filter">Filter ▾</span>
+        </div>
+        <div class="ol-msgs">
+          <div class="ol-msg-row unread" id="msg-heine" onclick="ol21OpenMsg(this,'heine')">
+            <div class="ol-msg-r1"><span class="ol-msg-from">Director Heine</span><span class="ol-msg-time">9:41 AM</span></div>
+            <div class="ol-msg-subj">Q3 Budget Review — action needed</div>
+            <div class="ol-msg-prev">Please review the attached figures before...</div>
+          </div>
+          <div class="ol-msg-row" onclick="ol21OpenMsg(this,'it')">
+            <div class="ol-msg-r1"><span class="ol-msg-from">IT Department</span><span class="ol-msg-time">8:55 AM</span></div>
+            <div class="ol-msg-subj">Scheduled maintenance tonight 11pm</div>
+            <div class="ol-msg-prev">Systems will be offline for 2 hours...</div>
+          </div>
+          <div class="ol-msg-row" onclick="ol21OpenMsg(this,'hr')">
+            <div class="ol-msg-r1"><span class="ol-msg-from">HR Division</span><span class="ol-msg-time">Yesterday</span></div>
+            <div class="ol-msg-subj">Annual leave policy — updated June 2026</div>
+            <div class="ol-msg-prev">Please review the updated leave entitlements...</div>
+          </div>
+          <div class="ol-msg-row" onclick="ol21OpenMsg(this,'sec')">
+            <div class="ol-msg-r1"><span class="ol-msg-from">Secretary's Office</span><span class="ol-msg-time">Mon</span></div>
+            <div class="ol-msg-subj">Cabinet briefing — Thursday 2pm</div>
+            <div class="ol-msg-prev">All ministry heads are requested to attend...</div>
+          </div>
+          <div class="ol-msg-row" onclick="ol21OpenMsg(this,'news')">
+            <div class="ol-msg-r1"><span class="ol-msg-from">RMI Gov Newsletter</span><span class="ol-msg-time">Mon</span></div>
+            <div class="ol-msg-subj">Pacific Digital Week — upcoming events</div>
+            <div class="ol-msg-prev">Join us for workshops on digital literacy...</div>
+          </div>
+        </div>
+      </div>
+      <!-- Reading pane -->
+      <div class="ol-readpane" id="ol21-readpane">
+        <div class="ol-readpane-toolbar">
+          <button class="ol-rbtn" id="ol21-reply-btn" disabled onclick="ol21Reply()">↩ Reply</button>
+          <button class="ol-rbtn" disabled>↩↩ Reply All</button>
+          <button class="ol-rbtn" disabled>→ Forward</button>
+          <button class="ol-rbtn" disabled>🗑️ Delete</button>
+          <button class="ol-rbtn" disabled>🏷️ Tag</button>
+          <button class="ol-rbtn" disabled>⚑ Flag</button>
+        </div>
+        <div class="ol-read-empty" id="ol21-empty">
+          <span style="font-size:28px">📧</span>
+          <span>Select a message to read it</span>
+        </div>
+        <div id="ol21-read-content" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+          <div class="ol-read-hdr">
+            <div class="ol-read-subj" id="ol21-subj"></div>
+            <div class="ol-read-meta" id="ol21-meta"></div>
+          </div>
+          <div class="ol-read-body" id="ol21-body"></div>
+        </div>
+        <!-- Compose (inline reply) -->
+        <div class="ol-compose-wrap" id="ol21-compose">
+          <div class="ol-compose-topbar">
+            <span class="ol-compose-title">✉️ Reply</span>
+            <button class="ol-compose-x" onclick="ol21CloseCompose()">✕</button>
+          </div>
+          <div class="ol-compose-field">
+            <span class="ol-compose-lbl">To</span>
+            <input class="ol-compose-inp" id="ol21-to" placeholder="Recipient" readonly>
+          </div>
+          <div class="ol-compose-field">
+            <span class="ol-compose-lbl">Subject</span>
+            <input class="ol-compose-inp" id="ol21-subj-inp" placeholder="Subject" readonly>
+          </div>
+          <div class="ol-compose-format">
+            <button class="ol-fmt-btn" style="font-weight:900">B</button>
+            <button class="ol-fmt-btn" style="font-style:italic">I</button>
+            <button class="ol-fmt-btn" style="text-decoration:underline">U</button>
+            <button class="ol-fmt-btn">≡</button>
+            <button class="ol-fmt-btn">🔗</button>
+            <button class="ol-fmt-btn">📎</button>
+          </div>
+          <textarea class="ol-compose-body" id="ol21-compose-body" placeholder="Type your reply here..."></textarea>
+          <div class="ol-compose-footer">
+            <button class="ol-rbtn pri" onclick="ol21Send()">Send</button>
+            <button class="ol-rbtn" onclick="ol21CloseCompose()">Discard</button>
+            <span style="font-size:10px;color:#a19f9d;margin-left:auto">Ctrl+Enter to send</span>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="callout success">
-      <div class="callout-head">💡 Pro Tip: Focused Inbox</div>
-      <p>Turn on Focused Inbox (View → Show Focused Inbox) to let Outlook automatically separate your most important emails from newsletters and notifications.</p>
+    <div class="ol-sim-result" id="ol21-result">
+      <span style="font-size:22px">✅</span>
+      <div class="ol-sim-result-txt"><strong>Outlook navigation complete!</strong> You opened a folder, read an email, opened Reply, and switched to Calendar. +25 XP earned.</div>
     </div>
-  `);
-  const parts = [
-    {icon:'📥', name:'Inbox', desc:'All incoming emails. Use Focused tab to filter important messages. Sort by Date, From, or Subject.'},
-    {icon:'📁', name:'Folder Pane', desc:'Inbox, Drafts, Sent, Deleted, Junk — plus custom folders you create for organization.'},
-    {icon:'👁️', name:'Reading Pane', desc:'Preview messages without opening. Ctrl+Alt+3 to show right, Ctrl+Alt+2 for bottom. Right-click to change.'},
-    {icon:'🔍', name:'Search Bar', desc:'Type any word to search. Use filters: From:name, Subject:topic, HasAttachment:yes.'},
-    {icon:'🛠️', name:'Ribbon / Toolbar', desc:'New Email, Reply, Forward, Delete, Move, Tags — all your action buttons live here.'},
-    {icon:'⚙️', name:'Settings (⚙️)', desc:'Signature, notification sounds, reading pane behavior, junk mail rules — all in Settings.'},
-  ];
-  document.getElementById('outlook-nav-grid').innerHTML = parts.map(p => `
-    <div class="hotspot-btn" onclick="this.classList.toggle('revealed')">
-      <div class="hs-icon">${p.icon}</div>
-      <div class="hs-title">${p.name}</div>
-      <div class="hs-desc">${p.desc}</div>
-    </div>`).join('');
+  </div>
+</div>
+
+<div class="lesson-section">
+  <h3 style="font-size:16px;font-weight:700;color:var(--text-bright);margin-bottom:12px">⌨️ Essential Outlook Shortcuts</h3>
+  <table class="compare-table">
+    <tr><th>Action</th><th>Windows</th><th>Mac</th></tr>
+    <tr><td>New Email</td><td><code>Ctrl+N</code></td><td><code>Cmd+N</code></td></tr>
+    <tr><td>Reply</td><td><code>Ctrl+R</code></td><td><code>Cmd+R</code></td></tr>
+    <tr><td>Reply All</td><td><code>Ctrl+Shift+R</code></td><td><code>Cmd+Shift+R</code></td></tr>
+    <tr><td>Forward</td><td><code>Ctrl+F</code></td><td><code>Cmd+J</code></td></tr>
+    <tr><td>Send</td><td><code>Ctrl+Enter</code></td><td><code>Cmd+Return</code></td></tr>
+    <tr><td>Search</td><td><code>Ctrl+E</code></td><td><code>Cmd+Option+F</code></td></tr>
+    <tr><td>Switch to Calendar</td><td><code>Ctrl+2</code></td><td><code>Cmd+2</code></td></tr>
+  </table>
+</div>
+
+<div class="lesson-section">
+  <div class="callout"><div class="callout-head">💡 Focused Inbox — save time every day</div>
+  <p>Turn on Focused Inbox: <strong>View → Show Focused Inbox</strong>. Outlook learns which messages matter to you and filters newsletters, CC mail, and low-priority messages into the Other tab automatically.</p></div>
+</div>
+
+<div class="lesson-section">
+  <div class="lab-card">
+    <div class="lab-title">🔍 Activity: Explore Your Real Outlook Interface</div>
+    <ol class="lab-steps">
+      <li>Open <strong>Outlook</strong> with your RMI work account at <strong>outlook.office.com</strong> or the desktop app.</li>
+      <li>Click each left-nav icon: <strong>Mail, Calendar, People, Tasks</strong> — note what opens in each section.</li>
+      <li>In your Inbox, open any unread email and use <strong>Reply</strong> — type two words and then use <strong>Discard</strong> (do not send).</li>
+      <li>Press <strong>Ctrl+E</strong> to focus the Search bar and type a colleague's name to find their emails.</li>
+      <li>Go to <strong>Settings (⚙) → View all Outlook settings → Mail → Compose and reply</strong> and confirm your email signature includes your name, title, and ministry.</li>
+    </ol>
+    <div class="lab-checkpoint" id="lcp-2-1">
+      <button class="lab-checkpoint-btn" onclick="completeLabCheckpoint('2-1', this)">✓ I explored my Outlook interface</button>
+      <span class="lab-checkpoint-label">Complete all 5 steps in your RMI Outlook before marking done.</span>
+      <span class="lab-checkpoint-done">✅ Lab completed — +15 XP awarded!</span>
+    </div>
+  </div>
+</div>
+`);
+
+  // ── L2_1 sim logic ─────────────────────────────────────────────────────────
+  const MSGS = {
+    heine: {
+      subj: 'Q3 Budget Review — action needed',
+      meta: 'From: <strong>Director Heine</strong> &lt;r.heine@finance.gov.mh&gt;<br>To: <strong>You</strong> &lt;j.smith@rmi.gov.mh&gt;<br>Sent: Today 9:41 AM',
+      body: 'Good morning,<br><br>Could you please review the attached Q3 budget summary before our 2:00 PM meeting today? I\'ve highlighted cells in yellow that need your sign-off before we submit to Treasury.<br><br>The main concern is the outer-island travel allocation — we\'re currently 14% over projection.<br><br>Regards,<br>Director Heine<br>Ministry of Finance'
+    },
+    it: {
+      subj: 'Scheduled maintenance tonight 11pm–1am',
+      meta: 'From: <strong>IT Department</strong> &lt;it-helpdesk@rmi.gov.mh&gt;<br>To: <strong>All Staff</strong><br>Sent: Today 8:55 AM',
+      body: 'Dear staff,<br><br>We will be performing scheduled system maintenance tonight from <strong>11:00 PM to 1:00 AM</strong>. All Microsoft 365 services including Outlook and Teams may be temporarily unavailable during this window.<br><br>Please save your work before 10:45 PM.<br><br>IT Helpdesk'
+    },
+    hr: {
+      subj: 'Annual leave policy — updated June 2026',
+      meta: 'From: <strong>HR Division</strong> &lt;hr@rmi.gov.mh&gt;<br>To: <strong>All Staff</strong><br>Sent: Yesterday',
+      body: 'Dear colleagues,<br><br>Please review the updated annual leave entitlements effective 1 July 2026. Key changes include:<br><br>• Public service leave increased from 20 to 22 days per annum<br>• Outer-island travel leave provisions updated<br>• Sick leave documentation requirements revised<br><br>Full policy document attached. Contact HR with questions.<br><br>HR Division'
+    },
+    sec: {
+      subj: 'Cabinet briefing — Thursday 2pm, Conference Room A',
+      meta: 'From: <strong>Secretary\'s Office</strong> &lt;cabinet@rmi.gov.mh&gt;<br>To: <strong>All Ministry Heads</strong><br>Sent: Monday',
+      body: 'Dear Ministry Heads,<br><br>Please be advised that the quarterly Cabinet briefing will be held this <strong>Thursday at 2:00 PM</strong> in Conference Room A, Capitol Building.<br><br>Agenda items include: Q3 performance reviews, the Pacific Climate Framework update, and the Digital Government roadmap.<br><br>Please confirm attendance by end of day Wednesday.<br><br>Office of the Secretary'
+    },
+    news: {
+      subj: 'Pacific Digital Week — upcoming events',
+      meta: 'From: <strong>RMI Gov Newsletter</strong> &lt;newsletter@rmi.gov.mh&gt;<br>To: <strong>All Staff</strong><br>Sent: Monday',
+      body: 'Greetings,<br><br>Pacific Digital Week runs 9–13 June. Join virtual workshops on digital literacy, cybersecurity, and government services modernisation.<br><br>Register at the link below by Friday.<br><br>Communications Team'
+    }
+  };
+
+  let t21 = [false,false,false,false];
+
+  function ol21CheckAll() {
+    if (t21.every(Boolean)) {
+      document.getElementById('ol21-result').classList.add('show');
+      addXP(25); showToast('📧','Outlook Navigator','All 4 tasks complete!');
+    }
+  }
+
+  window.ol21ClickDrafts = function() {
+    document.querySelectorAll('.ol-folder-item').forEach(el => el.classList.remove('sel'));
+    document.getElementById('fold-drafts').classList.add('sel');
+    if (!t21[0]) {
+      t21[0] = true;
+      const el = document.getElementById('t21-1');
+      el.querySelector('.ol-taskitem-ic').textContent = '✓';
+      el.style.color = '#22c55e';
+      addXP(5); ol21CheckAll();
+    }
+  };
+
+  window.ol21OpenMsg = function(row, key) {
+    document.querySelectorAll('.ol-msg-row').forEach(r => r.classList.remove('sel'));
+    row.classList.add('sel');
+    row.classList.remove('unread');
+    const msg = MSGS[key];
+    document.getElementById('ol21-empty').style.display = 'none';
+    const content = document.getElementById('ol21-read-content');
+    content.style.display = 'flex';
+    document.getElementById('ol21-subj').textContent = msg.subj;
+    document.getElementById('ol21-meta').innerHTML = msg.meta;
+    document.getElementById('ol21-body').innerHTML = msg.body;
+    document.getElementById('ol21-reply-btn').disabled = false;
+    document.querySelectorAll('.ol-readpane-toolbar .ol-rbtn').forEach(b => b.disabled = false);
+    if (key === 'heine' && !t21[1]) {
+      t21[1] = true;
+      const el = document.getElementById('t21-2');
+      el.querySelector('.ol-taskitem-ic').textContent = '✓';
+      el.style.color = '#22c55e';
+      addXP(5); ol21CheckAll();
+    }
+    // Store current msg for reply
+    window._ol21CurrentMsg = { key, ...msg };
+  };
+
+  window.ol21Reply = function() {
+    if (!window._ol21CurrentMsg) return;
+    const compose = document.getElementById('ol21-compose');
+    compose.classList.add('open');
+    document.getElementById('ol21-to').value = window._ol21CurrentMsg.meta.match(/&lt;([^&]+)&gt;/)?.[1] || 'Sender';
+    document.getElementById('ol21-subj-inp').value = 'RE: ' + window._ol21CurrentMsg.subj;
+    document.getElementById('ol21-compose-body').focus();
+    if (!t21[2]) {
+      t21[2] = true;
+      const el = document.getElementById('t21-3');
+      el.querySelector('.ol-taskitem-ic').textContent = '✓';
+      el.style.color = '#22c55e';
+      addXP(5); ol21CheckAll();
+    }
+  };
+
+  window.ol21CloseCompose = function() {
+    document.getElementById('ol21-compose').classList.remove('open');
+  };
+
+  window.ol21Send = function() {
+    const body = document.getElementById('ol21-compose-body').value.trim();
+    document.getElementById('ol21-compose').classList.remove('open');
+    showToast('📨', 'Message Sent', body.length > 0 ? 'Your reply was sent.' : 'Empty reply sent (add content next time!)');
+  };
+
+  window.ol21Nav = function(section, btn) {
+    document.querySelectorAll('.ol-nav-btn').forEach(b => b.classList.remove('act'));
+    btn.classList.add('act');
+    if (section === 'cal' && !t21[3]) {
+      t21[3] = true;
+      const el = document.getElementById('t21-4');
+      el.querySelector('.ol-taskitem-ic').textContent = '✓';
+      el.style.color = '#22c55e';
+      addXP(10); ol21CheckAll();
+      showToast('📅','Switched to Calendar','Calendar view in real Outlook works the same way!');
+    }
+  };
 }
 
 function renderL2_2() {
   setLessonBody(`
-    <div class="lesson-section">
-      <div class="section-tag">Lesson 2.2 — Outlook</div>
-      <h2 class="section-h">Email Management & Etiquette</h2>
-    </div>
-    <div class="lesson-section">
-      <h3 style="font-size:18px;font-weight:600;color:var(--text-bright);margin-bottom:16px">📤 To, Cc, and Bcc — When to Use Each</h3>
-      <table class="compare-table">
-        <tr><th>Field</th><th>Use For</th><th>Visibility</th></tr>
-        <tr><td><strong>To:</strong></td><td>Primary recipients who must read/act</td><td>Visible to everyone</td></tr>
-        <tr><td><strong>Cc:</strong></td><td>People who need to be aware (FYI only)</td><td>Visible to everyone</td></tr>
-        <tr><td><strong>Bcc:</strong></td><td>Large lists, protecting privacy, silent copies</td><td>Hidden from To/Cc</td></tr>
-      </table>
-    </div>
-    <div class="lesson-section">
-      <h3 style="font-size:18px;font-weight:600;color:var(--text-bright);margin-bottom:16px">💡 Email Etiquette Scenario</h3>
-      <div class="scenario-box">
-        <div class="scenario-scene">
-          You receive an email from your manager sent to 15 team members announcing a ministry staff briefing. The email says "Let me know if you're coming!" You want to say you'll attend. What should you do?
-        </div>
-        <div class="scenario-choices">
-          <button class="scenario-choice" onclick="checkEtiquette(this, false, 'ef1', 'Reply All sends your \'Yes!\' to all 15 team members — but they don\'t need to know your response. Only your manager does.')"><span class="choice-letter">A</span> Click Reply All and write "Yes, I'll be there!"</button>
-          <button class="scenario-choice" onclick="checkEtiquette(this, true, 'ef1', 'Correct! Reply only to the manager. The other 14 team members don\'t need to see your individual response.')"><span class="choice-letter">B</span> Click Reply (to manager only) and write "Yes, I'll be there!"</button>
-          <button class="scenario-choice" onclick="checkEtiquette(this, false, 'ef1', 'Forwarding is for sending content to someone new — not for responding to an invitation.')"><span class="choice-letter">C</span> Click Forward and add your response</button>
-        </div>
-        <div class="scenario-feedback" id="ef1"></div>
-      </div>
-    </div>
+<div class="lesson-section">
+  <div class="section-tag">Lesson 2.2 — Outlook</div>
+  <h2 class="section-h">Composing & Sending Professional Email</h2>
+  <p class="section-p">Every email you send represents the RMI public service. Use the compose simulation below — your message will be assessed for completeness, etiquette, and professional standards before sending.</p>
+</div>
 
-    <div class="lesson-section">
-      <h3 style="font-size:18px;font-weight:600;color:var(--text-bright);margin-bottom:16px">✍️ RMI Practical Lab: Send a Professional Outlook Message</h3>
-      <div class="topic-explain"><strong>Topic explanation:</strong> Outlook is the official communication record for formal work. A strong message has a clear subject, the correct recipients, a concise action request, and a professional signature.</div>
-      <div class="lab-card">
-        <div class="lab-title">📧 Activity: Draft and Review a RMI Email</div>
-        <div class="lab-purpose">Practice To/Cc/Bcc, formatting, attachments, signatures, and delayed delivery.</div>
-        <ol class="lab-steps">
-          <li>Create a new Outlook email with the subject <strong>M365 Practice: Weekly Update</strong>.</li>
-          <li>Address it to your trainer or practice partner. Add yourself to Cc only if you need a visible copy.</li>
-          <li>Write three short bullets: what you completed, what you need help with, and your next step.</li>
-          <li>Attach or link the Word file you created in OneDrive. Use a link instead of a downloaded attachment when collaboration is needed.</li>
-          <li>Add or confirm your Outlook signature with your name, department, and RMI contact details.</li>
-          <li>Use <strong>Schedule send</strong> to delay the email by 5 minutes, then cancel it before it sends if this is only practice.</li>
-        </ol>
-        <div class="lab-checkpoint" id="lcp-2-2">
-          <button class="lab-checkpoint-btn" onclick="completeLabCheckpoint('2-2', this)">✓ I drafted and sent my practice email</button>
-          <span class="lab-checkpoint-label">Complete the email activity in Outlook before marking done.</span>
-          <span class="lab-checkpoint-done">✅ Lab completed — +15 XP awarded!</span>
+<div class="lesson-section">
+  <div class="ol-sim">
+    <div class="ol-title-bar">
+      <div class="ol-tb-dot" style="background:#ff5f57"></div><div class="ol-tb-dot" style="background:#ffbd2e"></div><div class="ol-tb-dot" style="background:#28c840"></div>
+      <span class="ol-tb-name">Outlook — New Message</span>
+    </div>
+    <div class="ol-task-strip">
+      <div class="ol-task-icon">✉️</div>
+      <div class="ol-task-body">
+        <div class="ol-task-kicker">Compose Task</div>
+        <div class="ol-task-desc">Write a professional reply to Director Heine's budget email. Complete all fields then click Send — your message will be scored.</div>
+        <div class="ol-tasklist">
+          <div class="ol-taskitem" id="t22-to"><span class="ol-taskitem-ic">○</span> Fill in the To: field</div>
+          <div class="ol-taskitem" id="t22-subj"><span class="ol-taskitem-ic">○</span> Write a clear Subject line</div>
+          <div class="ol-taskitem" id="t22-body"><span class="ol-taskitem-ic">○</span> Write a professional body (25+ words)</div>
+          <div class="ol-taskitem" id="t22-greet"><span class="ol-taskitem-ic">○</span> Include a greeting (Hi / Dear / Good morning)</div>
+          <div class="ol-taskitem" id="t22-close"><span class="ol-taskitem-ic">○</span> Include a sign-off (Regards / Thanks / Sincerely)</div>
         </div>
       </div>
     </div>
-    <div class="lesson-section">
-      <h3 style="font-size:18px;font-weight:600;color:var(--text-bright);margin-bottom:16px">✅ Email Etiquette: Do's and Don'ts</h3>
-      <table class="compare-table">
-        <tr><th>✅ DO</th><th>❌ AVOID</th></tr>
-        <tr><td>Use a clear, specific subject line</td><td>Leave the subject blank</td></tr>
-        <tr><td>Proofread before sending</td><td>Send emails when angry or upset</td></tr>
-        <tr><td>Reply within 24 business hours</td><td>Reply All for mass announcements</td></tr>
-        <tr><td>Use professional greetings</td><td>Use ALL CAPS (implies shouting)</td></tr>
-        <tr><td>Use Bcc for large lists</td><td>Forward confidential content externally</td></tr>
-        <tr><td>Mark urgent emails appropriately</td><td>Mark everything as high priority</td></tr>
-      </table>
+    <div style="background:#fff">
+      <!-- Toolbar -->
+      <div style="padding:6px 12px;background:#faf9f8;border-bottom:1px solid #e1dfdd;display:flex;gap:6px;flex-wrap:wrap">
+        <button class="ol-rbtn pri" onclick="ol22Send()">↗ Send</button>
+        <button class="ol-rbtn" onclick="ol22Discard()">🗑️ Discard</button>
+        <button class="ol-rbtn">📎 Attach</button>
+        <button class="ol-rbtn" onclick="ol22ScheduleSend()">⏱ Schedule Send</button>
+        <span style="margin-left:auto;font-size:10px;color:#a19f9d;align-self:center">Ctrl+Enter to send</span>
+      </div>
+      <!-- Fields -->
+      <div class="ol-compose-field" style="padding:7px 14px">
+        <span class="ol-compose-lbl">To</span>
+        <input class="ol-compose-inp" id="l22-to" placeholder="Add recipient name or email..." oninput="ol22Check()" style="font-size:13px">
+        <span style="font-size:11px;color:#0078d4;cursor:pointer;margin-left:8px">Cc Bcc</span>
+      </div>
+      <div class="ol-compose-field" style="padding:7px 14px">
+        <span class="ol-compose-lbl">Cc</span>
+        <input class="ol-compose-inp" id="l22-cc" placeholder="Optional — copy recipients who need to be aware" style="font-size:12px">
+      </div>
+      <div class="ol-compose-field" style="padding:7px 14px;border-bottom:2px solid #e1dfdd">
+        <span class="ol-compose-lbl">Subject</span>
+        <input class="ol-compose-inp" id="l22-subj" placeholder="Write a clear, specific subject line..." oninput="ol22Check()" style="font-size:13px;font-weight:600">
+      </div>
+      <!-- Format bar -->
+      <div style="padding:4px 14px;border-bottom:1px solid #e1dfdd;background:#faf9f8;display:flex;gap:3px;align-items:center">
+        <button class="ol-fmt-btn" style="font-weight:900;font-size:13px" onclick="ol22Format('bold')">B</button>
+        <button class="ol-fmt-btn" style="font-style:italic" onclick="ol22Format('italic')">I</button>
+        <button class="ol-fmt-btn" style="text-decoration:underline" onclick="ol22Format('underline')">U</button>
+        <div style="width:1px;height:16px;background:#e1dfdd;margin:0 4px"></div>
+        <button class="ol-fmt-btn">≡</button>
+        <button class="ol-fmt-btn">•≡</button>
+        <div style="width:1px;height:16px;background:#e1dfdd;margin:0 4px"></div>
+        <button class="ol-fmt-btn">🔗</button>
+        <button class="ol-fmt-btn">📎</button>
+        <span style="margin-left:auto;font-size:10px;color:#a19f9d" id="l22-wordcount">0 words</span>
+      </div>
+      <!-- Body -->
+      <div style="position:relative">
+        <div id="l22-body" contenteditable="true" oninput="ol22Check()" style="min-height:160px;padding:14px;font-size:13px;color:#323130;font-family:'Segoe UI',sans-serif;line-height:1.7;outline:none" data-placeholder="Type your message here..."></div>
+      </div>
+      <!-- Signature preview -->
+      <div style="padding:10px 14px;border-top:1px solid #f0eeec;font-size:11px;color:#605e5c;line-height:1.6;background:#fafaf9" id="l22-sig">
+        <em>Your email signature will appear here. Set it up in Settings → Mail → Signature.</em>
+      </div>
     </div>
-  `);
+    <!-- Live feedback panel -->
+    <div style="padding:10px 14px;background:#faf9f8;border-top:1px solid #e1dfdd" id="l22-live-feedback">
+      <div style="font-size:10px;font-weight:700;color:#605e5c;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Message quality</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="l22-tags"></div>
+    </div>
+    <div class="ol-sim-result" id="l22-result">
+      <span style="font-size:22px" id="l22-res-ic">📨</span>
+      <div class="ol-sim-result-txt" id="l22-res-txt"></div>
+    </div>
+  </div>
+</div>
+
+<div class="lesson-section">
+  <h3 style="font-size:15px;font-weight:700;color:var(--text-bright);margin-bottom:12px">📋 To / Cc / Bcc Cheat Sheet</h3>
+  <table class="compare-table">
+    <tr><th>Field</th><th>Use For</th><th>RMI Example</th></tr>
+    <tr><td><strong>To:</strong></td><td>Primary recipient — must read and act</td><td>Director who approved the request</td></tr>
+    <tr><td><strong>Cc:</strong></td><td>FYI only — no action needed from them</td><td>Your supervisor, for awareness</td></tr>
+    <tr><td><strong>Bcc:</strong></td><td>Hidden copy — private; good for large lists</td><td>Sending to all ministry staff without exposing all addresses</td></tr>
+  </table>
+</div>
+
+<div class="lesson-section">
+  <table class="compare-table">
+    <tr><th>✅ Professional Practice</th><th>❌ Avoid</th></tr>
+    <tr><td>Clear, specific subject line</td><td>Blank subject or "Hi"</td></tr>
+    <tr><td>Open with a greeting and context</td><td>Starting with your request immediately</td></tr>
+    <tr><td>One key request per email</td><td>Long emails with 5 different topics</td></tr>
+    <tr><td>Professional sign-off with full name</td><td>Unsigned or emoji-only sign-offs</td></tr>
+    <tr><td>Reply within 24 business hours</td><td>Reply All to a 20-person announcement</td></tr>
+  </table>
+</div>
+
+<div class="lesson-section">
+  <div class="lab-card">
+    <div class="lab-title">📧 Activity: Send a Real Professional Email</div>
+    <ol class="lab-steps">
+      <li>Open <strong>Outlook</strong> and click <strong>New Email</strong>.</li>
+      <li>Address it to your supervisor or training partner. Add yourself to <strong>Cc</strong> only if you need a visible record.</li>
+      <li>Subject: <strong>M365 Training Progress — [Your Name] — [Today's Date]</strong></li>
+      <li>Body: Write 3 bullets — (1) one thing you have learned, (2) one question you still have, (3) your next training step.</li>
+      <li>Add your full <strong>email signature</strong> (name, title, ministry, phone). If not set up: Settings → Mail → Compose and reply → Signature.</li>
+      <li>Use <strong>Schedule send</strong> to delay it by 30 minutes — practice using this feature before sending for real.</li>
+    </ol>
+    <div class="lab-checkpoint" id="lcp-2-2">
+      <button class="lab-checkpoint-btn" onclick="completeLabCheckpoint('2-2', this)">✓ I sent my professional email</button>
+      <span class="lab-checkpoint-label">Complete all 6 steps in Outlook before marking done.</span>
+      <span class="lab-checkpoint-done">✅ Lab completed — +15 XP awarded!</span>
+    </div>
+  </div>
+</div>
+`);
+
+  // ── Compose body placeholder ──────────────────────────────────────────────
+  const bodyEl = document.getElementById('l22-body');
+  if (bodyEl) {
+    bodyEl.addEventListener('focus', function() {
+      if (this.textContent === '') this.style.color = '#323130';
+    });
+  }
+
+  const GREETINGS = ['hi','hello','dear','good morning','good afternoon','greetings','kia ora'];
+  const CLOSINGS  = ['regards','sincerely','thank','thanks','best wishes','kind regards','cheers','yours'];
+
+  window.ol22Check = function() {
+    const to    = (document.getElementById('l22-to')?.value || '').trim();
+    const subj  = (document.getElementById('l22-subj')?.value || '').trim();
+    const body  = (document.getElementById('l22-body')?.textContent || '').trim();
+    const words = body.split(/\s+/).filter(w => w.length > 0).length;
+    const bodyLow = body.toLowerCase();
+    const hasGreet = GREETINGS.some(g => bodyLow.startsWith(g) || bodyLow.includes('\n'+g));
+    const hasClose = CLOSINGS.some(c => bodyLow.includes(c));
+
+    document.getElementById('l22-wordcount').textContent = words + ' words';
+
+    // Update task items
+    const tick = (id, done) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.querySelector('.ol-taskitem-ic').textContent = done ? '✓' : '○';
+      el.style.color = done ? '#22c55e' : '#94a3b8';
+    };
+    tick('t22-to',    !!to);
+    tick('t22-subj',  !!subj);
+    tick('t22-body',  words >= 25);
+    tick('t22-greet', hasGreet);
+    tick('t22-close', hasClose);
+
+    // Live tag feedback
+    const tags = [
+      { ok: !!to,        good: '✅ Recipient',    bad: '⚠ No recipient' },
+      { ok: !!subj,      good: '✅ Subject set',  bad: '⚠ Missing subject' },
+      { ok: words >= 25, good: `✅ ${words} words`, bad: `⚠ Only ${words} words` },
+      { ok: hasGreet,    good: '✅ Greeting',      bad: '⚠ Add a greeting' },
+      { ok: hasClose,    good: '✅ Sign-off',       bad: '⚠ Add a sign-off' },
+    ];
+    document.getElementById('l22-tags').innerHTML = tags.map(t =>
+      `<span style="font-size:11px;padding:2px 8px;border-radius:4px;${t.ok
+        ? 'background:rgba(16,124,16,.1);color:#107c10;border:1px solid rgba(16,124,16,.25)'
+        : 'background:rgba(164,38,44,.08);color:#a4262c;border:1px solid rgba(164,38,44,.2)'
+      }">${t.ok ? t.good : t.bad}</span>`
+    ).join('');
+  };
+
+  window.ol22Format = function(cmd) {
+    document.execCommand(cmd, false, null);
+    document.getElementById('l22-body').focus();
+  };
+
+  window.ol22Send = function() {
+    const to    = (document.getElementById('l22-to')?.value || '').trim();
+    const subj  = (document.getElementById('l22-subj')?.value || '').trim();
+    const body  = (document.getElementById('l22-body')?.textContent || '').trim();
+    const words = body.split(/\s+/).filter(w => w.length > 0).length;
+    const bodyLow = body.toLowerCase();
+    const hasGreet = ['hi','hello','dear','good morning','greetings'].some(g => bodyLow.startsWith(g) || bodyLow.includes('\n'+g));
+    const hasClose = ['regards','sincerely','thank','thanks','best wishes','kind regards'].some(c => bodyLow.includes(c));
+
+    const issues = [];
+    if (!to)         issues.push('❌ To field is empty');
+    if (!subj)       issues.push('❌ Subject line is missing');
+    if (words < 25)  issues.push(`❌ Body is too short (${words} words — aim for 25+)`);
+    if (!hasGreet)   issues.push('💡 Consider opening with a greeting (Hi, Dear, Good morning)');
+    if (!hasClose)   issues.push('💡 Consider ending with a sign-off (Regards, Thanks)');
+
+    const res = document.getElementById('l22-result');
+    const ic  = document.getElementById('l22-res-ic');
+    const txt = document.getElementById('l22-res-txt');
+    res.classList.add('show');
+
+    if (!to || !subj || words < 25) {
+      res.classList.add('wrong');
+      ic.textContent = '⚠️';
+      txt.innerHTML = '<strong>Message not sent — please fix:</strong><br>' + issues.join('<br>');
+    } else {
+      res.classList.remove('wrong');
+      ic.textContent = '📨';
+      const tips = issues.filter(i => i.startsWith('💡')).join('<br>');
+      txt.innerHTML = `<strong>Message sent to ${to}!</strong> ${tips ? '<br><span style="color:#f4b942">'+tips+'</span>' : ' Great professional email.'}`;
+      addXP(30);
+      showToast('📨','Email Sent!','Professional message composed and sent.');
+    }
+  };
+
+  window.ol22Discard = function() {
+    ['l22-to','l22-subj'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    const b = document.getElementById('l22-body'); if(b) b.textContent='';
+    document.getElementById('l22-result').classList.remove('show');
+    ol22Check();
+  };
+
+  window.ol22ScheduleSend = function() {
+    showToast('⏱','Schedule Send','In real Outlook: click the ▾ arrow next to Send → Schedule send → pick date and time.');
+  };
 }
 
 window.checkEtiquette = function(btn, correct, fbId, msg) {
@@ -2172,47 +3287,264 @@ window.checkEtiquette = function(btn, correct, fbId, msg) {
 
 function renderL2_3() {
   setLessonBody(`
-    <div class="lesson-section">
-      <div class="section-tag">Lesson 2.3 — Outlook</div>
-      <h2 class="section-h">Organizing Your Inbox</h2>
-      <p class="section-p">A cluttered inbox kills productivity. Here's a proven system to keep your inbox at zero using Outlook's built-in tools.</p>
-    </div>
-    <div class="lesson-section">
-      <h3 style="font-size:18px;font-weight:600;color:var(--text-bright);margin-bottom:16px">📂 The 4 Inbox Organization Tools</h3>
-      <div class="feature-grid">
-        <div class="feature-card"><div class="fc-icon">📁</div><div class="fc-name">Folders</div><div class="fc-desc">Create project-based folders. Right-click Inbox → New Folder</div></div>
-        <div class="feature-card"><div class="fc-icon">🏷️</div><div class="fc-name">Categories</div><div class="fc-desc">Color-code emails: Action Required, Waiting, Reference. Right-click → Categorize</div></div>
-        <div class="feature-card"><div class="fc-icon">⚡</div><div class="fc-name">Rules</div><div class="fc-desc">Auto-sort incoming emails. Home → Rules → Create Rule</div></div>
-        <div class="feature-card"><div class="fc-icon">🔍</div><div class="fc-name">Search Folders</div><div class="fc-desc">Dynamic saved searches: Unread Mail, Flagged, From specific senders</div></div>
-      </div>
-    </div>
+<div class="lesson-section">
+  <div class="section-tag">Lesson 2.3 — Outlook</div>
+  <h2 class="section-h">Organising Your Inbox</h2>
+  <p class="section-p">An unmanaged inbox costs hours each week. Outlook's Rules, Categories, Flags, and Search Folders let you automate and organise without manual effort. Practise them here.</p>
+</div>
 
-    <div class="lesson-section">
-      <h3 style="font-size:18px;font-weight:600;color:var(--text-bright);margin-bottom:16px">⚙️ RMI Practical Lab: Create a Rule and Use Categories</h3>
-      <div class="topic-explain"><strong>Topic explanation:</strong> Rules automate repeated inbox decisions, while categories add visible meaning without moving mail. Together, they reduce inbox clutter and help you find important RMI government messages quickly.</div>
-      <div class="lab-card">
-        <div class="lab-title">📁 Activity: Organize Real Outlook Messages</div>
-        <ol class="lab-steps">
-          <li>Create folders named <strong>Action Required</strong>, <strong>Reference</strong>, and <strong>Training</strong>.</li>
-          <li>Create categories named <strong>RMI Priority</strong>, <strong>Waiting</strong>, and <strong>Follow Up</strong>.</li>
-          <li>Choose one recurring sender and create a rule to move those messages to <strong>Training</strong> or another appropriate folder.</li>
-          <li>Flag one message for follow-up tomorrow and confirm that it appears in Microsoft To Do.</li>
-          <li>Use Outlook Search with <strong>from:</strong>, <strong>subject:</strong>, or <strong>hasattachment:yes</strong> to find a message faster than scrolling.</li>
-        </ol>
-        <div class="lab-checkpoint" id="lcp-2-3">
-          <button class="lab-checkpoint-btn" onclick="completeLabCheckpoint('2-3', this)">✓ I organised my inbox folders</button>
-          <span class="lab-checkpoint-label">Complete all steps in Outlook before marking done.</span>
-          <span class="lab-checkpoint-done">✅ Lab completed — +15 XP awarded!</span>
-        </div>
+<div class="lesson-section">
+  <h3 style="font-size:15px;font-weight:700;color:var(--text-bright);margin-bottom:12px">📬 Activity 1 — Sort Your Inbox</h3>
+  <p style="font-size:13px;color:var(--text-dim);margin-bottom:14px">You've returned from a 5-day outer-island trip to 9 unread emails. Move each one to the correct folder by selecting a destination.</p>
+  <div id="inbox-sorter-2"></div>
+</div>
+
+<div class="lesson-section">
+  <h3 style="font-size:15px;font-weight:700;color:var(--text-bright);margin-bottom:12px">⚡ Activity 2 — Create an Outlook Rule</h3>
+  <p style="font-size:13px;color:var(--text-dim);margin-bottom:14px">Build a rule that automatically moves all newsletters from <code>newsletter@rmi.gov.mh</code> to the Newsletters folder. Fill in each step of the Rules Wizard.</p>
+  <div class="ol-rules-panel">
+    <div class="ol-rules-hdr">
+      <span class="ol-rules-title">📋 Rules Wizard — Create Rule</span>
+      <span style="font-size:11px;color:#605e5c">Step <span id="rw-step-num">1</span> of 3</span>
+    </div>
+    <div class="ol-rules-body" id="rw-body"></div>
+    <div class="ol-rules-footer">
+      <button class="ol-rbtn" id="rw-back-btn" onclick="rwBack()" disabled>← Back</button>
+      <button class="ol-rbtn pri" id="rw-next-btn" onclick="rwNext()">Next →</button>
+      <button class="ol-rbtn" onclick="showToast('❌','Cancelled','Rule creation cancelled.')">Cancel</button>
+    </div>
+  </div>
+  <div class="ol-sim-result" id="rw-result">
+    <span style="font-size:22px">✅</span>
+    <div class="ol-sim-result-txt" id="rw-res-txt"></div>
+  </div>
+</div>
+
+<div class="lesson-section">
+  <h3 style="font-size:15px;font-weight:700;color:var(--text-bright);margin-bottom:12px">📂 The 4 Inbox Organisation Tools</h3>
+  <div class="feature-grid">
+    <div class="feature-card"><div class="fc-icon">📁</div><div class="fc-name">Folders</div><div class="fc-desc">Right-click Inbox → New Folder. Group by project, ministry, or priority level.</div></div>
+    <div class="feature-card"><div class="fc-icon">🏷️</div><div class="fc-name">Categories</div><div class="fc-desc">Right-click email → Categorize. Colour-code: RMI Priority, Waiting, Follow Up.</div></div>
+    <div class="feature-card"><div class="fc-icon">⚡</div><div class="fc-name">Rules</div><div class="fc-desc">Home → Rules → Create Rule. Auto-move, flag, or alert based on sender/subject.</div></div>
+    <div class="feature-card"><div class="fc-icon">🔍</div><div class="fc-name">Search Folders</div><div class="fc-desc">Virtual folders that show all emails matching a saved search — e.g. all unread, all flagged.</div></div>
+  </div>
+</div>
+
+<div class="lesson-section">
+  <div class="lab-card">
+    <div class="lab-title">📁 Activity: Organise Your Real Outlook</div>
+    <ol class="lab-steps">
+      <li>Create 3 folders: <strong>Action Required</strong>, <strong>Reference</strong>, and <strong>Newsletters</strong>. Right-click your Inbox → New Folder.</li>
+      <li>Move at least 5 emails from your current inbox into the correct folder.</li>
+      <li>Right-click one important email → <strong>Categorize</strong> → create a category called <strong>RMI Priority</strong> (red colour).</li>
+      <li>Create a rule: <strong>Home → Rules → Create Rule</strong>. Condition: From a newsletter sender. Action: Move to Newsletters folder.</li>
+      <li>Right-click any flagged or important email → <strong>Follow Up → Add Reminder</strong> → set for tomorrow 9am.</li>
+    </ol>
+    <div class="lab-checkpoint" id="lcp-2-3">
+      <button class="lab-checkpoint-btn" onclick="completeLabCheckpoint('2-3', this)">✓ I organised my real inbox</button>
+      <span class="lab-checkpoint-label">Complete all 5 steps in Outlook before marking done.</span>
+      <span class="lab-checkpoint-done">✅ Lab completed — +15 XP awarded!</span>
+    </div>
+  </div>
+</div>
+`);
+
+  // ── Inbox sorter ──────────────────────────────────────────────────────────
+  const SORT_EMAILS = [
+    {ic:'⚡', from:'secretary.office@rmi.gov.mh', subj:'Cabinet briefing — Thursday 2pm — confirmation needed', correct:'action'},
+    {ic:'📰', from:'newsletter@pacifictech.com',   subj:'Pacific Digital Week newsletter — June 2026',          correct:'newsletters'},
+    {ic:'🏥', from:'hr@rmi.gov.mh',                subj:'Annual leave policy update effective July 2026',       correct:'hr'},
+    {ic:'🚀', from:'pm.office@rmi.gov.mh',          subj:'Outer Islands Connectivity Project — status update',  correct:'projects'},
+    {ic:'⚡', from:'director.heine@finance.gov.mh', subj:'URGENT: Q3 budget sign-off needed before 5pm',        correct:'action'},
+    {ic:'📰', from:'govweekly@rmi.gov.mh',          subj:'This week in government — July 1 edition',            correct:'newsletters'},
+    {ic:'📋', from:'audit@rmi.gov.mh',              subj:'Annual audit schedule — ministry heads',              correct:'reference'},
+    {ic:'🏥', from:'hr@rmi.gov.mh',                 subj:'Staff wellness programme — register by Friday',       correct:'hr'},
+    {ic:'🚀', from:'ict@rmi.gov.mh',                subj:'Digital Government Roadmap 2026 — v2 for review',     correct:'projects'},
+  ];
+  const SORT_FOLDERS = [
+    {id:'action',      label:'⚡ Action Required'},
+    {id:'projects',    label:'🚀 Projects'},
+    {id:'hr',          label:'🏥 HR & Benefits'},
+    {id:'newsletters', label:'📰 Newsletters'},
+    {id:'reference',   label:'📋 Reference'},
+  ];
+  let sortScore=0, sortDone=0;
+  const sorterEl = document.getElementById('inbox-sorter-2');
+  sorterEl.innerHTML = SORT_EMAILS.map((e,i)=>`
+    <div id="sort-row-${i}" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:7px;background:var(--glass);flex-wrap:wrap">
+      <span style="font-size:18px">${e.ic}</span>
+      <div style="flex:1;min-width:160px">
+        <div style="font-size:12px;font-weight:700;color:var(--text)">${e.subj}</div>
+        <div style="font-size:11px;color:var(--text-dim)">${e.from}</div>
       </div>
-    </div>
-    <div class="lesson-section">
-      <h3 style="font-size:18px;font-weight:600;color:var(--text-bright);margin-bottom:16px">🎯 Activity: Sort These Emails</h3>
-      <p class="section-p" style="margin-bottom:12px">Drag each email to the correct folder. Click an email to move it.</p>
-      <div id="inbox-sorter"></div>
-    </div>
-  `);
-  renderInboxSorter();
+      <select id="sort-sel-${i}" onchange="doSort(${i},'${e.correct}')" style="padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:11px;font-family:'Space Grotesk',sans-serif;background:var(--glass2);color:var(--text);cursor:pointer;outline:none">
+        <option value="">📂 Move to...</option>
+        ${SORT_FOLDERS.map(f=>`<option value="${f.id}">${f.label}</option>`).join('')}
+      </select>
+      <span id="sort-tick-${i}" style="font-size:14px;min-width:18px"></span>
+    </div>`).join('') +
+    '<div id="sort-complete" style="display:none" class="callout success" style="margin-top:10px"><div class="callout-head">🎉 Inbox sorted!</div><p id="sort-score-msg"></p></div>';
+
+  window.doSort = function(i, correct) {
+    const sel = document.getElementById('sort-sel-'+i);
+    const val = sel.value; if (!val) return;
+    sel.disabled = true;
+    const row  = document.getElementById('sort-row-'+i);
+    const tick = document.getElementById('sort-tick-'+i);
+    sortDone++;
+    if (val === correct) {
+      sortScore++;
+      row.style.borderColor = 'var(--success)';
+      row.style.background = 'rgba(34,197,94,.08)';
+      tick.textContent = '✅'; addXP(8);
+    } else {
+      row.style.borderColor = 'var(--danger)';
+      row.style.background = 'rgba(164,38,44,.08)';
+      tick.textContent = '❌';
+      // Show correct
+      const opt = sel.querySelector(`option[value="${correct}"]`);
+      if (opt) opt.style.color = '#22c55e';
+    }
+    if (sortDone === SORT_EMAILS.length) {
+      const el = document.getElementById('sort-complete');
+      el.style.display = 'block';
+      document.getElementById('sort-score-msg').textContent =
+        `You correctly filed ${sortScore}/${SORT_EMAILS.length} emails. ${sortScore>=7?'Excellent inbox management!':'Review the folder descriptions above.'}`;
+      if (sortScore >= 7) addXP(20);
+    }
+  };
+
+  // ── Rules Wizard ─────────────────────────────────────────────────────────
+  let rwStep = 1;
+  const RW_STEPS = [
+    {
+      title:'Step 1: Set the Condition — When should this rule trigger?',
+      body: `<div class="ol-rules-row">
+        <span class="ol-rules-lbl">Apply rule when</span>
+        <select class="ol-rules-sel" id="rw-cond">
+          <option value="">-- Select a condition --</option>
+          <option value="from">Email is from a specific sender</option>
+          <option value="subject">Subject contains a keyword</option>
+          <option value="size">Message size is greater than</option>
+          <option value="att">Message has an attachment</option>
+        </select>
+      </div>
+      <div class="ol-rules-row" id="rw-cond-val-row" style="display:none">
+        <span class="ol-rules-lbl">Value</span>
+        <input class="ol-rules-inp" id="rw-cond-val" placeholder="e.g. newsletter@rmi.gov.mh">
+      </div>`,
+      validate: () => {
+        const c = document.getElementById('rw-cond')?.value;
+        const v = document.getElementById('rw-cond-val')?.value.trim();
+        if (!c) { showToast('⚠','Required','Select a condition first.'); return false; }
+        if (c === 'from' && !v) { showToast('⚠','Required','Enter the sender email address.'); return false; }
+        if (c === 'subject' && !v) { showToast('⚠','Required','Enter a keyword.'); return false; }
+        return true;
+      }
+    },
+    {
+      title:'Step 2: Set the Action — What should Outlook do?',
+      body: `<div class="ol-rules-row">
+        <span class="ol-rules-lbl">Then</span>
+        <select class="ol-rules-sel" id="rw-action">
+          <option value="">-- Select an action --</option>
+          <option value="move">Move to folder</option>
+          <option value="flag">Flag for follow-up</option>
+          <option value="mark">Mark as read</option>
+          <option value="category">Apply a category</option>
+          <option value="alert">Display a desktop alert</option>
+        </select>
+      </div>
+      <div class="ol-rules-row" id="rw-folder-row" style="display:none">
+        <span class="ol-rules-lbl">Folder</span>
+        <select class="ol-rules-sel" id="rw-folder">
+          <option value="">-- Select folder --</option>
+          <option value="newsletters">📰 Newsletters</option>
+          <option value="action">⚡ Action Required</option>
+          <option value="projects">🚀 Projects</option>
+          <option value="hr">🏥 HR &amp; Benefits</option>
+          <option value="reference">📋 Reference</option>
+        </select>
+      </div>`,
+      validate: () => {
+        const a = document.getElementById('rw-action')?.value;
+        if (!a) { showToast('⚠','Required','Select an action.'); return false; }
+        if (a==='move' && !document.getElementById('rw-folder')?.value) { showToast('⚠','Required','Select a destination folder.'); return false; }
+        return true;
+      }
+    },
+    {
+      title:'Step 3: Name your rule and confirm',
+      body: `<div class="ol-rules-row">
+        <span class="ol-rules-lbl">Rule name</span>
+        <input class="ol-rules-inp" id="rw-name" placeholder="e.g. Move newsletters automatically">
+      </div>
+      <div style="margin-top:4px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#323130;cursor:pointer;margin-bottom:6px">
+          <input type="checkbox" id="rw-run-now" checked style="cursor:pointer"> Run this rule on messages already in my Inbox
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#323130;cursor:pointer">
+          <input type="checkbox" id="rw-enabled" checked style="cursor:pointer"> Enable this rule
+        </label>
+      </div>
+      <div class="ol-rules-preview" id="rw-preview-text">Rule preview will appear here.</div>`,
+      validate: () => {
+        if (!document.getElementById('rw-name')?.value.trim()) {
+          document.getElementById('rw-name').value = 'Move newsletters automatically';
+        }
+        return true;
+      }
+    }
+  ];
+
+  function rwRender() {
+    const step = RW_STEPS[rwStep-1];
+    document.getElementById('rw-step-num').textContent = rwStep;
+    document.getElementById('rw-body').innerHTML = `<div class="ol-rules-step-hdr">${step.title}</div>${step.body}`;
+    document.getElementById('rw-back-btn').disabled = rwStep === 1;
+    document.getElementById('rw-next-btn').textContent = rwStep === 3 ? '✅ Finish' : 'Next →';
+    // Wire up conditional fields
+    if (rwStep === 1) {
+      const sel = document.getElementById('rw-cond');
+      if (sel) sel.onchange = () => {
+        const row = document.getElementById('rw-cond-val-row');
+        if (row) row.style.display = (sel.value==='from'||sel.value==='subject'||sel.value==='size') ? 'flex' : 'none';
+      };
+    }
+    if (rwStep === 2) {
+      const sel = document.getElementById('rw-action');
+      if (sel) sel.onchange = () => {
+        const row = document.getElementById('rw-folder-row');
+        if (row) row.style.display = sel.value==='move' ? 'flex' : 'none';
+      };
+    }
+    if (rwStep === 3) {
+      const cond = RW_STEPS[0];
+      const condVal = '(sender / keyword set in step 1)';
+      const act  = '(action set in step 2)';
+      const prev = document.getElementById('rw-preview-text');
+      if (prev) prev.textContent = `When a message arrives → ${act} → apply to matching emails automatically.`;
+    }
+  }
+  rwRender();
+
+  window.rwNext = function() {
+    if (!RW_STEPS[rwStep-1].validate()) return;
+    if (rwStep === 3) {
+      const res = document.getElementById('rw-result');
+      const name = document.getElementById('rw-name')?.value.trim() || 'My Rule';
+      res.classList.add('show');
+      document.getElementById('rw-res-txt').innerHTML = `<strong>Rule "${name}" created!</strong> This rule will now run automatically on all incoming emails. In real Outlook, rules run in the order they are listed — you can manage them under <strong>Home → Rules → Manage Rules &amp; Alerts</strong>.`;
+      addXP(25); showToast('⚡','Rule Created','Automation set up successfully!');
+      return;
+    }
+    rwStep++;
+    rwRender();
+  };
+
+  window.rwBack = function() {
+    if (rwStep > 1) { rwStep--; rwRender(); }
+  };
 }
 
 function renderInboxSorter() {
@@ -2266,103 +3598,521 @@ function renderInboxSorter() {
 
 function renderL2_4() {
   setLessonBody(`
-    <div class="lesson-section">
-      <div class="section-tag">Lesson 2.4 — Outlook</div>
-      <h2 class="section-h">Calendar Management</h2>
-      <p class="section-p">Your calendar is your time strategy. Mastering Outlook Calendar means fewer missed meetings, no scheduling conflicts, and better control over your day.</p>
-    </div>
-    <div class="lesson-section">
-      <h3 style="font-size:18px;font-weight:600;color:var(--text-bright);margin-bottom:16px">📅 Calendar Building Blocks</h3>
-      <div class="hotspot-grid" style="grid-template-columns:repeat(2,1fr)" id="cal-grid"></div>
-    </div>
-    <div class="lesson-section">
-      <h3 style="font-size:18px;font-weight:600;color:var(--text-bright);margin-bottom:16px">🤔 Scheduling Scenario</h3>
-      <div class="scenario-box">
-        <div class="scenario-scene">You need to schedule a 1-hour team meeting with 5 colleagues. When you add them as attendees, the Scheduling Assistant shows two of them are busy at your proposed time (Tuesday 10am). What should you do?</div>
-        <div class="scenario-choices">
-          <button class="scenario-choice" onclick="checkCalScen(this,false,'csf1','Sending without checking conflicts means two colleagues will likely decline or miss the meeting.')"><span class="choice-letter">A</span> Send the meeting invite anyway — they can decline if they can't make it</button>
-          <button class="scenario-choice" onclick="checkCalScen(this,true,'csf1','Correct! The Scheduling Assistant exists exactly for this purpose. Use it to find a time when everyone is free, or mark the conflicted attendees as Optional.')"><span class="choice-letter">B</span> Use the Scheduling Assistant to find a time when everyone is available, or mark the conflicted people as Optional</button>
-          <button class="scenario-choice" onclick="checkCalScen(this,false,'csf1','Canceling is too drastic. The Scheduling Assistant is designed to solve exactly this problem.')"><span class="choice-letter">C</span> Cancel the meeting and email everyone asking when they're free</button>
-        </div>
-        <div class="scenario-feedback" id="csf1"></div>
-      </div>
-    </div>
+<div class="lesson-section">
+  <div class="section-tag">Lesson 2.4 — Outlook</div>
+  <h2 class="section-h">Calendar & Scheduling</h2>
+  <p class="section-p">Outlook Calendar is your RMI government time manager. In this lesson you'll create a real meeting invite, use the Scheduling Assistant to find availability, and add a Teams link.</p>
+</div>
 
-    <div class="lesson-section">
-      <h3 style="font-size:18px;font-weight:600;color:var(--text-bright);margin-bottom:16px">📅 RMI Practical Lab: Schedule a Teams Meeting from Outlook</h3>
-      <div class="topic-explain"><strong>Topic explanation:</strong> Outlook Calendar and Teams work together. The calendar manages time, attendees, reminders, and availability; Teams provides the online meeting room and collaboration space.</div>
-      <div class="lab-card">
-        <div class="lab-title">🤝 Activity: Build a Complete Meeting Invite</div>
-        <ol class="lab-steps">
-          <li>Create a 30-minute meeting named <strong>RMI M365 Practice Check-in</strong>.</li>
-          <li>Add one required attendee and one optional attendee.</li>
-          <li>Open Scheduling Assistant and choose a time that shows attendees as available.</li>
-          <li>Turn on Teams Meeting and add a short agenda with three bullets.</li>
-          <li>Set Show As to <strong>Busy</strong>, add a 10-minute reminder, and save the meeting as a draft or send it if this is an assigned activity.</li>
-        </ol>
-        <div class="lab-checkpoint" id="lcp-2-4">
-          <button class="lab-checkpoint-btn" onclick="completeLabCheckpoint('2-4', this)">✓ I created my meeting invite</button>
-          <span class="lab-checkpoint-label">Finish the meeting invite in Outlook Calendar before marking done.</span>
-          <span class="lab-checkpoint-done">✅ Lab completed — +15 XP awarded!</span>
+<div class="lesson-section">
+  <div class="ol-sim" style="position:relative">
+    <div class="ol-title-bar">
+      <div class="ol-tb-dot" style="background:#ff5f57"></div><div class="ol-tb-dot" style="background:#ffbd2e"></div><div class="ol-tb-dot" style="background:#28c840"></div>
+      <span class="ol-tb-name">Outlook — Calendar</span>
+    </div>
+    <div class="ol-task-strip">
+      <div class="ol-task-icon">📅</div>
+      <div class="ol-task-body">
+        <div class="ol-task-kicker">Calendar Tasks</div>
+        <div class="ol-tasklist">
+          <div class="ol-taskitem" id="cal-t1"><span class="ol-taskitem-ic">○</span> Click an empty time slot on <strong>Wednesday 27</strong> to start a new event</div>
+          <div class="ol-taskitem" id="cal-t2"><span class="ol-taskitem-ic">○</span> Fill in title, attendees, and check the Scheduling Assistant</div>
+          <div class="ol-taskitem" id="cal-t3"><span class="ol-taskitem-ic">○</span> Add a Teams meeting link and send the invite</div>
         </div>
       </div>
     </div>
-    <div class="callout">
-      <div class="callout-head">🌟 Scheduling Assistant Tips</div>
-      <p><strong>Access:</strong> When composing a Meeting invite, click the "Scheduling Assistant" tab at the top.</p>
-      <p><strong>Color coding:</strong> Free = white, Tentative = striped, Busy = solid blue, Out of Office = purple.</p>
-      <p><strong>AutoPick:</strong> Click "AutoPick Next" to jump to the next available slot for all attendees automatically.</p>
+    <div class="ol-cal-shell">
+      <!-- Sidebar: mini-calendar + view options -->
+      <div class="ol-cal-side">
+        <div class="ol-cal-mini-hdr">
+          <span class="ol-cal-mini-title">May 2026</span>
+          <button class="ol-cal-mini-nav">‹</button><button class="ol-cal-mini-nav">›</button>
+        </div>
+        <div class="ol-cal-mini-grid">
+          ${['S','M','T','W','T','F','S'].map(d=>`<div class="ol-cal-dow">${d}</div>`).join('')}
+          ${(() => {
+            const days = [];
+            for(let i=0;i<3;i++) days.push(`<div class="ol-cal-d other">${27+i}</div>`);
+            for(let d=1;d<=31;d++){
+              const cls = d===30?' today':d===27||d===28?' has-event':'';
+              days.push(`<div class="ol-cal-d${cls}">${d}</div>`);
+            }
+            return days.join('');
+          })()}
+        </div>
+        <div style="margin-top:12px">
+          <div style="font-size:10px;font-weight:700;color:#605e5c;margin-bottom:6px;text-transform:uppercase">My Calendars</div>
+          ${[['#0078d4','My Calendar'],['#107c10','Team Events'],['#ca5010','RMI Gov Holidays']].map(([c,n])=>`
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#323130;margin-bottom:4px">
+            <span style="width:10px;height:10px;border-radius:2px;background:${c};flex-shrink:0"></span>${n}
+          </div>`).join('')}
+        </div>
+        <div style="margin-top:14px">
+          <div style="font-size:10px;font-weight:700;color:#605e5c;margin-bottom:6px;text-transform:uppercase">View</div>
+          ${['Day','Work Week','Week','Month'].map((v,i)=>`<div style="padding:4px 8px;font-size:11px;cursor:pointer;border-radius:3px;${i===1?'background:#deecf9;color:#0078d4;font-weight:700':'color:#323130'};margin-bottom:2px">${v}</div>`).join('')}
+        </div>
+      </div>
+      <!-- Week view -->
+      <div class="ol-cal-view">
+        <div class="ol-cal-toolbar">
+          <button class="ol-cal-nav-btn">‹</button>
+          <button class="ol-cal-nav-btn">Today</button>
+          <button class="ol-cal-nav-btn">›</button>
+          <span class="ol-cal-title">May 25 – 29, 2026</span>
+          <button class="ol-rbtn pri" onclick="openNewEvent()" style="margin-left:auto">+ New Event</button>
+        </div>
+        <div class="ol-cal-week-wrap" id="cal-week-wrap" style="overflow-y:auto;max-height:420px">
+          <div class="ol-cal-week-hdr" id="cal-week-hdr"></div>
+          <div class="ol-cal-grid" id="cal-week-grid"></div>
+        </div>
+      </div>
     </div>
-  `);
-  const parts = [
-    {icon:'📆', name:'Appointments', desc:'Personal calendar blocks. No attendees. Right-click time slot or double-click to create.'},
-    {icon:'👥', name:'Meetings', desc:'Add attendees — requires a subject, time, and optional location or Teams link.'},
-    {icon:'🔁', name:'Recurring Events', desc:'Daily stand-ups, weekly reviews, monthly reports. Set recurrence pattern once and it repeats automatically.'},
-    {icon:'🤖', name:'Scheduling Assistant', desc:'See all attendees\' free/busy times on a timeline. The meeting organizer\'s best tool.'},
-    {icon:'🏢', name:'Room Finder', desc:'Book conference rooms directly in the meeting invite based on capacity and availability.'},
-    {icon:'👁️', name:'Show As', desc:'Free, Tentative, Busy, Out of Office — communicate your availability to colleagues.'},
-  ];
-  document.getElementById('cal-grid').innerHTML = parts.map(p => `
-    <div class="hotspot-btn" onclick="this.classList.toggle('revealed')">
-      <div class="hs-icon">${p.icon}</div>
-      <div class="hs-title">${p.name}</div>
-      <div class="hs-desc">${p.desc}</div>
+    <!-- New Event panel (right-side) -->
+    <div class="ol-newevent-panel" id="new-event-panel">
+      <div class="ol-newevent-hdr">
+        <span class="ol-newevent-title">📅 New Meeting</span>
+        <button class="ol-newevent-close" onclick="closeNewEvent()">✕</button>
+      </div>
+      <div class="ol-newevent-body">
+        <div class="ol-newevent-field">
+          <div class="ol-newevent-lbl">Meeting Title *</div>
+          <input class="ol-newevent-inp" id="evt-title" placeholder="e.g. Q3 Budget Review" oninput="evtCheck()">
+        </div>
+        <div class="ol-newevent-field">
+          <div class="ol-newevent-lbl">Required Attendees *</div>
+          <input class="ol-newevent-inp" id="evt-att" placeholder="e.g. Director Heine, Sarah Chen" oninput="evtCheck()">
+        </div>
+        <div class="ol-newevent-row">
+          <div class="ol-newevent-field">
+            <div class="ol-newevent-lbl">Day</div>
+            <select class="ol-newevent-inp" id="evt-day">
+              <option>Mon 25</option><option>Tue 26</option><option selected>Wed 27</option>
+              <option>Thu 28</option><option>Fri 29</option>
+            </select>
+          </div>
+          <div class="ol-newevent-field">
+            <div class="ol-newevent-lbl">Start</div>
+            <select class="ol-newevent-inp" id="evt-start">
+              ${['8:00 AM','9:00 AM','10:00 AM','11:00 AM','1:00 PM','2:00 PM','3:00 PM'].map((t,i)=>`<option${i===2?' selected':''}>${t}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="ol-newevent-row">
+          <div class="ol-newevent-field">
+            <div class="ol-newevent-lbl">Duration</div>
+            <select class="ol-newevent-inp" id="evt-dur">
+              <option>30 min</option><option selected>1 hour</option><option>1.5 hours</option><option>2 hours</option>
+            </select>
+          </div>
+          <div class="ol-newevent-field">
+            <div class="ol-newevent-lbl">Show As</div>
+            <select class="ol-newevent-inp" id="evt-show">
+              <option>Free</option><option>Tentative</option><option selected>Busy</option><option>Out of Office</option>
+            </select>
+          </div>
+        </div>
+        <div class="ol-newevent-field">
+          <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:#323130;cursor:pointer">
+            <input type="checkbox" id="evt-teams" checked style="cursor:pointer"> 🎥 Add a Teams meeting link
+          </label>
+        </div>
+        <div class="ol-newevent-field">
+          <div class="ol-newevent-lbl">Agenda (optional)</div>
+          <textarea class="ol-newevent-inp" id="evt-agenda" rows="3" placeholder="Add meeting agenda...&#10;• Item 1&#10;• Item 2" style="resize:vertical"></textarea>
+        </div>
+        <!-- Scheduling Assistant -->
+        <div class="ol-sched-assistant" id="sched-assistant" style="display:none">
+          <div class="ol-sched-title">📊 Scheduling Assistant</div>
+          <div id="sched-rows"></div>
+          <div style="font-size:10px;color:#605e5c;margin-top:8px">
+            <span style="background:#dff6dd;padding:1px 5px;border-radius:2px">Free</span>
+            <span style="background:#deecf9;padding:1px 5px;border-radius:2px;margin:0 4px">Busy</span>
+            <span style="background:#0078d4;padding:1px 5px;border-radius:2px;color:#fff">Meeting</span>
+          </div>
+        </div>
+        <button class="ol-rbtn" style="font-size:11px;margin-top:8px;width:100%" onclick="showSchedAssistant()" id="sched-btn">📊 Check Availability (Scheduling Assistant)</button>
+        <div id="evt-validation" style="margin-top:8px;font-size:11px;color:#a4262c;display:none"></div>
+      </div>
+      <div class="ol-newevent-footer">
+        <button class="ol-rbtn pri" onclick="sendMeetingInvite()">✉️ Send Invite</button>
+        <button class="ol-rbtn" onclick="closeNewEvent()">Cancel</button>
+      </div>
+    </div>
+    <div class="ol-sim-result" id="cal-result">
+      <span style="font-size:22px">📅</span>
+      <div class="ol-sim-result-txt" id="cal-res-txt"></div>
+    </div>
+  </div>
+</div>
+
+<div class="lesson-section">
+  <div class="callout"><div class="callout-head">🌟 Scheduling Assistant Tips</div>
+  <p><strong>Access:</strong> New Meeting → Scheduling Assistant tab. <strong>Colours:</strong> White=Free, Striped=Tentative, Blue=Busy, Purple=Out of Office. <strong>AutoPick:</strong> Jumps to the next slot when everyone is free automatically.</p></div>
+</div>
+
+<div class="lesson-section">
+  <div class="lab-card">
+    <div class="lab-title">🤝 Activity: Schedule a Real Ministry Meeting</div>
+    <ol class="lab-steps">
+      <li>Open <strong>Outlook Calendar</strong> and click <strong>New Meeting</strong> (not New Appointment).</li>
+      <li>Add a Required attendee and an Optional attendee from your real contacts.</li>
+      <li>Click the <strong>Scheduling Assistant</strong> tab — review their free/busy time and choose an available slot.</li>
+      <li>Add a Teams Meeting link: look for the <strong>Teams Meeting</strong> toggle or button in the toolbar — it generates a join link automatically.</li>
+      <li>Add a 3-bullet agenda in the message body and set a <strong>15-minute reminder</strong>. Save as draft or send.</li>
+    </ol>
+    <div class="lab-checkpoint" id="lcp-2-4">
+      <button class="lab-checkpoint-btn" onclick="completeLabCheckpoint('2-4', this)">✓ I created my meeting invite</button>
+      <span class="lab-checkpoint-label">Complete all 5 steps in Outlook Calendar before marking done.</span>
+      <span class="lab-checkpoint-done">✅ Lab completed — +15 XP awarded!</span>
+    </div>
+  </div>
+</div>
+`);
+
+  // ── Calendar build ────────────────────────────────────────────────────────
+  const DAYS = ['Mon 25','Tue 26','Wed 27','Thu 28','Fri 29'];
+  const HOURS = ['8 AM','9 AM','10 AM','11 AM','12 PM','1 PM','2 PM','3 PM','4 PM','5 PM'];
+  // Pre-existing events: {dayIdx: {hourIdx: {label, cls}}}
+  const PRE_EVENTS = {
+    0: { 0: {label:'Ministry Standup\n8–8:30am', cls:'blue'} },
+    1: { 2: {label:'Client Call\n10–11am', cls:'green'} },
+    2: { 5: {label:'Director Briefing\n1–2pm', cls:'orange'} },
+    3: { 1: {label:'HR Training\n9–10:30am', cls:'green'}, 3:{label:'Budget Review\n11–12pm',cls:'blue'} },
+    4: { 0: {label:'Friday Wrap-up\n8–8:30am', cls:'blue'} },
+  };
+
+  // Build header
+  const hdr = document.getElementById('cal-week-hdr');
+  hdr.innerHTML = '<div class="ol-cal-time-cell" style="background:#faf9f8;border-right:1px solid #e1dfdd">GMT+12</div>' +
+    DAYS.map((d,i) => `<div class="ol-cal-wh-cell">
+      <div class="ol-cal-wh-day">${d.split(' ')[0]}</div>
+      <div class="ol-cal-wh-date${i===4?' today-d':''}">${d.split(' ')[1]}</div>
     </div>`).join('');
+
+  // Build grid
+  const grid = document.getElementById('cal-week-grid');
+  let gridHTML = '';
+  HOURS.forEach((h,hi) => {
+    gridHTML += `<div class="ol-cal-time-cell">${h}</div>`;
+    DAYS.forEach((d,di) => {
+      const ev = PRE_EVENTS[di]?.[hi];
+      gridHTML += `<div class="ol-cal-slot" id="slot-${di}-${hi}" onclick="calSlotClick(${di},${hi})" title="Click to create an event">${
+        ev ? `<div class="ol-cal-event ${ev.cls}" style="top:2px;bottom:2px">${ev.label.replace('\n','<br>')}</div>` : ''
+      }</div>`;
+    });
+  });
+  grid.innerHTML = gridHTML;
+
+  let calT1=false;
+  window.calSlotClick = function(di,hi) {
+    openNewEvent();
+    document.getElementById('evt-day').value = DAYS[di];
+    document.getElementById('evt-start').value = ['8:00 AM','9:00 AM','10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM'][hi] || '10:00 AM';
+    if(!calT1 && di===2){ calT1=true; const t=document.getElementById('cal-t1'); t.querySelector('.ol-taskitem-ic').textContent='✓'; t.style.color='#22c55e'; addXP(8); }
+  };
+
+  window.openNewEvent = function() {
+    document.getElementById('new-event-panel').classList.add('open');
+    document.getElementById('sched-assistant').style.display = 'none';
+    document.getElementById('sched-btn').style.display = 'block';
+  };
+  window.closeNewEvent = function() {
+    document.getElementById('new-event-panel').classList.remove('open');
+  };
+
+  window.evtCheck = function() {
+    const t = document.getElementById('evt-title').value.trim();
+    const a = document.getElementById('evt-att').value.trim();
+    if(t && !document.getElementById('cal-t2').style.color) {}
+    // mark task 2 once both are filled
+    if(t && a) {
+      const el = document.getElementById('cal-t2');
+      el.querySelector('.ol-taskitem-ic').textContent = '✓';
+      el.style.color = '#22c55e';
+    }
+  };
+
+  window.showSchedAssistant = function() {
+    const att = document.getElementById('evt-att').value.trim();
+    if(!att){ showToast('⚠','Add attendees first','Enter attendee names before checking availability.'); return; }
+    const people = ['You',...att.split(',').map(s=>s.trim()).filter(Boolean).slice(0,3)];
+    const AVAIL = [
+      [1,1,1,0,1,1,1,0,1,1],
+      [1,0,1,1,1,0,1,1,1,1],
+      [1,1,0,1,1,1,0,1,1,1],
+      [1,1,1,1,0,1,1,0,1,1],
+    ];
+    document.getElementById('sched-assistant').style.display = 'block';
+    document.getElementById('sched-btn').style.display = 'none';
+    document.getElementById('sched-rows').innerHTML = people.map((p,pi)=>`
+      <div class="ol-sched-row">
+        <span class="ol-sched-name">${p.length>11?p.slice(0,11)+'…':p}</span>
+        <div class="ol-sched-bar">
+          ${HOURS.map((_,hi)=>{
+            const busy = AVAIL[pi%AVAIL.length][hi]===0;
+            const sel  = hi===2; // 10am selected
+            return `<div class="ol-sched-seg ${sel?'ol-sched-mtg':busy?'ol-sched-busy':'ol-sched-free'}" style="flex:1"></div>`;
+          }).join('')}
+        </div>
+      </div>`).join('');
+    addXP(5);
+  };
+
+  window.sendMeetingInvite = function() {
+    const title = document.getElementById('evt-title').value.trim();
+    const att   = document.getElementById('evt-att').value.trim();
+    const teams = document.getElementById('evt-teams').checked;
+    const day   = document.getElementById('evt-day').value;
+    const start = document.getElementById('evt-start').value;
+    const issues = [];
+    if(!title) issues.push('Meeting title is required');
+    if(!att || att.split(',').filter(s=>s.trim()).length < 1) issues.push('Add at least one attendee');
+    const valEl = document.getElementById('evt-validation');
+    if(issues.length){ valEl.style.display='block'; valEl.textContent = issues.join(' · '); return; }
+    valEl.style.display='none';
+    // Add to calendar
+    const slotMatch = HOURS.findIndex(h=>h.toLowerCase().replace(' ','').includes(start.toLowerCase().replace(':00','').replace(' ','').toLowerCase()));
+    const dayMatch  = DAYS.findIndex(d=>day.includes(d.split(' ')[0]));
+    if(dayMatch>=0 && slotMatch>=0){
+      const slot = document.getElementById(`slot-${dayMatch}-${slotMatch}`);
+      if(slot){ slot.innerHTML = `<div class="ol-cal-event blue" style="top:2px;bottom:2px">${title}<br>${start}</div>`; }
+    }
+    document.getElementById('new-event-panel').classList.remove('open');
+    const res = document.getElementById('cal-result');
+    res.classList.add('show');
+    document.getElementById('cal-res-txt').innerHTML =
+      `<strong>Meeting invited sent!</strong> "${title}" scheduled for ${day} at ${start}.${teams?' A Teams meeting link was added automatically.':''} Invitations sent to: ${att}.`;
+    const t3 = document.getElementById('cal-t3');
+    t3.querySelector('.ol-taskitem-ic').textContent='✓'; t3.style.color='#22c55e';
+    addXP(25); showToast('📅','Meeting Created','Invite sent with Teams link!');
+  };
 }
 
 window.checkCalScen = function(btn, c, id, msg) { window.checkEtiquette(btn, c, id, msg); };
 
 function renderL2_5() {
   setLessonBody(`
-    <div class="lesson-section">
-      <div class="section-tag">Lesson 2.5 — Outlook</div>
-      <h2 class="section-h">Contacts & Tasks</h2>
+<div class="lesson-section">
+  <div class="section-tag">Lesson 2.5 — Outlook</div>
+  <h2 class="section-h">Contacts & Tasks</h2>
+  <p class="section-p">Outlook People (Contacts) and Tasks work together with your email and calendar. Create contacts so colleagues are easy to find, and use Tasks to track your action items without losing them in email.</p>
+</div>
+
+<div class="lesson-section">
+  <h3 style="font-size:15px;font-weight:700;color:var(--text-bright);margin-bottom:12px">👤 Activity 1 — Add a New Contact</h3>
+  <p style="font-size:13px;color:var(--text-dim);margin-bottom:14px">Fill in all fields for this new RMI government contact: <strong>Michael Torres, IT Manager, Ministry of ICT</strong>, email <strong>m.torres@ict.gov.mh</strong>, phone <strong>+692 625 0001</strong>.</p>
+  <div class="ol-sim">
+    <div class="ol-title-bar">
+      <div class="ol-tb-dot" style="background:#ff5f57"></div><div class="ol-tb-dot" style="background:#ffbd2e"></div><div class="ol-tb-dot" style="background:#28c840"></div>
+      <span class="ol-tb-name">Outlook — People — New Contact</span>
     </div>
-    <div class="lesson-section">
-      <h3 style="font-size:18px;font-weight:600;color:var(--text-bright);margin-bottom:16px">👤 Managing Contacts</h3>
-      <ul class="info-list">
-        <li><strong>Find People:</strong> Click the People icon in the Outlook navigation bar (or press Ctrl+Shift+C)</li>
-        <li><strong>New Contact:</strong> Fill in Name, Job Title, Company, Email, Phone. Add a photo for easy recognition</li>
-        <li><strong>Contact Groups:</strong> Create distribution lists (e.g., "Marketing Team") to email a group with one click</li>
-        <li><strong>Import contacts:</strong> File → Open & Export → Import/Export → Import from CSV</li>
-      </ul>
-    </div>
-    <div class="lesson-section">
-      <h3 style="font-size:18px;font-weight:600;color:var(--text-bright);margin-bottom:16px">✅ Task Management</h3>
-      <div class="feature-grid">
-        <div class="feature-card"><div class="fc-icon">📝</div><div class="fc-name">Tasks</div><div class="fc-desc">Create tasks with due dates, priorities, and status tracking. Sync with To Do app.</div></div>
-        <div class="feature-card"><div class="fc-icon">🔔</div><div class="fc-name">Reminders</div><div class="fc-desc">Set date and time reminders on tasks and appointments. Never miss a deadline.</div></div>
-        <div class="feature-card"><div class="fc-icon">🚩</div><div class="fc-name">Follow-Up Flags</div><div class="fc-desc">Right-click any email → Follow Up → Flag for follow-up with a due date.</div></div>
-        <div class="feature-card"><div class="fc-icon">📱</div><div class="fc-name">Microsoft To Do</div><div class="fc-desc">Tasks sync with the To Do app on your phone and in Teams. One task system everywhere.</div></div>
+    <div class="ol-task-strip">
+      <div class="ol-task-icon">👥</div>
+      <div class="ol-task-body">
+        <div class="ol-task-kicker">Contact Task</div>
+        <div class="ol-task-desc">Fill in all 6 fields then click Save &amp; Close. Fields with the correct value turn green.</div>
       </div>
     </div>
-    <div class="lesson-section">
-      <h3 style="font-size:18px;font-weight:600;color:var(--text-bright);margin-bottom:16px">🎯 Priority Sorting Exercise</h3>
-      <p class="section-p" style="margin-bottom:12px">Click each task to assign it a priority. Then see your recommended workflow.</p>
-      <div id="task-sorter"></div>
+    <div style="background:#fff;padding:6px 10px;border-bottom:1px solid #e1dfdd;display:flex;gap:5px;background:#faf9f8">
+      <button class="ol-rbtn pri" onclick="saveContact()">💾 Save &amp; Close</button>
+      <button class="ol-rbtn" onclick="clearContact()">🗑️ Discard</button>
     </div>
-  `);
-  renderTaskSorter();
+    <div class="ol-contact-form">
+      <div class="ol-contact-grid">
+        <div class="ol-contact-field">
+          <div class="ol-contact-lbl">First Name *</div>
+          <input class="ol-contact-inp" id="ct-fn" placeholder="Michael" oninput="checkCt('ct-fn','michael')">
+        </div>
+        <div class="ol-contact-field">
+          <div class="ol-contact-lbl">Last Name *</div>
+          <input class="ol-contact-inp" id="ct-ln" placeholder="Torres" oninput="checkCt('ct-ln','torres')">
+        </div>
+        <div class="ol-contact-field">
+          <div class="ol-contact-lbl">Job Title *</div>
+          <input class="ol-contact-inp" id="ct-jt" placeholder="IT Manager" oninput="checkCt('ct-jt','it manager')">
+        </div>
+        <div class="ol-contact-field">
+          <div class="ol-contact-lbl">Organisation *</div>
+          <input class="ol-contact-inp" id="ct-org" placeholder="Ministry of ICT" oninput="checkCt('ct-org','ministry of ict')">
+        </div>
+        <div class="ol-contact-field">
+          <div class="ol-contact-lbl">Email *</div>
+          <input class="ol-contact-inp" id="ct-em" placeholder="m.torres@ict.gov.mh" oninput="checkCt('ct-em','m.torres@ict.gov.mh')">
+        </div>
+        <div class="ol-contact-field">
+          <div class="ol-contact-lbl">Business Phone *</div>
+          <input class="ol-contact-inp" id="ct-ph" placeholder="+692 625 0001" oninput="checkCt('ct-ph','+692 625 0001')">
+        </div>
+      </div>
+      <div class="ol-contact-field" style="margin-top:8px">
+        <div class="ol-contact-lbl">Notes</div>
+        <textarea class="ol-contact-inp" rows="2" placeholder="Optional — add context about this contact..." style="resize:vertical"></textarea>
+      </div>
+    </div>
+    <div class="ol-sim-result" id="ct-result">
+      <span style="font-size:22px" id="ct-res-ic">✅</span>
+      <div class="ol-sim-result-txt" id="ct-res-txt"></div>
+    </div>
+  </div>
+</div>
+
+<div class="lesson-section">
+  <h3 style="font-size:15px;font-weight:700;color:var(--text-bright);margin-bottom:12px">✅ Activity 2 — Manage Your Task List</h3>
+  <p style="font-size:13px;color:var(--text-dim);margin-bottom:14px">Use the Eisenhower matrix to prioritise 6 work tasks: <strong>Do Today</strong> (urgent + important), <strong>Schedule</strong> (important, not urgent), or <strong>Delegate / Drop</strong>. Then mark one task complete.</p>
+  <div class="ol-sim">
+    <div class="ol-title-bar">
+      <div class="ol-tb-dot" style="background:#ff5f57"></div><div class="ol-tb-dot" style="background:#ffbd2e"></div><div class="ol-tb-dot" style="background:#28c840"></div>
+      <span class="ol-tb-name">Outlook — Tasks (Microsoft To Do)</span>
+    </div>
+    <div class="ol-tasks-pane">
+      <div class="ol-tasks-toolbar">
+        <button class="ol-rbtn pri" onclick="addNewTask()">+ New Task</button>
+        <button class="ol-rbtn">⚑ Flagged Email</button>
+        <button class="ol-rbtn">📅 Due Today</button>
+        <span style="margin-left:auto;font-size:11px;color:#605e5c" id="task-score-label">Priority 0 / 6 tasks</span>
+      </div>
+      <div class="ol-task-list" id="task-list"></div>
+    </div>
+    <div class="ol-sim-result" id="task-result">
+      <span style="font-size:22px">✅</span>
+      <div class="ol-sim-result-txt" id="task-res-txt"></div>
+    </div>
+  </div>
+</div>
+
+<div class="lesson-section">
+  <div class="callout"><div class="callout-head">📱 Microsoft To Do — Tasks on your phone</div>
+  <p>Tasks you create in Outlook sync automatically with the <strong>Microsoft To Do app</strong> on your phone. Flagging an email in Outlook (right-click → Follow Up → Flag) also creates a linked task. All synced, no duplication.</p></div>
+</div>
+
+<div class="lesson-section">
+  <div class="lab-card">
+    <div class="lab-title">👤 Activity: Build Your RMI Contact List</div>
+    <ol class="lab-steps">
+      <li>Open <strong>Outlook → People</strong> (left nav icon or Ctrl+Shift+C).</li>
+      <li>Click <strong>New Contact</strong> and add 2 real colleagues with full details: name, title, ministry, email, and phone.</li>
+      <li>Create a <strong>Contact Group</strong> (distribution list): Home → New Contact Group → Add Members → name it "My Ministry Team". Add 3 contacts.</li>
+      <li>In <strong>Tasks</strong> (or Microsoft To Do), create 3 tasks with due dates for your top priorities this week. Add a reminder to the most urgent one.</li>
+      <li>Flag one email in your Inbox for follow-up: right-click → <strong>Follow Up → Tomorrow</strong>. Confirm it appears in your Tasks list.</li>
+    </ol>
+    <div class="lab-checkpoint" id="lcp-2-5">
+      <button class="lab-checkpoint-btn" onclick="completeLabCheckpoint('2-5', this)">✓ I created contacts and tasks</button>
+      <span class="lab-checkpoint-label">Complete all 5 steps in Outlook before marking done.</span>
+      <span class="lab-checkpoint-done">✅ Lab completed — +15 XP awarded!</span>
+    </div>
+  </div>
+</div>
+`);
+
+  // ── Contact form ──────────────────────────────────────────────────────────
+  window.checkCt = function(fieldId, expected) {
+    const el = document.getElementById(fieldId);
+    if (!el) return;
+    const val = el.value.trim().toLowerCase();
+    const ok  = val === expected.toLowerCase() || (expected.includes('@') ? val.includes('@') && val.includes('.') : val.length > 1);
+    el.classList.toggle('valid',   ok);
+    el.classList.toggle('invalid', !ok && val.length > 0);
+  };
+
+  window.saveContact = function() {
+    const fields = ['ct-fn','ct-ln','ct-jt','ct-org','ct-em','ct-ph'];
+    const vals   = fields.map(id => (document.getElementById(id)?.value || '').trim());
+    const empty  = vals.filter(v => !v).length;
+    const res = document.getElementById('ct-result');
+    const ic  = document.getElementById('ct-res-ic');
+    const txt = document.getElementById('ct-res-txt');
+    res.classList.add('show');
+    if (empty === 0) {
+      res.classList.remove('wrong');
+      ic.textContent = '✅';
+      txt.innerHTML = `<strong>${vals[0]} ${vals[1]}</strong> (${vals[2]}, ${vals[3]}) saved to your Outlook contacts. You can now type their name in the To: field of any email and Outlook will auto-complete it. +20 XP`;
+      addXP(20);
+    } else {
+      res.classList.add('wrong');
+      ic.textContent = '⚠️';
+      txt.textContent = `${empty} field${empty>1?'s':''} still empty. Fill in all required fields before saving.`;
+    }
+  };
+
+  window.clearContact = function() {
+    ['ct-fn','ct-ln','ct-jt','ct-org','ct-em','ct-ph'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.value=''; el.classList.remove('valid','invalid'); }
+    });
+    document.getElementById('ct-result').classList.remove('show');
+  };
+
+  // ── Task list ─────────────────────────────────────────────────────────────
+  const TASKS = [
+    { name:'Reply to Director Heine — budget sign-off needed today',      due:'Today',       overdue:false, rec:'Do Today' },
+    { name:'Prepare Q4 planning presentation for next month\'s meeting',  due:'Jun 15',      overdue:false, rec:'Schedule' },
+    { name:'Subscribe to optional government newsletter',                  due:'No date',     overdue:false, rec:'Delegate / Drop' },
+    { name:'Submit leave application — closes Friday',                    due:'Fri May 30',  overdue:false, rec:'Do Today' },
+    { name:'Read optional background paper on Pacific Climate Framework',  due:'No date',     overdue:false, rec:'Schedule' },
+    { name:'Review 2025 annual report draft — director asked by end of day',due:'Today',     overdue:false, rec:'Do Today' },
+  ];
+  const PRIS = ['Do Today','Schedule','Delegate / Drop'];
+  let taskPriDone = 0, taskPriScore = 0, taskChecked = false;
+
+  function buildTaskList() {
+    document.getElementById('task-list').innerHTML = TASKS.map((t,i)=>`
+      <div class="ol-task-item" id="task-row-${i}">
+        <div class="ol-task-cb" id="task-cb-${i}" onclick="checkTask(${i})" title="Mark complete">
+          <span id="task-cb-ic-${i}"></span>
+        </div>
+        <div class="ol-task-text">
+          <div class="ol-task-name" id="task-name-${i}">${t.name}</div>
+          <div class="ol-task-due${t.overdue?' overdue':''}">${t.due}</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-left:auto;max-width:200px">
+          ${PRIS.map(p=>`<button id="tp-${i}-${p.replace(/ /g,'-')}" onclick="prioritiseTask(${i},'${p}','${t.rec}')" style="font-size:10px;padding:3px 7px;border-radius:4px;background:var(--glass);border:1px solid var(--border);color:var(--text-dim);cursor:pointer;font-family:'Space Grotesk',sans-serif;white-space:nowrap">${p}</button>`).join('')}
+        </div>
+      </div>`).join('');
+  }
+  buildTaskList();
+
+  window.prioritiseTask = function(i, pick, correct) {
+    document.querySelectorAll(`[id^="tp-${i}-"]`).forEach(b => { b.disabled=true; b.style.opacity='.4'; });
+    const btn = document.getElementById(`tp-${i}-${pick.replace(/ /g,'-')}`);
+    btn.style.opacity='1'; taskPriDone++;
+    if (pick === correct) {
+      taskPriScore++;
+      btn.style.borderColor='var(--success)'; btn.style.color='#22c55e';
+      addXP(8);
+    } else {
+      btn.style.borderColor='var(--danger)'; btn.style.color='#fca5a5';
+      // highlight correct
+      const corrBtn = document.getElementById(`tp-${i}-${correct.replace(/ /g,'-')}`);
+      if(corrBtn){ corrBtn.style.opacity='1'; corrBtn.style.borderColor='var(--success)'; corrBtn.style.color='#22c55e'; }
+    }
+    document.getElementById('task-score-label').textContent = `Priority ${taskPriDone} / ${TASKS.length} tasks`;
+    if (taskPriDone === TASKS.length) checkTaskComplete();
+  };
+
+  window.checkTask = function(i) {
+    const cb = document.getElementById('task-cb-'+i);
+    const ic = document.getElementById('task-cb-ic-'+i);
+    const nm = document.getElementById('task-name-'+i);
+    const checked = cb.classList.toggle('checked');
+    ic.textContent = checked ? '✓' : '';
+    nm.classList.toggle('done', checked);
+    if(checked && !taskChecked){ taskChecked=true; addXP(5); }
+    checkTaskComplete();
+  };
+
+  function checkTaskComplete() {
+    if (taskPriDone === TASKS.length && taskChecked) {
+      const res = document.getElementById('task-result');
+      res.classList.add('show');
+      document.getElementById('task-res-txt').innerHTML =
+        `<strong>Tasks complete!</strong> You correctly prioritised ${taskPriScore}/${TASKS.length} tasks and marked one complete. ${taskPriScore>=5?'Excellent time management!':'Review the Eisenhower matrix: urgent+important = Do Today.'} +15 XP`;
+      addXP(15);
+    }
+  }
+
+  window.addNewTask = function() {
+    showToast('✅','New Task','In real Outlook / Microsoft To Do: click + New Task, type the task name, set a due date, and add a reminder. Tasks sync to your phone automatically.');
+  };
 }
 
 function renderTaskSorter() {
