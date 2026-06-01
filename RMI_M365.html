@@ -1566,6 +1566,73 @@ button, .nav-item, .module-card, .hotspot-btn { touch-action: manipulation; }
 .ol-sim-result.wrong { background: rgba(164,38,44,.07); border-top-color: rgba(164,38,44,.25); }
 .ol-sim-result-txt { font-size: 12px; color: var(--text); line-height: 1.5; }
 
+
+/* ═══════════════════════════════════════════════════════════
+   ACTIVITY GATING SYSTEM
+═══════════════════════════════════════════════════════════ */
+/* Next button locked state */
+.btn-primary.gated {
+  background: linear-gradient(135deg, #4a4a6a, #3a3a5a) !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+  transform: none !important;
+  pointer-events: none;
+}
+.btn-primary.gated:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Gate notice strip shown above Next when locked */
+#gate-notice {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 40px;
+  background: rgba(244,185,66,0.09);
+  border-top: 1px solid rgba(244,185,66,0.25);
+  font-size: 12px;
+  color: var(--gold);
+  font-weight: 600;
+}
+#gate-notice.visible { display: flex; }
+#gate-notice-icon { font-size: 18px; flex-shrink: 0; }
+#gate-progress-wrap {
+  display: flex; flex-direction: column; flex: 1; gap: 4px;
+}
+#gate-checklist {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-top: 4px;
+}
+.gate-item {
+  font-size: 11px;
+  padding: 2px 9px;
+  border-radius: 12px;
+  border: 1px solid rgba(244,185,66,0.3);
+  background: rgba(244,185,66,0.06);
+  color: var(--gold);
+  transition: all 0.25s;
+  display: flex; align-items: center; gap: 5px;
+}
+.gate-item.done {
+  border-color: rgba(34,197,94,0.4);
+  background: rgba(34,197,94,0.08);
+  color: #22c55e;
+}
+.gate-item-ic { font-size: 11px; }
+
+/* Pulse animation on locked Next button tooltip */
+@keyframes gatePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(244,185,66,0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(244,185,66,0); }
+}
+.btn-primary.gated { animation: gatePulse 2s ease infinite; }
+
+/* Quiz question "Next" hidden until answered */
+#q-next-btn { display: none; }
+#q-next-btn.visible { display: inline-flex; }
+
 </style>
 </head>
 <body>
@@ -1707,10 +1774,17 @@ button, .nav-item, .module-card, .hotspot-btn { touch-action: manipulation; }
     <div class="progress-track" id="lesson-progress-track"></div>
   </div>
   <div class="lesson-body" id="lesson-body"></div>
+  <div id="gate-notice">
+    <span id="gate-notice-icon">🔒</span>
+    <div id="gate-progress-wrap">
+      <span id="gate-notice-text">Complete all activities to unlock the next lesson</span>
+      <div id="gate-checklist"></div>
+    </div>
+  </div>
   <div class="lesson-nav">
     <button class="btn-secondary" id="lesson-prev" onclick="lessonNav(-1)">← Previous</button>
     <span style="font-size:13px;color:var(--text-dim)" id="lesson-nav-label"></span>
-    <button class="btn-primary" id="lesson-next" onclick="lessonNav(1)">Next →</button>
+    <button class="btn-primary gated" id="lesson-next" onclick="lessonNav(1)">Next →</button>
   </div>
 </div>
 
@@ -1845,6 +1919,10 @@ function loadState() {
   if (saved) {
     try { Object.assign(state, JSON.parse(saved)); } catch(e) {}
   }
+  // Ensure completedActivities is always an array
+  if (!Array.isArray(state.completedActivities)) {
+    state.completedActivities = [];
+  }
 }
 function saveState() {
   localStorage.setItem('rmi-m365-v2', JSON.stringify(state));
@@ -1963,6 +2041,15 @@ function updateOverallProgress() {
 function navigate(screen) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + screen).classList.add('active');
+  // Scroll to top of screen header on navigation
+  (function() {
+    const scr = document.getElementById('screen-' + screen);
+    if (!scr) return;
+    const hdr = scr.querySelector('.lesson-header, .quiz-header, .q-hdr, .l-hdr') || scr;
+    let top = 0, el = hdr;
+    while (el) { top += el.offsetTop; el = el.offsetParent; }
+    window.scrollTo({ top: top, behavior: 'instant' });
+  })();
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const navEl = document.getElementById('nav-' + screen);
   if (navEl) navEl.classList.add('active');
@@ -2101,6 +2188,7 @@ function startModule(mod) {
   state.currentLesson = 0;
   renderLesson();
   navigate('lesson');
+  setTimeout(refreshGateUI, 100);
   // badge for first login
   if (mod === 1 && !state.earnedBadges.includes('first_login')) earnBadge('first_login');
 }
@@ -2128,6 +2216,17 @@ function renderLesson() {
   nextBtn.textContent = isLast ? 'Take Quiz →' : 'Next Lesson →';
 
   lesson.render();
+  // Scroll to lesson header — the breadcrumb/title bar at the top of each lesson
+  (function() {
+    const hdr = document.querySelector('#screen-lesson .lesson-header');
+    if (!hdr) return;
+    // Walk offsetParent chain to get absolute document top
+    let top = 0, el = hdr;
+    while (el) { top += el.offsetTop; el = el.offsetParent; }
+    window.scrollTo({ top: top, behavior: 'instant' });
+  })();
+  // Refresh gate UI after lesson content is rendered
+  setTimeout(refreshGateUI, 80);
 }
 
 function lessonNav(dir) {
@@ -2136,11 +2235,22 @@ function lessonNav(dir) {
   const idx = state.currentLesson;
 
   if (dir === 1) {
+    // ── GATING CHECK ──────────────────────────────────────────────────────────
+    if (!isLessonUnlocked(mod, idx)) {
+      // Flash the gate notice
+      const notice = document.getElementById('gate-notice');
+      if (notice) {
+        notice.style.animation = 'none';
+        setTimeout(() => { notice.style.animation = ''; }, 10);
+      }
+      showToast('🔒', 'Complete all activities first', 'Finish all activities in this lesson to continue.');
+      return;
+    }
+    // ─────────────────────────────────────────────────────────────────────────
     addXP(10);
     if (state.moduleProgress[mod - 1] <= idx) state.moduleProgress[mod - 1] = idx + 1;
     updateOverallProgress();
     if (idx === ls.length - 1) {
-      // go to quiz
       startModuleQuiz(mod);
       return;
     }
@@ -2550,6 +2660,21 @@ function renderL1_1() {
       </div>
     </div>
     <div class="lesson-section">
+      <h3 style="font-size:18px;font-weight:600;color:var(--text-bright);margin-bottom:16px">✅ Quick Knowledge Check</h3>
+      <p class="section-p" style="margin-bottom:14px">Answer this question to unlock the next lesson.</p>
+      <div class="scenario-box" id="l11-kc-box">
+        <div class="scenario-scene"><strong>Which of the following best describes Microsoft 365?</strong></div>
+        <div class="scenario-choices">
+          <button class="scenario-choice" onclick="answerL11KC(this,false)"><span class="choice-letter">A</span>A one-time software purchase installed on a single computer</button>
+          <button class="scenario-choice" onclick="answerL11KC(this,true)"><span class="choice-letter">B</span>A cloud-based productivity platform with apps that update automatically</button>
+          <button class="scenario-choice" onclick="answerL11KC(this,false)"><span class="choice-letter">C</span>A hardware device made by Microsoft for business use</button>
+          <button class="scenario-choice" onclick="answerL11KC(this,false)"><span class="choice-letter">D</span>A replacement for the Windows operating system</button>
+        </div>
+        <div class="scenario-feedback" id="l11-kc-fb"></div>
+      </div>
+    </div>
+
+    <div class="lesson-section">
       <h3 style="font-size:18px;font-weight:600;color:var(--text-bright);margin-bottom:16px">☁️ Why Cloud Matters</h3>
       <ul class="info-list">
         <li><strong>Always updated:</strong> No more manual patches or version upgrades — Microsoft updates happen automatically</li>
@@ -2589,6 +2714,28 @@ function initAppsGrid() {
   if (complete) complete.classList.remove('show');
 }
 
+window.answerL11KC = function(btn, correct) {
+  const choices = btn.parentElement.querySelectorAll('.scenario-choice');
+  choices.forEach(c => { c.classList.add('disabled'); c.onclick = null; });
+  const fb = document.getElementById('l11-kc-fb');
+  fb.classList.add('show');
+  if (correct) {
+    btn.classList.add('correct');
+    fb.classList.add('correct');
+    fb.textContent = '✅ Correct! Microsoft 365 is a cloud-based subscription platform — always updated, works on any device.';
+    addXP(10);
+    markActivityDone('kc1-answered');
+  } else {
+    btn.classList.add('wrong');
+    fb.classList.add('wrong');
+    fb.textContent = '❌ Not quite. Microsoft 365 is a cloud-based platform delivered by subscription — not a one-time purchase or hardware device.';
+    // Still mark as answered so learner can proceed after seeing the correct answer
+    choices.forEach(c => { if (c.querySelector('.choice-letter').textContent === 'B') c.classList.add('reveal-correct'); });
+    markActivityDone('kc1-answered');
+  }
+  refreshGateUI();
+};
+
 window.revealApp = function(i) {
   const el = document.getElementById('app-' + i);
   if (!el || el.classList.contains('revealed')) return;
@@ -2598,9 +2745,11 @@ window.revealApp = function(i) {
   document.getElementById('apps-revealed').textContent = window._appsRevealed;
   if (window._appsRevealed >= 6 && !window._appsActivityComplete) {
     window._appsActivityComplete = true;
+    markActivityDone('apps-explored');
     const complete = document.getElementById('apps-complete');
     if (complete) complete.classList.add('show');
     showToast('🎉', 'Activity Complete!', 'You explored 6+ M365 apps!');
+    markActivityDone('apps-explored');
     addXP(20);
   }
 };
@@ -2664,6 +2813,7 @@ function renderL1_2() {
 window.checkScenario1 = function(btn, correct) {
   const choices = btn.parentElement.querySelectorAll('.scenario-choice');
   choices.forEach(c => { c.classList.add('disabled'); c.onclick = null; });
+  markActivityDone('ovt-answered');
   const fb = document.getElementById('sf1');
   fb.classList.add('show');
   if (correct) {
@@ -2680,6 +2830,8 @@ window.checkScenario1 = function(btn, correct) {
 };
 
 function renderL1_3() {
+  // Override kc1 for this lesson
+  window._kc1_override = 'kc1-cyber';
   setLessonBody(`
     <div class="lesson-section">
       <div class="section-tag">Lesson 1.3</div>
@@ -2736,6 +2888,12 @@ function renderL1_3() {
 window.checkKC1 = function(btn, correct, fbId) {
   const choices = btn.parentElement.querySelectorAll('.scenario-choice');
   choices.forEach(c => { c.classList.add('disabled'); c.onclick = null; });
+  // Mark based on current lesson context
+  if (state.currentModule === 1 && state.currentLesson === 2) {
+    markActivityDone('kc1-cyber');
+  } else {
+    markActivityDone('kc1-answered');
+  }
   const fb = document.getElementById(fbId);
   fb.classList.add('show');
   if (correct) {
@@ -2979,7 +3137,7 @@ function renderL2_1() {
       const el = document.getElementById('t21-1');
       el.querySelector('.ol-taskitem-ic').textContent = '✓';
       el.style.color = '#22c55e';
-      addXP(5); ol21CheckAll();
+      addXP(5); markActivityDone('ol21-t1'); ol21CheckAll();
     }
   };
 
@@ -3001,7 +3159,7 @@ function renderL2_1() {
       const el = document.getElementById('t21-2');
       el.querySelector('.ol-taskitem-ic').textContent = '✓';
       el.style.color = '#22c55e';
-      addXP(5); ol21CheckAll();
+      addXP(5); markActivityDone('ol21-t2'); ol21CheckAll();
     }
     // Store current msg for reply
     window._ol21CurrentMsg = { key, ...msg };
@@ -3011,7 +3169,7 @@ function renderL2_1() {
     if (!window._ol21CurrentMsg) return;
     const compose = document.getElementById('ol21-compose');
     compose.classList.add('open');
-    document.getElementById('ol21-to').value = window._ol21CurrentMsg.meta.match(/&lt;([^&]+)&gt;/)?.[1] || 'Sender';
+    document.getElementById('ol21-to').value = (window._ol21CurrentMsg.meta.match(/&lt;([^&]+)&gt;/) || [])[1] || 'Sender';
     document.getElementById('ol21-subj-inp').value = 'RE: ' + window._ol21CurrentMsg.subj;
     document.getElementById('ol21-compose-body').focus();
     if (!t21[2]) {
@@ -3019,7 +3177,7 @@ function renderL2_1() {
       const el = document.getElementById('t21-3');
       el.querySelector('.ol-taskitem-ic').textContent = '✓';
       el.style.color = '#22c55e';
-      addXP(5); ol21CheckAll();
+      addXP(5); markActivityDone('ol21-t3'); ol21CheckAll();
     }
   };
 
@@ -3041,7 +3199,7 @@ function renderL2_1() {
       const el = document.getElementById('t21-4');
       el.querySelector('.ol-taskitem-ic').textContent = '✓';
       el.style.color = '#22c55e';
-      addXP(10); ol21CheckAll();
+      addXP(10); markActivityDone('ol21-t4'); ol21CheckAll();
       showToast('📅','Switched to Calendar','Calendar view in real Outlook works the same way!');
     }
   };
@@ -3185,9 +3343,9 @@ function renderL2_2() {
   const CLOSINGS  = ['regards','sincerely','thank','thanks','best wishes','kind regards','cheers','yours'];
 
   window.ol22Check = function() {
-    const to    = (document.getElementById('l22-to')?.value || '').trim();
-    const subj  = (document.getElementById('l22-subj')?.value || '').trim();
-    const body  = (document.getElementById('l22-body')?.textContent || '').trim();
+    const to    = ((document.getElementById('l22-to') ? document.getElementById('l22-to').value : '') || '').trim();
+    const subj  = ((document.getElementById('l22-subj') ? document.getElementById('l22-subj').value : '') || '').trim();
+    const body  = ((document.getElementById('l22-body') ? document.getElementById('l22-body').textContent : '') || '').trim();
     const words = body.split(/\s+/).filter(w => w.length > 0).length;
     const bodyLow = body.toLowerCase();
     const hasGreet = GREETINGS.some(g => bodyLow.startsWith(g) || bodyLow.includes('\n'+g));
@@ -3230,9 +3388,9 @@ function renderL2_2() {
   };
 
   window.ol22Send = function() {
-    const to    = (document.getElementById('l22-to')?.value || '').trim();
-    const subj  = (document.getElementById('l22-subj')?.value || '').trim();
-    const body  = (document.getElementById('l22-body')?.textContent || '').trim();
+    const to    = ((document.getElementById('l22-to') ? document.getElementById('l22-to').value : '') || '').trim();
+    const subj  = ((document.getElementById('l22-subj') ? document.getElementById('l22-subj').value : '') || '').trim();
+    const body  = ((document.getElementById('l22-body') ? document.getElementById('l22-body').textContent : '') || '').trim();
     const words = body.split(/\s+/).filter(w => w.length > 0).length;
     const bodyLow = body.toLowerCase();
     const hasGreet = ['hi','hello','dear','good morning','greetings'].some(g => bodyLow.startsWith(g) || bodyLow.includes('\n'+g));
@@ -3260,6 +3418,7 @@ function renderL2_2() {
       const tips = issues.filter(i => i.startsWith('💡')).join('<br>');
       txt.innerHTML = `<strong>Message sent to ${to}!</strong> ${tips ? '<br><span style="color:#f4b942">'+tips+'</span>' : ' Great professional email.'}`;
       addXP(30);
+      markActivityDone('email-sent');
       showToast('📨','Email Sent!','Professional message composed and sent.');
     }
   };
@@ -3277,6 +3436,9 @@ function renderL2_2() {
 }
 
 window.checkEtiquette = function(btn, correct, fbId, msg) {
+  // Mark activity done based on current lesson context
+  const _etMap = {'ef1':'email-sent','mef1':'meet-etiq','csf1':'cal-etiq','shfb0':'share-perm-1','shfb1':'share-perm-2'};
+  if(_etMap[fbId]) markActivityDone(_etMap[fbId]);
   const choices = btn.parentElement.querySelectorAll('.scenario-choice');
   choices.forEach(c => { c.classList.add('disabled'); c.onclick = null; });
   const fb = document.getElementById(fbId);
@@ -3406,6 +3568,7 @@ function renderL2_3() {
       if (opt) opt.style.color = '#22c55e';
     }
     if (sortDone === SORT_EMAILS.length) {
+      markActivityDone('inbox-sorted');
       const el = document.getElementById('sort-complete');
       el.style.display = 'block';
       document.getElementById('sort-score-msg').textContent =
@@ -3434,8 +3597,8 @@ function renderL2_3() {
         <input class="ol-rules-inp" id="rw-cond-val" placeholder="e.g. newsletter@rmi.gov.mh">
       </div>`,
       validate: () => {
-        const c = document.getElementById('rw-cond')?.value;
-        const v = document.getElementById('rw-cond-val')?.value.trim();
+        const c = (document.getElementById('rw-cond') ? document.getElementById('rw-cond').value : '');
+        const v = (document.getElementById('rw-cond-val') ? document.getElementById('rw-cond-val').value : '').trim();
         if (!c) { showToast('⚠','Required','Select a condition first.'); return false; }
         if (c === 'from' && !v) { showToast('⚠','Required','Enter the sender email address.'); return false; }
         if (c === 'subject' && !v) { showToast('⚠','Required','Enter a keyword.'); return false; }
@@ -3467,9 +3630,9 @@ function renderL2_3() {
         </select>
       </div>`,
       validate: () => {
-        const a = document.getElementById('rw-action')?.value;
+        const a = (document.getElementById('rw-action') ? document.getElementById('rw-action').value : '');
         if (!a) { showToast('⚠','Required','Select an action.'); return false; }
-        if (a==='move' && !document.getElementById('rw-folder')?.value) { showToast('⚠','Required','Select a destination folder.'); return false; }
+        if (a==='move' && !(document.getElementById('rw-folder') ? document.getElementById('rw-folder').value : '')) { showToast('⚠','Required','Select a destination folder.'); return false; }
         return true;
       }
     },
@@ -3489,7 +3652,7 @@ function renderL2_3() {
       </div>
       <div class="ol-rules-preview" id="rw-preview-text">Rule preview will appear here.</div>`,
       validate: () => {
-        if (!document.getElementById('rw-name')?.value.trim()) {
+        if (!(document.getElementById('rw-name') ? document.getElementById('rw-name').value : '').trim()) {
           document.getElementById('rw-name').value = 'Move newsletters automatically';
         }
         return true;
@@ -3532,8 +3695,9 @@ function renderL2_3() {
     if (!RW_STEPS[rwStep-1].validate()) return;
     if (rwStep === 3) {
       const res = document.getElementById('rw-result');
-      const name = document.getElementById('rw-name')?.value.trim() || 'My Rule';
+      const name = (document.getElementById('rw-name') ? document.getElementById('rw-name').value : '').trim() || 'My Rule';
       res.classList.add('show');
+      markActivityDone('rule-created');
       document.getElementById('rw-res-txt').innerHTML = `<strong>Rule "${name}" created!</strong> This rule will now run automatically on all incoming emails. In real Outlook, rules run in the order they are listed — you can manage them under <strong>Home → Rules → Manage Rules &amp; Alerts</strong>.`;
       addXP(25); showToast('⚡','Rule Created','Automation set up successfully!');
       return;
@@ -3795,7 +3959,7 @@ function renderL2_4() {
   HOURS.forEach((h,hi) => {
     gridHTML += `<div class="ol-cal-time-cell">${h}</div>`;
     DAYS.forEach((d,di) => {
-      const ev = PRE_EVENTS[di]?.[hi];
+      const ev = (PRE_EVENTS[di] !== undefined && PRE_EVENTS[di][hi] !== undefined) ? PRE_EVENTS[di][hi] : null;
       gridHTML += `<div class="ol-cal-slot" id="slot-${di}-${hi}" onclick="calSlotClick(${di},${hi})" title="Click to create an event">${
         ev ? `<div class="ol-cal-event ${ev.cls}" style="top:2px;bottom:2px">${ev.label.replace('\n','<br>')}</div>` : ''
       }</div>`;
@@ -3884,7 +4048,7 @@ function renderL2_4() {
       `<strong>Meeting invited sent!</strong> "${title}" scheduled for ${day} at ${start}.${teams?' A Teams meeting link was added automatically.':''} Invitations sent to: ${att}.`;
     const t3 = document.getElementById('cal-t3');
     t3.querySelector('.ol-taskitem-ic').textContent='✓'; t3.style.color='#22c55e';
-    addXP(25); showToast('📅','Meeting Created','Invite sent with Teams link!');
+    addXP(25); markActivityDone('event-created'); showToast('📅','Meeting Created','Invite sent with Teams link!');
   };
 }
 
@@ -4016,7 +4180,7 @@ function renderL2_5() {
 
   window.saveContact = function() {
     const fields = ['ct-fn','ct-ln','ct-jt','ct-org','ct-em','ct-ph'];
-    const vals   = fields.map(id => (document.getElementById(id)?.value || '').trim());
+    const vals   = fields.map(id => ((document.getElementById(id) ? document.getElementById(id).value : '') || '').trim());
     const empty  = vals.filter(v => !v).length;
     const res = document.getElementById('ct-result');
     const ic  = document.getElementById('ct-res-ic');
@@ -4025,6 +4189,7 @@ function renderL2_5() {
     if (empty === 0) {
       res.classList.remove('wrong');
       ic.textContent = '✅';
+      markActivityDone('contact-saved');
       txt.innerHTML = `<strong>${vals[0]} ${vals[1]}</strong> (${vals[2]}, ${vals[3]}) saved to your Outlook contacts. You can now type their name in the To: field of any email and Outlook will auto-complete it. +20 XP`;
       addXP(20);
     } else {
@@ -4102,6 +4267,8 @@ function renderL2_5() {
 
   function checkTaskComplete() {
     if (taskPriDone === TASKS.length && taskChecked) {
+      markActivityDone('tasks-done');
+      markActivityDone('tasks-done');
       const res = document.getElementById('task-result');
       res.classList.add('show');
       document.getElementById('task-res-txt').innerHTML =
@@ -4334,7 +4501,9 @@ function renderL3_1() {
     document.getElementById('tsim-compose').style.display = 'none';
     if(section==='teams' && !t31_t1){
       t31_t1=true;
-      document.getElementById('t31-t1-ic').textContent='✓';
+      document.getElementById('t31-t1-ic')
+    markActivityDone('tsim-t1');
+    document.getElementById('t31-t1-ic').textContent='✓';
       document.getElementById('t31-t1').style.color='#22c55e';
       document.getElementById('t31-hint').textContent='💡 Now expand the Disaster Preparedness Team and click the Logistics channel.';
       addXP(10);
@@ -4371,6 +4540,7 @@ function renderL3_1() {
     document.getElementById('tsim-compose').style.display='block';
     if(teamName==='Disaster Preparedness' && channel==='Logistics' && !t31_t2){
       t31_t2=true;
+      markActivityDone('tsim-t2');
       document.getElementById('t31-t2-ic').textContent='✓';
       document.getElementById('t31-t2').style.color='#22c55e';
       document.getElementById('t31-hint').textContent='✅ Both tasks complete! You navigated Teams like a pro.';
@@ -4469,6 +4639,8 @@ function renderMentionQuiz() {
       <div class="scenario-feedback" id="mfb${qi}"></div>
     </div>`).join('');
   window.checkMention = function(btn, correct, fbId) {
+  const _mMap = {'mfb0':'chat-sent','mfb1':'chat-mention'};
+  if(_mMap[fbId]) markActivityDone(_mMap[fbId]);
     const choices = btn.parentElement.querySelectorAll('.scenario-choice');
     choices.forEach(c => { c.classList.add('disabled'); c.onclick = null; });
     const fb = document.getElementById(fbId);
@@ -4528,7 +4700,7 @@ function renderL3_3() {
       <div class="hs-title">${c.name}</div>
       <div class="hs-desc">${c.desc}</div>
     </div>`).join('');
-  window.checkMeetEtiq = function(btn, c, id, msg) { window.checkEtiquette(btn, c, id, msg); };
+  window.checkMeetEtiq = function(btn, c, id, msg) { markActivityDone('meet-etiq'); window.checkEtiquette(btn, c, id, msg); };
 }
 
 function renderL3_4() {
@@ -4648,7 +4820,7 @@ function renderL3_5() {
       </div>
       <div class="scenario-feedback" id="stfb${qi}"></div>
     </div>`).join('');
-  window.checkStatus = function(btn, c, id) { window.checkEtiquette(btn, c, id, c ? 'Correct! Good status communication helps your team know your availability.' : 'Not quite. Think about what level of interruption you need (or don\'t need).'); };
+  window.checkStatus = function(btn, c, id) { const _sMap={'stfb0':'status-q1','stfb1':'status-q2','stfb2':'status-q3'}; if(_sMap[id]) markActivityDone(_sMap[id]); window.checkEtiquette(btn, c, id, c ? 'Correct! Good status communication helps your team know your availability.' : 'Not quite. Think about what level of interruption you need (or don\'t need).'); };
 }
 
 // MODULE 4 LESSONS
@@ -4716,6 +4888,8 @@ function renderThreatGame() {
     </div>`).join('');
 
   window.checkThreat = function(btn, pick, correct, fbId) {
+  const _tMap = {'tgfb0':'threat-q1','tgfb1':'threat-q2','tgfb2':'threat-q3','tgfb3':'threat-q4'};
+  if(_tMap[fbId]) markActivityDone(_tMap[fbId]);
     const parent = btn.parentElement;
     parent.querySelectorAll('button').forEach(b => { b.disabled = true; b.style.opacity = '0.5'; b.onmouseover = null; });
     btn.style.opacity = '1';
@@ -4781,8 +4955,9 @@ function renderL4_2() {
     {ic:'🎁',n:'Gift Card / Wire Requests',d:'"Buy $500 in Amazon gift cards urgently" — 100% of the time, this is a scam'},
     {ic:'🤫',n:'Secrecy Requests',d:'"Keep this confidential — don\'t tell anyone yet." Legitimate requests don\'t need secrecy.'},
   ];
+  window._redflagCount = 0;
   document.getElementById('redflag-grid').innerHTML = flags.map(f=>`
-    <div class="hotspot-btn" tabindex="0" role="button" onclick="this.classList.toggle('revealed')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
+    <div class="hotspot-btn" tabindex="0" role="button" onclick="this.classList.toggle('revealed'); if(!this.classList.contains('_counted') && this.classList.contains('revealed')){this.classList.add('_counted'); window._redflagCount=(window._redflagCount||0)+1; if(window._redflagCount>=6) markActivityDone('redflag-6');}" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
       <div class="hs-icon">${f.ic}</div>
       <div class="hs-title">${f.n}</div>
       <div class="hs-desc">${f.d}</div>
@@ -4903,6 +5078,8 @@ Secretary of Finance`,
 
   window._phishEmails = PHISH_EMAILS;
   window.checkPhishAction = function(i, action, correct){
+  markActivityDone('phish-'+(i+1));
+  markActivityDone('phish-'+(i+1));
     const parent = document.querySelectorAll('.phish-actions-row')[i];
     parent.querySelectorAll('.phish-act').forEach(b=>{b.onclick=null;b.style.opacity='.4';b.style.cursor='default';});
     const clickedBtn = event.currentTarget || event.target;
@@ -5102,6 +5279,8 @@ function renderL4_4() {
     </div>`).join('');
 
   window.checkSE = function(btn, correct, fbId, expl) {
+  const _seMap = {'sefb0':'se-q1','sefb1':'se-q2','sefb2':'se-q3'};
+  if(_seMap[fbId]) markActivityDone(_seMap[fbId]);
     const choices = btn.parentElement.querySelectorAll('.scenario-choice');
     choices.forEach(c => { c.classList.add('disabled'); c.onclick = null; });
     const fb = document.getElementById(fbId);
@@ -5344,6 +5523,7 @@ function renderL5_1() {
     document.getElementById('od-new-folder-form').style.display='none';
     if(!odT1){
       odT1=true;
+      markActivityDone('od-t1');
       document.getElementById('od-t1-ic').textContent='✓';
       document.getElementById('od-t1').style.color='#22c55e';
       addXP(10);
@@ -5356,6 +5536,7 @@ function renderL5_1() {
     document.getElementById('od-share-dlg').dataset.file = name;
     if(!odT2){
       odT2=true;
+      markActivityDone('od-t2');
       document.getElementById('od-t2-ic').textContent='✓';
       document.getElementById('od-t2').style.color='#22c55e';
       addXP(10);
@@ -6005,6 +6186,768 @@ function applyAccessibilityEnhancements() {
 init();
 applyAccessibilityEnhancements();
   restoreLabCheckpoints();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ACTIVITY GATING ENGINE
+// Every lesson declares which activities must be done before Next unlocks.
+// Each activity registers completion by calling markActivityDone(key).
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Per-session completed activity keys (persisted in state)
+// state.completedActivities = Set of "mod-lesson-key" strings
+
+function actKey(mod, lesson, key) {
+  return `${mod}-${lesson}-${key}`;
+}
+
+function markActivityDone(key) {
+  if (!state.completedActivities) state.completedActivities = [];
+  const full = actKey(state.currentModule, state.currentLesson, key);
+  if (!state.completedActivities.includes(full)) {
+    state.completedActivities.push(full);
+    saveState();
+  }
+  refreshGateUI();
+}
+
+function isActivityDone(mod, lesson, key) {
+  if (!state.completedActivities) return false;
+  return state.completedActivities.includes(actKey(mod, lesson, key));
+}
+
+// ── Lesson requirement map ───────────────────────────────────────────────────
+// Each entry: { label, key }
+// label = shown in checklist pill; key = used in isActivityDone()
+const LESSON_REQUIREMENTS = {
+  // Module 1
+  '1-1': [
+    { key: 'apps-explored',  label: 'Explore 6 M365 apps' },
+    { key: 'kc1-answered',   label: 'Answer knowledge check' },
+  ],
+  '1-2': [
+    { key: 'ol-hotspots',    label: 'Explore Outlook panels' },
+    { key: 'teams-hotspots', label: 'Explore Teams panels' },
+    { key: 'ovt-answered',   label: 'Outlook vs Teams scenario' },
+  ],
+  '1-3': [
+    { key: 'kc1-cyber',      label: 'Answer cybersecurity check' },
+  ],
+  // Module 2
+  '2-1': [
+    { key: 'ol21-t1', label: 'Click Drafts folder' },
+    { key: 'ol21-t2', label: 'Open Director email' },
+    { key: 'ol21-t3', label: 'Click Reply' },
+    { key: 'ol21-t4', label: 'Switch to Calendar' },
+  ],
+  '2-2': [
+    { key: 'email-sent', label: 'Compose and send email' },
+  ],
+  '2-3': [
+    { key: 'inbox-sorted',  label: 'Sort all 9 inbox emails' },
+    { key: 'rule-created',  label: 'Complete Rules Wizard' },
+  ],
+  '2-4': [
+    { key: 'event-created', label: 'Schedule meeting & send invite' },
+  ],
+  '2-5': [
+    { key: 'contact-saved', label: 'Save contact form' },
+    { key: 'tasks-done',    label: 'Prioritise all tasks' },
+  ],
+  // Module 3
+  '3-1': [
+    { key: 'tsim-t1',       label: 'Click Teams icon' },
+    { key: 'tsim-t2',       label: 'Open Logistics channel' },
+  ],
+  '3-2': [
+    { key: 'chat-sent',     label: 'Send a Teams message' },
+    { key: 'chat-mention',  label: 'Use @mention' },
+    { key: 'chat-reacted',  label: 'React to a message' },
+  ],
+  '3-3': [
+    { key: 'meet-mic',      label: 'Mute/unmute mic' },
+    { key: 'meet-cam',      label: 'Turn on camera' },
+    { key: 'meet-hand',     label: 'Raise hand' },
+    { key: 'meet-chat',     label: 'Open meeting chat' },
+  ],
+  '3-4': [
+    { key: 'file-opened',   label: 'Open the file' },
+    { key: 'file-shared',   label: 'Share with correct permissions' },
+  ],
+  '3-5': [
+    { key: 'status-q1',    label: 'Status scenario 1' },
+    { key: 'status-q2',    label: 'Status scenario 2' },
+    { key: 'status-q3',    label: 'Status scenario 3' },
+    { key: 'notif-done',   label: 'Notification audit' },
+  ],
+  // Module 4
+  '4-1': [
+    { key: 'threat-q1',    label: 'Threat scenario 1' },
+    { key: 'threat-q2',    label: 'Threat scenario 2' },
+    { key: 'threat-q3',    label: 'Threat scenario 3' },
+    { key: 'threat-q4',    label: 'Threat scenario 4' },
+  ],
+  '4-2': [
+    { key: 'redflag-6',    label: 'Reveal 6 red flag cards' },
+    { key: 'phish-1',      label: 'Phishing example 1' },
+    { key: 'phish-2',      label: 'Phishing example 2' },
+    { key: 'phish-3',      label: 'Phishing example 3' },
+  ],
+  '4-3': [
+    { key: 'pw-strong',    label: 'Test a strong password' },
+    { key: 'mfa-complete', label: 'Complete MFA walkthrough' },
+  ],
+  '4-4': [
+    { key: 'se-q1',        label: 'Social engineering scenario 1' },
+    { key: 'se-q2',        label: 'Social engineering scenario 2' },
+    { key: 'se-q3',        label: 'Social engineering scenario 3' },
+  ],
+  '4-5': [
+    { key: 'share-q1',     label: 'File sharing decision 1' },
+    { key: 'share-q2',     label: 'File sharing decision 2' },
+    { key: 'alex-done',    label: "Alex's security simulation" },
+  ],
+  // Module 5
+  '5-1': [
+    { key: 'od-t1',        label: 'Create OneDrive folder' },
+    { key: 'od-t2',        label: 'Share a file' },
+  ],
+  '5-2': [
+    { key: 'share-perm-1', label: 'Sharing scenario 1' },
+    { key: 'share-perm-2', label: 'Sharing scenario 2' },
+  ],
+  '5-3': [
+    { key: 'sp-scenario',  label: 'SharePoint scenario' },
+  ],
+  '5-4': [
+    { key: 'coauth-done',  label: 'Co-authoring scenario' },
+  ],
+  '5-5': [
+    { key: 'naming-done',  label: 'File naming activity' },
+  ],
+};
+
+function getLessonReqs(mod, lesson) {
+  // state.currentLesson is 0-based; LESSON_REQUIREMENTS uses 1-based lesson numbers
+  return LESSON_REQUIREMENTS[`${mod}-${lesson + 1}`] || [];
+}
+
+function isLessonUnlocked(mod, lesson) {
+  const reqs = getLessonReqs(mod, lesson);
+  if (reqs.length === 0) return true; // no requirements = always unlocked
+  return reqs.every(r => isActivityDone(mod, lesson, r.key));
+}
+
+function refreshGateUI() {
+  const mod = state.currentModule;
+  const lesson = state.currentLesson;
+  const reqs = getLessonReqs(mod, lesson);
+  const nextBtn = document.getElementById('lesson-next');
+  const notice  = document.getElementById('gate-notice');
+  const checklist = document.getElementById('gate-checklist');
+  const noticeText = document.getElementById('gate-notice-text');
+
+  if (!nextBtn || !notice) return;
+
+  if (reqs.length === 0) {
+    // No requirements — always unlocked
+    nextBtn.classList.remove('gated');
+    notice.classList.remove('visible');
+    return;
+  }
+
+  const doneCount = reqs.filter(r => isActivityDone(mod, lesson, r.key)).length;
+  const allDone   = doneCount === reqs.length;
+
+  // Update Next button
+  nextBtn.classList.toggle('gated', !allDone);
+
+  // Update checklist pills
+  if (checklist) {
+    checklist.innerHTML = reqs.map(r => {
+      const done = isActivityDone(mod, lesson, r.key);
+      return `<span class="gate-item${done ? ' done' : ''}">
+        <span class="gate-item-ic">${done ? '✓' : '○'}</span>${r.label}
+      </span>`;
+    }).join('');
+  }
+
+  // Show/hide notice
+  notice.classList.toggle('visible', !allDone);
+
+  if (noticeText) {
+    if (allDone) {
+      // Hide the gate strip entirely when everything is done
+      notice.classList.remove('visible');
+    } else {
+      noticeText.textContent = `Complete ${reqs.length - doneCount} more activit${reqs.length - doneCount === 1 ? 'y' : 'ies'} to unlock the next lesson`;
+    }
+  }
+}
+
+// Call refreshGateUI whenever a lesson is rendered
+// renderLesson override removed — refreshGateUI called directly in original
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RUNTIME ACTIVITY WIRING — patches functions that couldn't be statically wired
+// Runs after all lesson functions are defined.
+// ═══════════════════════════════════════════════════════════════════════════
+(function patchActivityTracking() {
+
+  // Helper: wrap a function to call markActivityDone(key) after it runs
+  function wrapFn(obj, name, actKey, condition) {
+    const orig = obj[name];
+    if (typeof orig !== 'function') return;
+    obj[name] = function(...args) {
+      const result = orig.apply(this, args);
+      try {
+        if (!condition || condition(args)) markActivityDone(actKey);
+      } catch(e) {}
+      return result;
+    };
+  }
+
+  // ── Password evaluator: mark 'pw-strong' when pct >= 50 ────────────────
+  const _origEvalPW = window.evaluatePassword || window.evalPW;
+  if (_origEvalPW) {
+    const evalName = window.evaluatePassword ? 'evaluatePassword' : 'evalPW';
+    const __origEval = window[evalName];
+    window[evalName] = function(pw) {
+      __origEval(pw);
+      // check the meter fill width as proxy for score
+      const fill = document.getElementById('pw-meter-fill') || document.getElementById('pw-bar');
+      if (fill) {
+        const w = parseFloat(fill.style.width || '0');
+        if (w >= 50) markActivityDone('pw-strong');
+      }
+    };
+  }
+
+  // ── checkShare ───────────────────────────────────────────────────────────
+  const _origShare = window.checkShare;
+  if (_origShare) {
+    window.checkShare = function(btn, c, fbId, msg) {
+      const _m = {'shfb0':'share-q1','shfb1':'share-q2','sfb0':'share-perm-1','sfb1':'share-perm-2'};
+      markActivityDone(_m[fbId] || 'share-q1');
+      return _origShare.apply(this, arguments);
+    };
+  }
+
+  // ── checkSE ─────────────────────────────────────────────────────────────
+  const _origSE = window.checkSE;
+  if (_origSE) {
+    window.checkSE = function(btn, correct, fbId, expl) {
+      const _m = {'sefb0':'se-q1','sefb1':'se-q2','sefb2':'se-q3'};
+      if (_m[fbId]) markActivityDone(_m[fbId]);
+      return _origSE.apply(this, arguments);
+    };
+  }
+
+  // ── checkThreat ─────────────────────────────────────────────────────────
+  const _origThreat = window.checkThreat;
+  if (_origThreat) {
+    window.checkThreat = function(btn, pick, correct, fbId) {
+      const _m = {'tgfb0':'threat-q1','tgfb1':'threat-q2','tgfb2':'threat-q3','tgfb3':'threat-q4'};
+      if (_m[fbId]) markActivityDone(_m[fbId]);
+      return _origThreat.apply(this, arguments);
+    };
+  }
+
+  // ── checkPhishAction ─────────────────────────────────────────────────────
+  const _origPhish = window.checkPhishAction;
+  if (_origPhish) {
+    window.checkPhishAction = function(i, action, correct) {
+      markActivityDone('phish-' + (i + 1));
+      return _origPhish.apply(this, arguments);
+    };
+  }
+
+  // ── checkStatus ──────────────────────────────────────────────────────────
+  const _origStatus = window.checkStatus;
+  if (_origStatus) {
+    window.checkStatus = function(btn, c, id) {
+      const _m = {'stfb0':'status-q1','stfb1':'status-q2','stfb2':'status-q3'};
+      if (_m[id]) markActivityDone(_m[id]);
+      return _origStatus.apply(this, arguments);
+    };
+  }
+
+  // ── checkMentionQuiz / checkMention ──────────────────────────────────────
+  const _origMention = window.checkMention;
+  if (_origMention) {
+    window.checkMention = function(btn, correct, fbId) {
+      const _m = {'mfb0':'chat-sent','mfb1':'chat-mention'};
+      if (_m[fbId]) markActivityDone(_m[fbId]);
+      return _origMention.apply(this, arguments);
+    };
+  }
+
+  // ── checkMeetEtiq ────────────────────────────────────────────────────────
+  const _origMeet = window.checkMeetEtiq;
+  if (_origMeet) {
+    window.checkMeetEtiq = function(btn, c, id, msg) {
+      markActivityDone('meet-etiq');
+      return _origMeet.apply(this, arguments);
+    };
+  }
+
+  // ── meetCtrl (L3_3 meeting controls) ─────────────────────────────────────
+  const _origMeetCtrl = window.meetCtrl;
+  if (_origMeetCtrl) {
+    window.meetCtrl = function(ctrl, btn) {
+      const _m = {mic:'meet-mic',cam:'meet-cam',hand:'meet-hand',chat:'meet-chat'};
+      if (_m[ctrl]) markActivityDone(_m[ctrl]);
+      return _origMeetCtrl.apply(this, arguments);
+    };
+  }
+
+  // ── tsimNav / tsimOpenChannel ─────────────────────────────────────────────
+  const _origTsimNav = window.tsimNav;
+  if (_origTsimNav) {
+    window.tsimNav = function(section) {
+      if (section === 'teams') markActivityDone('tsim-t1');
+      return _origTsimNav.apply(this, arguments);
+    };
+  }
+  const _origOpenCh = window.tsimOpenChannel;
+  if (_origOpenCh) {
+    window.tsimOpenChannel = function(teamName, channel, idx) {
+      if (teamName === 'Disaster Preparedness' && channel === 'Logistics') {
+        markActivityDone('tsim-t2');
+      }
+      return _origOpenCh.apply(this, arguments);
+    };
+  }
+
+  // ── sendChatMsg (L3_2) ────────────────────────────────────────────────────
+  const _origSendChat = window.sendChatMsg;
+  if (_origSendChat) {
+    window.sendChatMsg = function() {
+      const val = (document.getElementById('chat-input') || document.getElementById('tsim-msg-input'));
+      const txt = val ? val.value || val.textContent || '' : '';
+      const hasMention = /@\w+/.test(txt);
+      markActivityDone('chat-sent');
+      if (hasMention) markActivityDone('chat-mention');
+      return _origSendChat.apply(this, arguments);
+    };
+  }
+
+  // ── reactMsg / tsimSend ────────────────────────────────────────────────────
+  const _origReact = window.reactMsg;
+  if (_origReact) {
+    window.reactMsg = function(btn) {
+      markActivityDone('chat-reacted');
+      return _origReact.apply(this, arguments);
+    };
+  }
+  const _origTsimSend = window.tsimSend;
+  if (_origTsimSend) {
+    window.tsimSend = function() {
+      markActivityDone('chat-sent');
+      return _origTsimSend.apply(this, arguments);
+    };
+  }
+
+  // ── shareFile (L3_4 / L5_1) ──────────────────────────────────────────────
+  const _origShareFile = window.shareFile;
+  if (_origShareFile) {
+    window.shareFile = function(id, name) {
+      markActivityDone('file-opened');
+      return _origShareFile.apply(this, arguments);
+    };
+  }
+  const _origSendShare = window.sendShare;
+  if (_origSendShare) {
+    window.sendShare = function() {
+      markActivityDone('file-shared');
+      return _origSendShare.apply(this, arguments);
+    };
+  }
+
+  // ── odShareFile / odCreateFolder (L5_1) ─────────────────────────────────
+  const _origOdShare = window.odShareFile;
+  if (_origOdShare) {
+    window.odShareFile = function(id, name) {
+      markActivityDone('od-t2');
+      return _origOdShare.apply(this, arguments);
+    };
+  }
+  const _origOdCreate = window.odCreateFolder;
+  if (_origOdCreate) {
+    window.odCreateFolder = function() {
+      markActivityDone('od-t1');
+      return _origOdCreate.apply(this, arguments);
+    };
+  }
+
+  // ── odSendShare (L5_1) ───────────────────────────────────────────────────
+  const _origOdSend = window.odSendShare;
+  if (_origOdSend) {
+    window.odSendShare = function() {
+      markActivityDone('od-t2');
+      return _origOdSend.apply(this, arguments);
+    };
+  }
+
+  // ── alexDec (L4_5) ───────────────────────────────────────────────────────
+  const _origAlexDec = window.alexDec;
+  if (_origAlexDec) {
+    window.alexDec = function(btn, correct, msg) {
+      // When alex sim ends, we check for completion in the original fn
+      return _origAlexDec.apply(this, arguments);
+    };
+  }
+  // alexDone is now marked in checkTaskComplete above
+
+  // ── L5 simple scenario completions ───────────────────────────────────────
+  // chkSt is used for L3_5 status — already wrapped
+  // L5_3, L5_4, L5_5 use scenario functions that call completeLabCheckpoint
+  // We wire them via the lab checkpoint system — completing the lab = completing the activity
+
+  // ── MFA walkthrough: patch the finish onclick set in renderMFASetup ───────
+  // The mfa-next-btn onclick is set dynamically. We intercept via a MutationObserver.
+  const _mfaObs = new MutationObserver(function(muts) {
+    const mfaBtn = document.getElementById('mfa-next') || document.getElementById('mfa-next-btn');
+    if (!mfaBtn) return;
+    if (mfaBtn._gated) return;
+    mfaBtn._gated = true;
+    const origClick = mfaBtn.onclick;
+    mfaBtn.onclick = function(e) {
+      if (origClick) origClick.call(this, e);
+      // If it's the last step (Finish button), mark done
+      if (mfaBtn.textContent.includes('Finish') || mfaBtn.textContent.includes('Complete')) {
+        markActivityDone('mfa-complete');
+        refreshGateUI();
+      }
+    };
+  });
+  _mfaObs.observe(document.body, { childList: true, subtree: true });
+
+  // ── Notification audit: wrap pickNotif ────────────────────────────────────
+  const _origPickNotif = window.pickNotif;
+  if (_origPickNotif) {
+    let _notifCount = 0;
+    window.pickNotif = function(btn, i, pick, correct) {
+      _notifCount++;
+      if (_notifCount >= 5) markActivityDone('notif-done');
+      return _origPickNotif.apply(this, arguments);
+    };
+  }
+
+  // ── sortEmail2 (L2_3) ─────────────────────────────────────────────────────
+  const _origSort2 = window.sortEmail2;
+  if (_origSort2) {
+    let _sortCount = 0;
+    window.sortEmail2 = function(i, correct) {
+      _sortCount++;
+      if (_sortCount >= 6) markActivityDone('inbox-sorted');
+      return _origSort2.apply(this, arguments);
+    };
+  }
+
+  // ── doSort (L2_3 second sorter) ───────────────────────────────────────────
+  const _origDoSort = window.doSort;
+  if (_origDoSort) {
+    let _doSortCount = 0;
+    window.doSort = function(i, correct) {
+      _doSortCount++;
+      if (_doSortCount >= 9) markActivityDone('inbox-sorted');
+      return _origDoSort.apply(this, arguments);
+    };
+  }
+
+  // ── rwNext rule wizard: mark rule-created when step 3 finishes ────────────
+  const _origRwNext = window.rwNext;
+  if (_origRwNext) {
+    window.rwNext = function() {
+      const stepEl = document.getElementById('rw-step-num');
+      if (stepEl && stepEl.textContent === '3') {
+        markActivityDone('rule-created');
+      }
+      return _origRwNext.apply(this, arguments);
+    };
+  }
+
+  // ── saveContact: mark contact-saved ──────────────────────────────────────
+  const _origSaveContact = window.saveContact;
+  if (_origSaveContact) {
+    window.saveContact = function() {
+      const fields = ['ct-fn','ct-ln','ct-jt','ct-org','ct-em','ct-ph'];
+      const allFilled = fields.every(id => {
+        const el = document.getElementById(id);
+        return el && el.value.trim().length > 0;
+      });
+      if (allFilled) markActivityDone('contact-saved');
+      return _origSaveContact.apply(this, arguments);
+    };
+  }
+
+  // ── sendMeetingInvite (L2_4): mark event-created ─────────────────────────
+  const _origSendMtg = window.sendMeetingInvite;
+  if (_origSendMtg) {
+    window.sendMeetingInvite = function() {
+      const title = (document.getElementById('evt-title') || {}).value || '';
+      const att = (document.getElementById('evt-att') || {}).value || '';
+      if (title.trim() && att.trim()) markActivityDone('event-created');
+      return _origSendMtg.apply(this, arguments);
+    };
+  }
+
+  // ── ol22Send (L2_2): mark email-sent when valid ───────────────────────────
+  const _origOl22 = window.ol22Send;
+  if (_origOl22) {
+    window.ol22Send = function() {
+      const to   = (document.getElementById('l22-to') || {}).value || '';
+      const subj = (document.getElementById('l22-subj') || {}).value || '';
+      const body = (document.getElementById('l22-body') || {}).textContent || '';
+      const wc = body.split(/\s+/).filter(Boolean).length;
+      if (to.trim() && subj.trim() && wc >= 25) markActivityDone('email-sent');
+      return _origOl22.apply(this, arguments);
+    };
+  }
+
+  // ── ol21CheckAll: mark all ol21 tasks when all complete ───────────────────
+  // The result is shown when all 4 are done - no further hook needed
+
+  // ── L5_3/5_4/5_5 scenario completions ────────────────────────────────────
+  // These use chkSt (L5_3 co-author), checkShare (L5_2), generic checkEtiquette
+  // Wire via completeLabCheckpoint as the primary gate mechanism for these lessons
+  // The lab checkpoint also calls markActivityDone for these simple lessons
+  const _origLabCP = window.completeLabCheckpoint;
+  if (_origLabCP) {
+    window.completeLabCheckpoint = function(id, btn) {
+      // Map lab IDs to activity completion keys for lessons that rely on the lab
+      const labToAct = {
+        '5-3': ['sp-scenario'],
+        '5-4': ['coauth-done'],
+        '5-5': ['naming-done'],
+        '4-3-safe': ['alex-done'],
+        '3-3': ['meet-etiq'],
+        '3-2': ['chat-reacted'],
+        '4-1': ['threat-q4'],
+      };
+      const acts = labToAct[id];
+      if (acts) acts.forEach(a => markActivityDone(a));
+      return _origLabCP.apply(this, arguments);
+    };
+  }
+
+
+  // ── Explicit string aliases (ensure completedActivities stores correct keys) ───
+  // These are covered by the wrapped functions above, but we add direct calls
+  // in the DOM event listener as a fallback for any timing issues.
+  
+  // Wrap meetCtrl for meet-mic/cam/hand/chat
+  const __origMeetCtrl2 = window.meetCtrl;
+  if (__origMeetCtrl2 && !__origMeetCtrl2._gated2) {
+    __origMeetCtrl2._gated2 = true;
+    window.meetCtrl = function(ctrl, btn) {
+      const _k = {mic:'meet-mic',cam:'meet-cam',hand:'meet-hand',chat:'meet-chat'};
+      if (_k[ctrl]) markActivityDone(_k[ctrl]);
+      return __origMeetCtrl2.call(this, ctrl, btn);
+    };
+  }
+
+  // checkSE wrapper
+  const __origSE2 = window.checkSE;
+  if (__origSE2 && !__origSE2._gated2) {
+    __origSE2._gated2 = true;
+    window.checkSE = function(btn, correct, fbId, expl) {
+      const _m = {'sefb0':'se-q1','sefb1':'se-q2','sefb2':'se-q3'};
+      if (_m[fbId]) markActivityDone(_m[fbId]);
+      return __origSE2.call(this, btn, correct, fbId, expl);
+    };
+  }
+
+  // checkShare wrapper
+  const __origShare2 = window.checkShare;
+  if (__origShare2 && !__origShare2._gated2) {
+    __origShare2._gated2 = true;
+    window.checkShare = function(btn, c, fbId, msg) {
+      const _m = {'shfb0':'share-q1','shfb1':'share-q2','sfb0':'share-perm-1','sfb1':'share-perm-2'};
+      markActivityDone(_m[fbId] || 'share-q1');
+      return __origShare2.call(this, btn, c, fbId, msg);
+    };
+  }
+
+  // checkThreat wrapper
+  const __origThreat2 = window.checkThreat;
+  if (__origThreat2 && !__origThreat2._gated2) {
+    __origThreat2._gated2 = true;
+    window.checkThreat = function(btn, pick, correct, fbId) {
+      const _m = {'tgfb0':'threat-q1','tgfb1':'threat-q2','tgfb2':'threat-q3','tgfb3':'threat-q4'};
+      if (_m[fbId]) markActivityDone(_m[fbId]);
+      return __origThreat2.call(this, btn, pick, correct, fbId);
+    };
+  }
+
+  // checkPhishAction wrapper
+  const __origPA2 = window.checkPhishAction;
+  if (__origPA2 && !__origPA2._gated2) {
+    __origPA2._gated2 = true;
+    window.checkPhishAction = function(i, action, correct) {
+      markActivityDone('phish-' + (i+1));
+      return __origPA2.call(this, i, action, correct);
+    };
+  }
+
+  // checkStatus wrapper
+  const __origStat2 = window.checkStatus;
+  if (__origStat2 && !__origStat2._gated2) {
+    __origStat2._gated2 = true;
+    window.checkStatus = function(btn, c, id) {
+      const _m = {'stfb0':'status-q1','stfb1':'status-q2','stfb2':'status-q3'};
+      if (_m[id]) markActivityDone(_m[id]);
+      return __origStat2.call(this, btn, c, id);
+    };
+  }
+
+  // alexDec wrapper — mark alex-done when all 3 decisions made
+  const __origAlexDec2 = window.alexDec;
+  if (__origAlexDec2 && !__origAlexDec2._gated2) {
+    __origAlexDec2._gated2 = true;
+    let _alexDecCount = 0;
+    window.alexDec = function(btn, correct, msg) {
+      _alexDecCount++;
+      if (_alexDecCount >= 3) markActivityDone('alex-done');
+      return __origAlexDec2.call(this, btn, correct, msg);
+    };
+  }
+
+  // L5 scenario completions — mark sp/coauth/naming via scenario clicks
+  document.addEventListener('click', function(e) {
+    const scen = e.target.closest('.scenario-choice, .scen-c');
+    if (!scen) return;
+    const mod = state.currentModule, lesson = state.currentLesson;
+    if (mod === 5) {
+      if (lesson === 2) markActivityDone('sp-scenario');
+      if (lesson === 3) markActivityDone('coauth-done');
+      if (lesson === 4) markActivityDone('naming-done');
+    }
+  });
+
+
+  // Explicit meet control keys (ensure static coverage)
+  window._meetCtrlMarkDone = function(ctrl) {
+    if (ctrl==='mic')  markActivityDone('meet-mic');
+    if (ctrl==='cam')  markActivityDone('meet-cam');
+    if (ctrl==='hand') markActivityDone('meet-hand');
+    if (ctrl==='chat') markActivityDone('meet-chat');
+  };
+  const __origMeetCtrl3 = window.meetCtrl;
+  if (__origMeetCtrl3) {
+    window.meetCtrl = function(ctrl, btn) {
+      window._meetCtrlMarkDone(ctrl);
+      return __origMeetCtrl3.apply(this, arguments);
+    };
+  }
+
+  // Explicit phish keys
+  window._phishMarkDone = function(i) {
+    if (i===0) markActivityDone('phish-1');
+    if (i===1) markActivityDone('phish-2');
+    if (i===2) markActivityDone('phish-3');
+  };
+  const __origPA3 = window.checkPhishAction;
+  if (__origPA3) {
+    window.checkPhishAction = function(i, action, correct) {
+      window._phishMarkDone(i);
+      return __origPA3.apply(this, arguments);
+    };
+  }
+
+  console.log('[Gate] Activity tracking patches applied.');
+
+  // ── L1_2 hotspot click tracking ──────────────────────────────────────────
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.hotspot-btn');
+    if (!btn) return;
+    // Count revealed hotspots in L1_2 outlook grid
+    // L1_2 uses 'outlook-grid'; other lessons use 'outlook-nav-grid'
+    const olGrid = document.getElementById('outlook-grid') || document.getElementById('outlook-nav-grid');
+    if (olGrid && olGrid.contains(btn)) {
+      const revealed = olGrid.querySelectorAll('.hotspot-btn.revealed').length;
+      if (revealed >= 3) markActivityDone('ol-hotspots');
+    }
+    const tmGrid = document.getElementById('teams-grid') || document.getElementById('teams-nav-grid');
+    if (tmGrid && tmGrid.contains(btn)) {
+      const revealed = tmGrid.querySelectorAll('.hotspot-btn.revealed').length;
+      if (revealed >= 3) markActivityDone('teams-hotspots');
+    }
+    // L1_1 portal app count
+    const appsGrid = document.getElementById('apps-grid') || document.getElementById('apps-portal');
+    if (appsGrid && appsGrid.contains(btn)) {
+      const revealed = appsGrid.querySelectorAll('.hotspot-btn.revealed, [data-done]').length;
+      if (revealed >= 6) markActivityDone('apps-explored');
+    }
+    // General: any scenario answered counts for kc1-answered in L1_1
+    const scenParent = btn.closest('.scenario-choices');
+    if (scenParent) {
+      const fbId = (scenParent.nextElementSibling ? scenParent.nextElementSibling.id : null);
+      if (fbId === 'kc-fb1') markActivityDone('kc1-cyber');
+      if (fbId === 'sf1' || fbId === 'ef1') markActivityDone('ovt-answered');
+    }
+  });
+
+  // ── L4_3 MFA: patch the next button each time it's dynamically set ───────
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('#mfa-next, #mfa-next-btn');
+    if (!btn) return;
+    if (btn.textContent.trim().includes('✅') || btn.textContent.trim().includes('Finish') || btn.textContent.trim().includes('Complete')) {
+      setTimeout(() => { markActivityDone('mfa-complete'); refreshGateUI(); }, 100);
+    }
+  });
+
+  // ── ol21 tasks via DOM events ─────────────────────────────────────────────
+  document.addEventListener('click', function(e) {
+    // Folder click in L2_1
+    const fold = e.target.closest('#fold-drafts');
+    if (fold) markActivityDone('ol21-t1');
+    // Nav button in L2_1
+    const navBtn = e.target.closest('.ol-nav-btn[id="ol-nav-cal"]');
+    if (navBtn) markActivityDone('ol21-t4');
+    // Reply button in L2_1
+    const replyBtn = e.target.closest('#ol21-reply-btn');
+    if (replyBtn) markActivityDone('ol21-t3');
+    // Message open in L2_1
+    const msgHeine = e.target.closest('#msg-heine');
+    if (msgHeine) markActivityDone('ol21-t2');
+  });
+
+  // ── L2_5 tasks: hook prioritiseTask finish ────────────────────────────────
+  const _origPrioritise = window.prioritiseTask;
+  if (_origPrioritise) {
+    let _priCount = 0;
+    window.prioritiseTask = function(i, pick, correct) {
+      _priCount++;
+      // When all tasks are done and at least one task is checked
+      const result = _origPrioritise.apply(this, arguments);
+      const taskDoneEl = document.getElementById('task-result');
+      if (taskDoneEl && taskDoneEl.classList.contains('show')) {
+        markActivityDone('tasks-done');
+      }
+      return result;
+    };
+  }
+
+  // ── L5 simple scenario wiring via checkEtiquette fbId ────────────────────
+  const _origEtiq2 = window.checkEtiquette;
+  if (_origEtiq2) {
+    window.checkEtiquette = function(btn, correct, fbId, msg) {
+      const _map = {
+        'ef1':'email-sent','mef1':'meet-etiq','csf1':'cal-etiq',
+        'stfb0':'status-q1','stfb1':'status-q2','stfb2':'status-q3',
+        'shfb0':'share-q1','shfb1':'share-q2',
+        'sefb0':'se-q1','sefb1':'se-q2','sefb2':'se-q3',
+        'tgfb0':'threat-q1','tgfb1':'threat-q2','tgfb2':'threat-q3','tgfb3':'threat-q4',
+        'kc1fb':'kc1-cyber',
+      };
+      if (_map[fbId]) markActivityDone(_map[fbId]);
+      return _origEtiq2.apply(this, arguments);
+    };
+  }
+})();
+
 </script>
 </body>
 </html>
