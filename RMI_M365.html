@@ -2041,15 +2041,16 @@ function updateOverallProgress() {
 function navigate(screen) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + screen).classList.add('active');
-  // Scroll to top of screen header on navigation
-  (function() {
-    const scr = document.getElementById('screen-' + screen);
-    if (!scr) return;
-    const hdr = scr.querySelector('.lesson-header, .quiz-header, .q-hdr, .l-hdr') || scr;
-    let top = 0, el = hdr;
-    while (el) { top += el.offsetTop; el = el.offsetParent; }
-    window.scrollTo({ top: top, behavior: 'instant' });
-  })();
+  // After layout, scroll so the screen header sits at top of viewport
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      var scr = document.getElementById('screen-' + screen);
+      if (!scr) return;
+      var hdr = scr.querySelector('.lesson-header, .quiz-header, .q-hdr, .l-hdr') || scr.firstElementChild || scr;
+      var rect = hdr.getBoundingClientRect();
+      window.scrollTo({ top: window.pageYOffset + rect.top, behavior: 'instant' });
+    });
+  });
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const navEl = document.getElementById('nav-' + screen);
   if (navEl) navEl.classList.add('active');
@@ -2216,15 +2217,16 @@ function renderLesson() {
   nextBtn.textContent = isLast ? 'Take Quiz →' : 'Next Lesson →';
 
   lesson.render();
-  // Scroll to lesson header — the breadcrumb/title bar at the top of each lesson
-  (function() {
-    const hdr = document.querySelector('#screen-lesson .lesson-header');
-    if (!hdr) return;
-    // Walk offsetParent chain to get absolute document top
-    let top = 0, el = hdr;
-    while (el) { top += el.offsetTop; el = el.offsetParent; }
-    window.scrollTo({ top: top, behavior: 'instant' });
-  })();
+  // After layout: scroll so #lesson-body (the lecture content) is at top of viewport
+  // The sticky .lesson-header will sit naturally above it
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      var body = document.getElementById('lesson-body');
+      if (!body) return;
+      var rect = body.getBoundingClientRect();
+      window.scrollTo({ top: window.pageYOffset + rect.top, behavior: 'instant' });
+    });
+  });
   // Refresh gate UI after lesson content is rendered
   setTimeout(refreshGateUI, 80);
 }
