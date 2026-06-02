@@ -1768,6 +1768,62 @@ button, .nav-item, .module-card, .hotspot-btn { touch-action: manipulation; }
 #q-next-btn { display: none; }
 #q-next-btn.visible { display: inline-flex; }
 
+
+@media print {
+  #cert-fill-form { display: none !important; }
+  body { background: white !important; }
+  #sidebar, #menu-toggle, .lesson-nav, #toast, #gate-notice,
+  .btn-primary, .btn-secondary, .screen:not(#screen-certificate) { display: none !important; }
+  #main { margin-left: 0 !important; }
+  #screen-certificate { display: block !important; }
+  .cert-page { padding: 0 !important; background: white !important; }
+  .cert-wrap { box-shadow: none !important; border: 1px solid #ddd !important; }
+  .cert-topband, .cert-score-badge { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+
+
+/* ── Certificate editable fields ── */
+.cert-editable {
+  color: #1a1a2e !important;
+  font-weight: 600;
+  font-size: 14px;
+}
+.cert-editable:empty::before {
+  content: attr(data-placeholder);
+  color: #bbb;
+  font-style: italic;
+  font-weight: 400;
+  pointer-events: none;
+}
+.cert-editable:focus {
+  border-bottom: 2px solid #003087 !important;
+  background: #f0f5ff;
+  border-radius: 2px;
+}
+@media print {
+  .cert-editable {
+    border-bottom: none !important;
+    background: transparent !important;
+    outline: none !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .cert-editable:empty::before {
+    content: '' !important;
+  }
+  #cert-fill-form { display: none !important; }
+  body { background: white !important; }
+  #sidebar, #menu-toggle, .lesson-nav, #toast, #gate-notice,
+  .btn-primary, .btn-secondary { display: none !important; }
+  #main { margin-left: 0 !important; }
+  .screen { display: none !important; }
+  #screen-certificate { display: block !important; }
+  .cert-page { padding: 0 !important; background: white !important; }
+  .cert-wrap { box-shadow: none !important; border: 1px solid #ddd; max-width:100% !important; }
+  .cert-topband { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .cert-score-badge { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+
 </style>
 </head>
 <body>
@@ -2024,6 +2080,19 @@ button, .nav-item, .module-card, .hotspot-btn { touch-action: manipulation; }
       </div>
 
       <!-- CERT BODY -->
+      <!-- EDITABLE DETAILS FORM (hidden on print) -->
+      <div id="cert-fill-form" style="background:#fffbeb;border:1px solid #f4b942;border-radius:8px;padding:16px 20px;margin:0;font-family:'Segoe UI',Arial,sans-serif">
+        <div style="font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">✏️ Fill in your details before printing</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="grid-column:1/-1">
+            <p style="margin:0;font-size:12px;color:#78716c;line-height:1.5">Click directly on the <strong>Ministry / Office</strong>, <strong>Employee ID</strong>, and <strong>Supervisor / Manager</strong> fields on the certificate below to type your details. They will be saved automatically and appear when you print.</p>
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:#605e5c;display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em">Correct learner name (optional)</label>
+            <input id="cert-inp-name" type="text" placeholder="Full name as it should appear" oninput="certFillName(this.value)" style="width:100%;padding:7px 10px;border:1px solid #d1d5db;border-radius:5px;font-size:13px;font-family:'Segoe UI',sans-serif;outline:none;box-sizing:border-box">
+          </div>
+        </div>
+      </div>
       <div class="cert-body">
         <div class="cert-presents">presents this</div>
         <div class="cert-award-title">Certificate of Completion</div>
@@ -2043,15 +2112,15 @@ button, .nav-item, .module-card, .hotspot-btn { touch-action: manipulation; }
         <div class="cert-meta-grid" aria-label="Completion details">
           <div class="cert-meta-card">
             <div class="cert-meta-label">Ministry / Office</div>
-            <div class="cert-meta-value" id="cert-ministry">—</div>
+            <div class="cert-meta-value cert-editable" id="cert-ministry" contenteditable="true" data-placeholder="Click to enter your ministry" oninput="saveCertDetail('ministry',this.textContent)" style="min-height:22px;outline:none;border-bottom:1px dashed #c8c6c4;cursor:text;color:#1a1a2e;font-size:14px;font-weight:600"></div>
           </div>
           <div class="cert-meta-card">
             <div class="cert-meta-label">Employee ID</div>
-            <div class="cert-meta-value" id="cert-employee-id">—</div>
+            <div class="cert-meta-value cert-editable" id="cert-employee-id" contenteditable="true" data-placeholder="Click to enter employee ID" oninput="saveCertDetail('empid',this.textContent)" style="min-height:22px;outline:none;border-bottom:1px dashed #c8c6c4;cursor:text;color:#1a1a2e;font-size:14px;font-weight:600"></div>
           </div>
           <div class="cert-meta-card">
             <div class="cert-meta-label">Supervisor / Manager</div>
-            <div class="cert-meta-value" id="cert-supervisor">—</div>
+            <div class="cert-meta-value cert-editable" id="cert-supervisor" contenteditable="true" data-placeholder="Click to enter supervisor name" oninput="saveCertDetail('supervisor',this.textContent)" style="min-height:22px;outline:none;border-bottom:1px dashed #c8c6c4;cursor:text;color:#1a1a2e;font-size:14px;font-weight:600"></div>
           </div>
           <div class="cert-meta-card">
             <div class="cert-meta-label">Verification Code</div>
@@ -2135,6 +2204,7 @@ const state = {
   quizTimer: null,
   quizSeconds: 0,
   finalScore: 0,
+  finalExamAttempted: false,
   learnerName: '',
   randomSeeds: {},
   ministry: '',
@@ -6791,6 +6861,14 @@ function startModuleQuiz(mod) {
 function startFinalExam() {
   const navEl = document.getElementById('nav-final');
   if (navEl && navEl.classList.contains('locked')) { showToast('🔒', 'Final Exam Locked', 'Complete all 5 modules first'); return; }
+  // One attempt only — if already taken, go straight to results/certificate
+  if (state.finalExamAttempted) {
+    showToast('📋', 'Exam Already Completed', 'You have already taken the final exam. Your score of ' + (state.finalScore || 0) + '% is your final result. To retake the exam, you must complete the full self-paced training again.');
+    if (state.finalScore >= 80) {
+      setTimeout(function() { showCertificate(); }, 1500);
+    }
+    return;
+  }
   startModuleQuiz(6);
 }
 
@@ -6902,8 +6980,19 @@ function showResults() {
     }
     if (!quiz.nextModule) {
       state.finalScore = pct;
+      state.finalExamAttempted = true;
       state.learnerName = 'Outstanding Learner';
       document.getElementById('results-continue').textContent = '🏆 View Certificate';
+      // Show one-attempt notice on results screen
+      var noticeEl = document.getElementById('final-exam-notice');
+      if (!noticeEl) {
+        noticeEl = document.createElement('div');
+        noticeEl.id = 'final-exam-notice';
+        noticeEl.style.cssText = 'margin:16px 0 0;padding:12px 16px;background:rgba(244,185,66,0.1);border:1px solid rgba(244,185,66,0.4);border-radius:8px;font-size:13px;color:var(--gold);text-align:center;line-height:1.5';
+        noticeEl.innerHTML = '📋 <strong>This score is final.</strong> The final exam can only be taken once. To retake, you must complete the full self-paced training again.';
+        var btnRow = document.querySelector('#screen-results .results-actions, #screen-results [style*="justify-content:center"]');
+        if (btnRow) btnRow.parentNode.insertBefore(noticeEl, btnRow);
+      }
     }
     updateOverallProgress();
     saveState();
@@ -6916,7 +7005,14 @@ function showResults() {
     bDisplay.innerHTML = `<div class="badge-earned"><div class="badge-icon">${earnedBadge.icon}</div><div class="badge-info"><div class="badge-name">${earnedBadge.name}</div><div class="badge-sub">Badge Unlocked!</div></div></div>`;
   } else { bDisplay.innerHTML = ''; }
 
-  document.getElementById('results-retry').onclick = retryQuiz;
+  var retryBtn = document.getElementById('results-retry');
+  // For final exam: hide retry button — one attempt only
+  if (quiz.sourceModule === 6 || !quiz.nextModule) {
+    retryBtn.style.display = 'none';
+  } else {
+    retryBtn.style.display = '';
+    retryBtn.onclick = retryQuiz;
+  }
   document.getElementById('results-continue').style.display = quiz.nextModule ? '' : (passed ? '' : 'none');
 }
 
@@ -6975,6 +7071,7 @@ function renderBadges() {
 // ═══════════════════════════════════════════════
 function showCertificate() {
   navigate('certificate');
+  setTimeout(restoreCertDetails, 50);
   // Populate fields from saved state
   const nEl = document.getElementById('cert-name');
   const mEl = document.getElementById('cert-ministry');
@@ -7888,6 +7985,44 @@ function certApplyInfo() {
   prefill('cf-ministry', ministry === '—' ? '' : ministry);
   prefill('cf-empid', empId === '—' ? '' : empId);
   prefill('cf-supervisor', supervisor === '—' ? '' : supervisor);
+}
+
+function saveCertDetail(key, value) {
+  try {
+    var saved = JSON.parse(localStorage.getItem('rmi-m365-v2-cert-details') || '{}');
+    saved[key] = value.trim();
+    localStorage.setItem('rmi-m365-v2-cert-details', JSON.stringify(saved));
+  } catch(e) {}
+}
+
+function restoreCertDetails() {
+  try {
+    var saved = JSON.parse(localStorage.getItem('rmi-m365-v2-cert-details') || '{}');
+    var map = {
+      'ministry':   'cert-ministry',
+      'empid':      'cert-employee-id',
+      'supervisor': 'cert-supervisor',
+    };
+    Object.keys(map).forEach(function(key) {
+      if (saved[key]) {
+        var el = document.getElementById(map[key]);
+        if (el) el.textContent = saved[key];
+      }
+    });
+    // Also restore name input if present
+    var nameInp = document.getElementById('cert-inp-name');
+    if (nameInp && saved.name) {
+      nameInp.value = saved.name;
+      var nameEl = document.getElementById('cert-name');
+      if (nameEl) nameEl.textContent = saved.name;
+    }
+  } catch(e) {}
+}
+
+function certFillName(value) {
+  var el = document.getElementById('cert-name');
+  if (el && value.trim()) el.textContent = value.trim();
+  saveCertDetail('name', value);
 }
 </script>
 </body>
