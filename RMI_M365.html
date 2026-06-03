@@ -9456,6 +9456,193 @@ window.finishRestore = function(email, name) {
   }
   showToast('✓', 'Account Restored!', 'Welcome back, ' + data.profile.name + '! Your progress has been fully restored.');
 };
+
+// ═══════════════════════════════════════════════════════════════
+// PASSWORD RESET FLOW
+// No email server needed — generates a one-time code shown on
+// screen that the user must copy and re-enter to verify identity.
+// ═══════════════════════════════════════════════════════════════
+
+var _resetEmail = '';
+var _resetCode  = '';
+
+// Hidden reset — only accessible via Ctrl+Shift+R on the login screen
+// Requires admin PIN before proceeding
+var _resetPinHash = '1606603425'; // hashed PIN
+var _resetPinAttempts = 0;
+
+window.showForgotPassword = function() {
+  if (_resetPinAttempts >= 5) {
+    showToast('🔒', 'Locked', 'Too many failed attempts. Reload the page to try again.');
+    return;
+  }
+  var pin = prompt('Enter the Administrator PIN to access password reset:');
+  if (!pin) return;
+  if ((pin.trim().hashCode ? pin.trim().hashCode() : simpleHash(pin.trim())) !== parseInt(_resetPinHash)) {
+    _resetPinAttempts++;
+    var left = 5 - _resetPinAttempts;
+    alert('Incorrect PIN.' + (left > 0 ? ' ' + left + ' attempt(s) remaining.' : ' Account locked.'));
+    return;
+  }
+  _resetPinAttempts = 0;
+  // PIN correct — show reset flow
+  ['reset-step-1','reset-step-2','reset-step-3'].forEach(function(id) {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('reset-step-1').style.display = 'block';
+  document.getElementById('reset-email').value = document.getElementById('login-email').value || '';
+  document.getElementById('reset-step1-error').style.display = 'none';
+  document.getElementById('reset-pw-overlay').style.display = 'flex';
+};
+
+function simpleHash(str) {
+  var h = 0;
+  for (var i = 0; i < str.length; i++) {
+    h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+  }
+  return h >>> 0;
+}
+
+window.closeResetModal = function() {
+  document.getElementById('reset-pw-overlay').style.display = 'none';
+  _resetEmail = '';
+  _resetCode  = '';
+};
+
+window.resetBack = function() {
+  document.getElementById('reset-step-2').style.display = 'none';
+  document.getElementById('reset-step-1').style.display = 'block';
+};
+
+window.resetStep1 = function() {
+  var email  = document.getElementById('reset-email').value.trim().toLowerCase();
+  var errEl  = document.getElementById('reset-step1-error');
+  errEl.style.display = 'none';
+
+  if (!email) {
+    errEl.style.display = 'block';
+    errEl.textContent = 'Please enter your email address.';
+    return;
+  }
+  var users = getUsers();
+  if (!users[email]) {
+    errEl.style.display = 'block';
+    errEl.textContent = 'No account found with this email address.';
+    return;
+  }
+
+  // Generate a 6-character alphanumeric code
+  _resetEmail = email;
+  _resetCode  = Math.random().toString(36).substring(2,5).toUpperCase()
+              + Math.random().toString(36).substring(2,5).toUpperCase();
+  _resetCode  = _resetCode.substring(0,6);
+
+  // Show step 2
+  document.getElementById('reset-email-display').textContent = email;
+  document.getElementById('reset-code-value').textContent    = _resetCode;
+  document.getElementById('reset-code-input').value          = '';
+  document.getElementById('reset-step2-error').style.display = 'none';
+  document.getElementById('reset-step-1').style.display = 'none';
+  document.getElementById('reset-step-2').style.display = 'block';
+};
+
+window.resetStep2 = function() {
+  var entered = document.getElementById('reset-code-input').value.trim().toUpperCase();
+  var errEl   = document.getElementById('reset-step2-error');
+  errEl.style.display = 'none';
+
+  if (!entered) {
+    errEl.style.display = 'block';
+    errEl.textContent = 'Please enter the reset code shown above.';
+    return;
+  }
+  if (entered !== _resetCode) {
+    errEl.style.display = 'block';
+    errEl.textContent = 'Incorrect code. Please copy the code exactly as shown.';
+    return;
+  }
+
+  // Code correct — show step 3
+  document.getElementById('reset-new-pw').value     = '';
+  document.getElementById('reset-confirm-pw').value = '';
+  document.getElementById('reset-step3-error').style.display = 'none';
+  document.getElementById('reset-step-2').style.display = 'none';
+  document.getElementById('reset-step-3').style.display = 'block';
+};
+
+window.resetStep3 = function() {
+  var newPw   = document.getElementById('reset-new-pw').value;
+  var confirm = document.getElementById('reset-confirm-pw').value;
+  var errEl   = document.getElementById('reset-step3-error');
+  errEl.style.display = 'none';
+
+  if (newPw.length < 8) {
+    errEl.style.display = 'block';
+    errEl.textContent = 'Password must be at least 8 characters.';
+    return;
+  }
+  if (newPw !== confirm) {
+    errEl.style.display = 'block';
+    errEl.textContent = 'Passwords do not match.';
+    return;
+  }
+
+  // Save new password
+  var users = getUsers();
+  if (!users[_resetEmail]) {
+    errEl.style.display = 'block';
+    errEl.textContent = 'Account not found. Please try again.';
+    return;
+  }
+  users[_resetEmail].pwHash = hashPw(newPw);
+  users[_resetEmail].lastLogin = new Date().toISOString();
+  saveUsers(users);
+
+  // Clear reset state
+  closeResetModal();
+
+  // Auto sign in with new password
+  setSession({ email: _resetEmail, name: users[_resetEmail].name, role: users[_resetEmail].role });
+  loadUserProgress(_resetEmail);
+
+  var user    = users[_resetEmail];
+  var authScr = document.getElementById('screen-auth');
+  if (authScr) authScr.classList.remove('active');
+  document.body.classList.remove('auth-pending');
+
+  if (user.role === 'admin') {
+    navigate('admin');
+    adminRefresh();
+    var admEl = document.getElementById('admin-logged-as');
+    if (admEl) admEl.textContent = user.name + ' (Admin)';
+  } else {
+    navigate('home');
+    init();
+  }
+
+  _resetEmail = '';
+  _resetCode  = '';
+  showToast('🔑', 'Password Reset!', 'Your password has been updated. You are now signed in.');
+};
+
+// Hidden trigger: click the CMI logo 5 times rapidly on the login screen
+(function() {
+  var _logoClicks = 0;
+  var _logoTimer  = null;
+  document.addEventListener('click', function(e) {
+    var logo = e.target.closest('.auth-logo-wrap img, .auth-logo-wrap');
+    if (!logo) return;
+    var authScreen = document.getElementById('screen-auth');
+    if (!authScreen || !authScreen.classList.contains('active')) return;
+    _logoClicks++;
+    clearTimeout(_logoTimer);
+    _logoTimer = setTimeout(function() { _logoClicks = 0; }, 2000);
+    if (_logoClicks >= 5) {
+      _logoClicks = 0;
+      showForgotPassword();
+    }
+  });
+})();
 </script>
 
 <!-- ═══════════════════════════════════════════════════════
@@ -9659,6 +9846,65 @@ window.finishRestore = function(email, name) {
       <button class="admin-action-btn del" onclick="closeEditModal()">Cancel</button>
       <button class="admin-action-btn edit" onclick="saveEditUser()" style="padding:7px 18px">Save Changes</button>
     </div>
+  </div>
+</div>
+
+
+<!-- ── Reset Password Modal ── -->
+<div id="reset-pw-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#041430;border:1px solid rgba(244,185,66,0.4);border-top:4px solid var(--gold);border-radius:14px;padding:32px;max-width:440px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.7)">
+
+    <!-- Step 1: Enter email -->
+    <div id="reset-step-1">
+      <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:6px">🔑 Reset Password</div>
+      <p style="font-size:12px;color:var(--text-dim);margin-bottom:20px;line-height:1.6">Enter your registered email address. You will be given a reset code to verify your identity.</p>
+      <div style="margin-bottom:14px">
+        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);display:block;margin-bottom:4px">Email Address</label>
+        <input id="reset-email" type="email" placeholder="yourname@rmi.gov.mh" style="width:100%;padding:10px 12px;background:rgba(0,0,0,0.4);border:1px solid rgba(244,185,66,0.25);border-radius:7px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;color:#fff;outline:none;box-sizing:border-box">
+      </div>
+      <div id="reset-step1-error" style="display:none;color:#fca5a5;font-size:12px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:10px">
+        <button onclick="closeResetModal()" style="flex:1;padding:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:7px;color:var(--text-dim);font-size:13px;cursor:pointer;font-family:'IBM Plex Sans',sans-serif">Cancel</button>
+        <button onclick="resetStep1()" style="flex:2;padding:10px;background:linear-gradient(135deg,#003087,#0047AB);border:none;border-radius:7px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'IBM Plex Sans',sans-serif">Get Reset Code →</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Enter reset code -->
+    <div id="reset-step-2" style="display:none">
+      <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:6px">🔐 Enter Reset Code</div>
+      <p style="font-size:12px;color:var(--text-dim);margin-bottom:8px;line-height:1.6">Your reset code for <strong id="reset-email-display" style="color:var(--gold)"></strong> is shown below. Copy it and enter it in the field.</p>
+      <div id="reset-code-display" style="background:rgba(0,48,135,0.3);border:2px solid var(--gold);border-radius:8px;padding:14px;text-align:center;margin-bottom:16px">
+        <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px;text-transform:uppercase;letter-spacing:.1em">Your Reset Code</div>
+        <div id="reset-code-value" style="font-family:'DM Mono',monospace;font-size:26px;font-weight:700;color:var(--gold);letter-spacing:6px"></div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:6px">⚠ Copy this code before proceeding</div>
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);display:block;margin-bottom:4px">Enter Code to Confirm</label>
+        <input id="reset-code-input" type="text" placeholder="Enter the code shown above" style="width:100%;padding:10px 12px;background:rgba(0,0,0,0.4);border:1px solid rgba(244,185,66,0.25);border-radius:7px;font-size:14px;font-family:'DM Mono',sans-serif;color:#fff;outline:none;box-sizing:border-box;letter-spacing:3px;text-align:center" onkeydown="if(event.key==='Enter')resetStep2()">
+      </div>
+      <div id="reset-step2-error" style="display:none;color:#fca5a5;font-size:12px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:10px">
+        <button onclick="resetBack()" style="flex:1;padding:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:7px;color:var(--text-dim);font-size:13px;cursor:pointer;font-family:'IBM Plex Sans',sans-serif">← Back</button>
+        <button onclick="resetStep2()" style="flex:2;padding:10px;background:linear-gradient(135deg,#003087,#0047AB);border:none;border-radius:7px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'IBM Plex Sans',sans-serif">Verify Code →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Set new password -->
+    <div id="reset-step-3" style="display:none">
+      <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:6px">✅ Set New Password</div>
+      <p style="font-size:12px;color:var(--text-dim);margin-bottom:20px;line-height:1.6">Code verified. Enter your new password below.</p>
+      <div style="margin-bottom:12px">
+        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);display:block;margin-bottom:4px">New Password (min 8 characters)</label>
+        <input id="reset-new-pw" type="password" placeholder="Enter new password" style="width:100%;padding:10px 12px;background:rgba(0,0,0,0.4);border:1px solid rgba(244,185,66,0.25);border-radius:7px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;color:#fff;outline:none;box-sizing:border-box">
+      </div>
+      <div style="margin-bottom:16px">
+        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);display:block;margin-bottom:4px">Confirm New Password</label>
+        <input id="reset-confirm-pw" type="password" placeholder="Re-enter new password" style="width:100%;padding:10px 12px;background:rgba(0,0,0,0.4);border:1px solid rgba(244,185,66,0.25);border-radius:7px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;color:#fff;outline:none;box-sizing:border-box" onkeydown="if(event.key==='Enter')resetStep3()">
+      </div>
+      <div id="reset-step3-error" style="display:none;color:#fca5a5;font-size:12px;margin-bottom:10px"></div>
+      <button onclick="resetStep3()" style="width:100%;padding:12px;background:linear-gradient(135deg,#003087,#0047AB);border:none;border-radius:7px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'IBM Plex Sans',sans-serif">Save New Password & Sign In →</button>
+    </div>
+
   </div>
 </div>
 
