@@ -816,7 +816,7 @@ function showResult(){
 }
 startQuiz();
 
-var chatHistory=[],chatOpen=false;
+var chatOpen=false;
 var CMI_PROMPT='You are the friendly CMI IT Assistant for the College of the Marshall Islands. Help first-year students with IT questions. Be warm, concise, encouraging. Max 3 sentences.\n\nKey info:\n- Student email domain: @cmistudent.com\n- Help Desk: https://helpdesk.cmi.edu\n- SSO Portal: https://myportal.cmi.edu\n- Moodle: https://elearning.cmi.edu (also via MyPortal)\n- SONIS: https://sonis.cmi.edu — login: Student ID + PIN (also via MyPortal)\n- SONIS guide: https://helpdesk.cmi.edu/hc/en-us/articles/21147987045657-SONIS-Student-Portal-User-Guide\n- Google Workspace @cmistudent.com via MyPortal\n- Microsoft 365 via MyPortal\n- Wi-Fi: UniFi voucher from IT Help Desk\n- Personal devices: IT assists students with personal laptops/phones — troubleshooting, fixing issues, installing free college-licensed software (Microsoft 365, antivirus). Submit a ticket.\n- Labs Uliga: TH 209, TH 105, WH 201-204, RH 204, RH 119, BS Lab, EDU Lab, ABE Lab\n- Outer: Arrak, Jaluit, Wotje, Kwaj, Likiep Labs\n- eBooks: Cengage, contact instructor\n- Password issues: myportal.cmi.edu or helpdesk.cmi.edu';
 
 function toggleChat(){chatOpen=!chatOpen;document.getElementById('chatWindow').classList.toggle('open',chatOpen);document.getElementById('chatToggle').textContent=chatOpen?'✕':'🤖';}
@@ -827,34 +827,34 @@ async function sendMsg(){
   inp.value='';document.getElementById('chatSugs').style.display='none';
   addMsg(text,'user');chatHistory.push({role:'user',content:text});
   var typing=addTyping();document.getElementById('chatSend').disabled=true;
+
+  // Decide endpoint & headers
+  var endpoint, headers={'Content-Type':'application/json'}, body;
+  if(CHAT_API){
+    // ── Server proxy (GitHub Pages / external hosting) ──
+    endpoint=CHAT_API;
+    body=JSON.stringify({system:CMI_PROMPT,messages:chatHistory});
+  } else {
+    // ── Direct (Claude.ai artifact — API key auto-injected) ──
+    endpoint='https://api.anthropic.com/v1/messages';
+    headers['anthropic-version']='2023-06-01';
+    headers['anthropic-dangerous-direct-browser-access']='true';
+    body=JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,system:CMI_PROMPT,messages:chatHistory});
+  }
+
   try{
-    var res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body:JSON.stringify({
-        model:'claude-haiku-4-5-20251001',
-        max_tokens:500,
-        system:CMI_PROMPT,
-        messages:chatHistory
-      })
-    });
+    var res=await fetch(endpoint,{method:'POST',headers:headers,body:body});
     var data=await res.json();
     if(!res.ok){
-      var errMsg=data.error&&data.error.message?data.error.message:'API error '+res.status;
-      typing.remove();addMsg('⚠️ '+errMsg,'bot');
+      typing.remove();
+      addMsg('⚠️ '+(data.error&&data.error.message?data.error.message:'Error '+res.status),'bot');
       chatHistory.pop();
     } else {
-      var reply=data.content&&data.content[0]?data.content[0].text:'I had trouble understanding that. Please try again.';
+      var reply=data.content&&data.content[0]?data.content[0].text:'I had trouble. Please try again.';
       typing.remove();addMsg(reply,'bot');chatHistory.push({role:'assistant',content:reply});
     }
   }catch(e){
-    typing.remove();
-    addMsg('⚠️ Network error: '+e.message,'bot');
-    chatHistory.pop();
+    typing.remove();addMsg('⚠️ Network error: '+e.message,'bot');chatHistory.pop();
   }
   document.getElementById('chatSend').disabled=false;
 }
