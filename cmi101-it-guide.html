@@ -828,11 +828,34 @@ async function sendMsg(){
   addMsg(text,'user');chatHistory.push({role:'user',content:text});
   var typing=addTyping();document.getElementById('chatSend').disabled=true;
   try{
-    var res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:CMI_PROMPT,messages:chatHistory})});
+    var res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:500,
+        system:CMI_PROMPT,
+        messages:chatHistory
+      })
+    });
     var data=await res.json();
-    var reply=data.content&&data.content[0]?data.content[0].text:'Sorry, trouble connecting. Please visit helpdesk.cmi.edu';
-    typing.remove();addMsg(reply,'bot');chatHistory.push({role:'assistant',content:reply});
-  }catch(e){typing.remove();addMsg('Sorry, connection issue. Please visit helpdesk.cmi.edu','bot');}
+    if(!res.ok){
+      var errMsg=data.error&&data.error.message?data.error.message:'API error '+res.status;
+      typing.remove();addMsg('⚠️ '+errMsg,'bot');
+      chatHistory.pop();
+    } else {
+      var reply=data.content&&data.content[0]?data.content[0].text:'I had trouble understanding that. Please try again.';
+      typing.remove();addMsg(reply,'bot');chatHistory.push({role:'assistant',content:reply});
+    }
+  }catch(e){
+    typing.remove();
+    addMsg('⚠️ Network error: '+e.message,'bot');
+    chatHistory.pop();
+  }
   document.getElementById('chatSend').disabled=false;
 }
 function sendSug(btn){document.getElementById('chatInput').value=btn.textContent;sendMsg();}
