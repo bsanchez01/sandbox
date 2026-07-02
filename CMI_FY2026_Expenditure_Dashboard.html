@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMI FY2026 Quarterly Progress Report — Expenditure Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --navy:#00008a; --navy2:#3333a1; --gold:#F4B942; --gold-dk:#d99b1c;
+  --ink:#1b1e2e; --muted:#5c6078; --line:#dfe1ec; --bg:#f4f5fa; --card:#ffffff;
+  --pos:#1a7f4e; --neg:#b3261e; --warn:#9a6700;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'IBM Plex Sans',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5}
+.mono{font-family:'IBM Plex Mono',monospace}
+
+/* ---------- header ---------- */
+header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 78%);color:#fff;padding:26px 28px 0}
+.rebbelip{height:14px;background:
+  repeating-linear-gradient(-45deg,var(--gold) 0 11px,transparent 11px 22px),
+  repeating-linear-gradient(45deg,var(--gold) 0 11px,#00006b 11px 22px);}
+.hwrap{max-width:1240px;margin:0 auto}
+.eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:600}
+h1{font-size:26px;font-weight:700;margin:6px 0 2px}
+.sub{color:#cdd2f0;font-size:14px;margin-bottom:16px}
+.caveat{display:inline-flex;align-items:center;gap:8px;background:var(--gold);color:#231a00;font-weight:600;font-size:13px;padding:7px 14px;border-radius:6px 6px 0 0;margin-top:6px}
+.caveat svg{flex:none}
+
+/* fiscal progress strip (signature) */
+.fyband{max-width:1240px;margin:14px auto 0;padding-bottom:22px}
+.fytrack{display:flex;height:34px;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.35)}
+.fyseg{position:relative;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff}
+.fyseg small{font-weight:400;opacity:.85;margin-left:6px}
+.fy-q1{background:rgba(255,255,255,.16);flex:3}
+.fy-q2{background:rgba(255,255,255,.28);flex:3}
+.fy-q3{background:var(--gold);color:#231a00;flex:2.85;border-left:2px dashed #fff}
+.fy-rem{background:repeating-linear-gradient(-45deg,rgba(255,255,255,.10) 0 8px,rgba(255,255,255,.02) 8px 16px);flex:3.15;color:#cdd2f0;font-weight:400;border-left:2px solid #fff}
+.fylegend{display:flex;justify-content:space-between;font-size:11px;color:#b9bfe8;margin-top:6px}
+
+/* ---------- tabs ---------- */
+nav{background:var(--card);border-bottom:2px solid var(--line);position:sticky;top:0;z-index:30;box-shadow:0 1px 4px rgba(20,22,60,.06)}
+.tabs{max-width:1240px;margin:0 auto;display:flex;overflow-x:auto}
+.tab{padding:14px 18px;font-size:13.5px;font-weight:500;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;font-family:inherit}
+.tab:hover{color:var(--navy)}
+.tab.active{color:var(--navy);border-bottom-color:var(--gold);font-weight:600}
+.tab:focus-visible{outline:2px solid var(--navy2);outline-offset:-2px}
+
+/* ---------- layout ---------- */
+main{max-width:1240px;margin:0 auto;padding:26px 20px 60px}
+.panel{display:none}
+.panel.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.panel.active{animation:none}}
+h2{font-size:19px;font-weight:700;color:var(--navy);margin:26px 0 4px}
+h2:first-child{margin-top:0}
+.desc{color:var(--muted);font-size:13.5px;margin-bottom:14px;max-width:900px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:920px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;box-shadow:0 1px 3px rgba(20,22,60,.05)}
+.kpi .lbl{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.kpi .val{font-size:27px;font-weight:700;color:var(--navy);margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi .chg{font-size:12.5px;margin-top:3px;font-weight:500}
+.up{color:var(--pos)}.down{color:var(--neg)}.flat{color:var(--muted)}
+.kpi.goldtop{border-top:4px solid var(--gold)}
+.chartbox{position:relative;height:330px}
+.chartbox.tall{height:400px}
+.note{font-size:12px;color:var(--muted);margin-top:10px}
+.assume{background:#fffbec;border:1px solid #f0dfa4;border-radius:10px;padding:16px 20px;font-size:13.5px}
+.assume h3{font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--warn);margin-bottom:8px}
+.assume li{margin:5px 0 5px 18px}
+
+/* ---------- tables ---------- */
+.twrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px;background:var(--card)}
+th{background:var(--navy);color:#fff;text-align:left;padding:9px 12px;font-weight:600;font-size:12px;letter-spacing:.04em;white-space:nowrap;position:sticky;top:0}
+th.r,td.r{text-align:right;font-variant-numeric:tabular-nums}
+td{padding:8px 12px;border-bottom:1px solid var(--line)}
+tbody tr:nth-child(even){background:#f8f9fd}
+tbody tr:hover{background:#eef0fb}
+tr.top10 td:first-child{border-left:4px solid var(--gold)}
+td.neg{color:var(--neg)}
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.b-up{background:#e5f3ec;color:var(--pos)}.b-down{background:#fbe9e7;color:var(--neg)}
+.b-gold{background:#fdf1d3;color:#7a5600}.b-navy{background:#e7e8f7;color:var(--navy)}
+.b-part{background:#f1f1f6;color:var(--muted);font-weight:500}
+tfoot td{font-weight:700;background:#eef0fb;border-top:2px solid var(--navy)}
+
+/* findings */
+.finding{border-left:4px solid var(--navy2);background:var(--card);border-radius:0 10px 10px 0;padding:14px 18px;margin-bottom:12px;border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.finding b{color:var(--navy)}
+.dqcard{border-radius:10px;background:var(--card);border:1px solid var(--line);padding:16px 20px;margin-bottom:12px;display:flex;gap:14px}
+.dqsev{flex:none;align-self:flex-start;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+.sev-high{background:#fbe9e7;color:var(--neg)}
+.sev-medium{background:#fdf1d3;color:#7a5600}
+.sev-low{background:#e7e8f7;color:var(--navy)}
+.sev-pass{background:#e5f3ec;color:var(--pos)}
+.dqcard h4{font-size:14.5px;color:var(--ink);margin-bottom:4px}
+.dqcard p{font-size:13px;color:var(--muted)}
+.dqamt{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--navy);margin-top:6px;font-weight:500}
+
+
+/* ---------- quarter drill-down modal ---------- */
+.clickq{cursor:pointer;transition:box-shadow .15s,transform .15s}
+.clickq:hover{box-shadow:0 4px 14px rgba(0,0,138,.18);transform:translateY(-2px)}
+.clickq:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.qhint{font-size:11px;color:var(--navy2);font-weight:600;margin-top:5px}
+.fyseg.clickq:hover{filter:brightness(1.12);transform:none;box-shadow:none}
+.qmodal-bg{display:none;position:fixed;inset:0;background:rgba(15,17,50,.55);z-index:100;padding:30px 16px;overflow-y:auto}
+.qmodal-bg.open{display:block}
+.qmodal{max-width:1080px;margin:0 auto;background:var(--bg);border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,30,.4);animation:fade .2s ease}
+.qmhead{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:20px 26px;display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+.qmhead h3{font-size:21px;font-weight:700}
+.qmhead .qsub{color:#cdd2f0;font-size:13px;margin-top:3px}
+.qmnet{font-size:26px;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums}
+.qclose{background:rgba(255,255,255,.15);border:none;color:#fff;width:34px;height:34px;border-radius:8px;font-size:17px;cursor:pointer;flex:none;font-family:inherit}
+.qclose:hover{background:rgba(255,255,255,.3)}
+.qmtabs{display:flex;gap:6px;padding:0 26px;background:var(--navy2)}
+.qmtab{background:none;border:none;color:#cdd2f0;padding:10px 14px;font-size:13px;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;font-family:inherit}
+.qmtab.active{color:#fff;border-bottom-color:var(--gold);font-weight:600}
+.qmbody{padding:22px 26px 26px}
+.qmini{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+@media(max-width:700px){.qmini{grid-template-columns:1fr 1fr}}
+.qmini .card{padding:12px 14px}
+.qmini .lbl{font-size:10.5px}
+.qmini .val{font-size:19px}
+.qpanel{display:none}.qpanel.active{display:block}
+.qtbl{width:100%;border-collapse:collapse;font-size:13px;background:var(--card);border-radius:8px;overflow:hidden}
+.qtbl th{font-size:11px;padding:8px 12px}
+.qtbl td{padding:7px 12px}
+.qpartial{background:var(--gold);color:#231a00;font-size:12.5px;font-weight:600;padding:8px 14px;border-radius:8px;margin-bottom:16px;display:none}
+.qpartial.show{display:block}
+
+footer{max-width:1240px;margin:0 auto;padding:18px 20px 40px;font-size:12px;color:var(--muted);border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hwrap">
+    <div class="eyebrow">College of the Marshall Islands · Board of Regents &amp; Executive Leadership</div>
+    <h1>FY2026 Quarterly Progress Report — Expenditure Analysis</h1>
+    <div class="sub">General Ledger expenditure detail (GL 5000-series) · Fiscal year October 1, 2025 – September 30, 2026 · 22,804 transactions</div>
+    <div class="caveat">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 8v5m0 3.5v.5M10.3 3.9 2.6 17a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" stroke="#231a00" stroke-width="2" stroke-linecap="round"/></svg>
+      Q3 is PARTIAL — data through June 25, 2026. Five posting days and all of Q4 remain.
+    </div>
+    <div class="fyband">
+      <div class="fytrack" role="img" aria-label="Fiscal year progress: Q1 and Q2 complete, Q3 partial through June 25, Q4 not started">
+        <div class="fyseg fy-q1 clickq" data-q="Q1" role="button" tabindex="0" aria-label="Open Q1 details">Q1<small>closed</small></div>
+        <div class="fyseg fy-q2 clickq" data-q="Q2" role="button" tabindex="0" aria-label="Open Q2 details">Q2<small>closed</small></div>
+        <div class="fyseg fy-q3 clickq" data-q="Q3" role="button" tabindex="0" aria-label="Open Q3 details">Q3<small>thru Jun 25</small></div>
+        <div class="fyseg fy-rem">Q4 · remainder of FY2026</div>
+      </div>
+      <div class="fylegend"><span>Oct 1, 2025</span><span>Jan 1</span><span>Apr 1</span><span>▲ Jun 25 — report cutoff</span><span>Sep 30, 2026</span></div>
+    </div>
+  </div>
+</header>
+
+<nav><div class="tabs" role="tablist">
+  <button class="tab active" data-t="overview" role="tab">Overview</button>
+  <button class="tab" data-t="quarter" role="tab">By Quarter</button>
+  <button class="tab" data-t="category" role="tab">By Category</button>
+  <button class="tab" data-t="department" role="tab">By Department</button>
+  <button class="tab" data-t="fund" role="tab">By Fund</button>
+  <button class="tab" data-t="vendors" role="tab">Vendors</button>
+  <button class="tab" data-t="dq" role="tab">Data Quality</button>
+</div></nav>
+
+<main>
+
+<!-- ============ OVERVIEW ============ -->
+<section class="panel active" id="p-overview">
+  <div class="grid g4">
+    <div class="card kpi goldtop"><div class="lbl">FY2026 Net Expenditures YTD</div><div class="val" id="k-total"></div><div class="chg flat">Oct 1, 2025 – Jun 25, 2026</div></div>
+    <div class="card kpi clickq" data-q="Q1" role="button" tabindex="0" aria-label="Open Q1 details"><div class="lbl">Q1 (Oct–Dec)</div><div class="val" id="k-q1"></div><div class="chg flat">Quarter closed</div><div class="qhint">Click for Q1 details →</div></div>
+    <div class="card kpi clickq" data-q="Q2" role="button" tabindex="0" aria-label="Open Q2 details"><div class="lbl">Q2 (Jan–Mar)</div><div class="val" id="k-q2"></div><div class="chg" id="k-q2c"></div><div class="qhint">Click for Q2 details →</div></div>
+    <div class="card kpi clickq" data-q="Q3" role="button" tabindex="0" aria-label="Open Q3 details"><div class="lbl">Q3 (Apr–Jun 25) — partial</div><div class="val" id="k-q3"></div><div class="chg" id="k-q3c"></div><div class="qhint">Click for Q3 details →</div></div>
+  </div>
+
+  <h2>Key findings for Regents and Ministers</h2>
+  <p class="desc">Plain-language highlights. Every figure is computed directly from the general ledger extract; nothing is estimated.</p>
+  <div id="findings"></div>
+
+  <div class="grid g2" style="margin-top:20px">
+    <div class="card"><h2 style="margin-top:0">Monthly spending pattern</h2><div class="chartbox"><canvas id="c-monthly"></canvas></div>
+      <p class="note">June reflects postings through June 25 only. The January peak is the spring-semester Pell disbursement; the October peak is the fall disbursement plus fiscal-year-opening payments.</p></div>
+    <div class="card"><h2 style="margin-top:0">Where the money goes</h2><div class="chartbox"><canvas id="c-groupdonut"></canvas></div>
+      <p class="note">Personnel and student aid together account for roughly three of every four dollars spent.</p></div>
+  </div>
+
+  <div class="assume" style="margin-top:20px">
+    <h3>Assumptions &amp; method — stated explicitly</h3>
+    <ul>
+      <li><b>Net expenditure = Debit − Credit</b> on every line; credits are treated as expenditure reductions/reversals, never as revenue.</li>
+      <li><b>Quarters</b> are assigned from the PostTo date on CMI's October–September fiscal calendar. Q3 covers April 1 – June 25, 2026 only (~93% of the quarter's calendar days).</li>
+      <li><b>Category groups</b> (personnel, student aid, contractual, etc.) are inferred from GL account numbers and titles; the full account-to-group mapping is shown on the By Category tab for Finance to verify.</li>
+      <li><b>Fund descriptions</b> are inferred from each fund's dominant department and account, because the extract carries fund codes only, not official fund names. Fund 0 is treated as the general/operating fund.</li>
+      <li><b>Vendor rankings exclude payroll</b> (TransSource PRS, $5,121,396.66 net). Individuals appearing in the vendor list are contract-services payees, landlords, or reimbursement recipients paid through A/P — not employees on payroll.</li>
+      <li>The file parsed cleanly: 0 unreadable dates, 0 unreadable amounts, 0 rows outside the FY2026 window.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ QUARTER ============ -->
+<section class="panel" id="p-quarter">
+  <h2>Net expenditure by quarter</h2>
+  <p class="desc">Q1 and Q2 are closed quarters. Q3 is partial (through June 25) and will rise as the final days of June post — treat the Q2→Q3 decline as timing, not savings. <b style="color:var(--navy)">Click any quarter — the bars, the summary rows below, or the Q1/Q2/Q3 cards on the Overview tab — to drill into that quarter’s categories, departments, and vendors.</b></p>
+  <div class="grid g2">
+    <div class="card"><div class="chartbox"><canvas id="c-qbar"></canvas></div></div>
+    <div class="card"><div class="chartbox"><canvas id="c-qexpell"></canvas></div>
+      <p class="note">Removing Pell disbursements reveals the underlying operating rhythm: core spending is remarkably stable at ~$2.8–3.3M per quarter.</p></div>
+  </div>
+  <h2>Quarterly summary</h2>
+  <div class="twrap card" style="padding:0"><table id="t-quarter"></table></div>
+  <h2>Monthly trend</h2>
+  <div class="twrap card" style="padding:0"><table id="t-monthly"></table></div>
+</section>
+
+<!-- ============ CATEGORY ============ -->
+<section class="panel" id="p-category">
+  <h2>Expenditure by category group</h2>
+  <p class="desc">The 54 GL accounts grouped into nine functional categories, stacked by quarter. Grouping is inferred from account numbers/titles — mapping shown in the detail table below.</p>
+  <div class="card"><div class="chartbox tall"><canvas id="c-groupbar"></canvas></div></div>
+  <h2>Category groups by quarter</h2>
+  <div class="twrap card" style="padding:0"><table id="t-groups"></table></div>
+  <h2>All 54 GL accounts, ranked</h2>
+  <p class="desc">Gold-edged rows mark the <span class="badge b-gold">Top 10</span> accounts — together they carry <span id="top10share"></span> of all FY2026 spending.</p>
+  <div class="twrap card" style="padding:0;max-height:560px;overflow-y:auto"><table id="t-gl"></table></div>
+</section>
+
+<!-- ============ DEPARTMENT ============ -->
+<section class="panel" id="p-department">
+  <h2>Top 10 spending departments</h2>
+  <p class="desc">Pell Grant is shown separately in the chart — at 36% of all spending it is pass-through federal student aid, not departmental operations.</p>
+  <div class="card"><div class="chartbox tall"><canvas id="c-deptbar"></canvas></div></div>
+  <h2>All 39 departments with quarter-over-quarter swings</h2>
+  <p class="desc">Badges flag swings greater than ±25% between quarters for departments spending over $100K YTD. Q2→Q3 declines are partly timing (Q3 is missing its final days).</p>
+  <div class="twrap card" style="padding:0;max-height:640px;overflow-y:auto"><table id="t-dept"></table></div>
+</section>
+
+<!-- ============ FUND ============ -->
+<section class="panel" id="p-fund">
+  <div class="grid g3">
+    <div class="card kpi goldtop"><div class="lbl">General / Operating (Fund 0)</div><div class="val" id="k-gen"></div><div class="chg flat" id="k-genp"></div></div>
+    <div class="card kpi"><div class="lbl">Restricted / Grant Funds (15 funds)</div><div class="val" id="k-res"></div><div class="chg flat" id="k-resp"></div></div>
+    <div class="card kpi"><div class="lbl">Largest restricted fund</div><div class="val" id="k-bigres"></div><div class="chg flat">Fund 1700 — Pell / federal student aid</div></div>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><h2 style="margin-top:0">Fund mix</h2><div class="chartbox"><canvas id="c-funddonut"></canvas></div>
+      <p class="note">Two-thirds of FY2026 spending flows through restricted funds — relevant context for the land grant and accreditation sections, where fund-source discipline is reviewed.</p></div>
+    <div class="card"><h2 style="margin-top:0">Reading this tab</h2>
+      <p style="font-size:13.5px;color:var(--muted)">The GL extract carries fund <b>codes</b>, not official fund names. Each fund's profile below is inferred from its dominant department and expense account so the Board can see what the fund actually pays for. Finance should substitute official fund titles before publication. Land-grant activity is visible in Funds 1901/1902 (Land Grant Programs – Majuro), and the MCST maritime project in Fund 1651.</p></div>
+  </div>
+  <h2>All 16 funds</h2>
+  <div class="twrap card" style="padding:0"><table id="t-fund"></table></div>
+</section>
+
+<!-- ============ VENDORS ============ -->
+<section class="panel" id="p-vendors">
+  <h2>Top 15 vendors / payees (payroll excluded)</h2>
+  <p class="desc">Net amounts paid through accounts payable, cash disbursements, and related sources — TransSource PRS (payroll, $5.12M) is excluded. Individuals listed are contract-services payees or landlords paid through A/P. Useful for procurement oversight and sole-source review.</p>
+  <div class="card"><div class="chartbox tall"><canvas id="c-venbar"></canvas></div></div>
+  <div class="twrap card" style="padding:0;margin-top:16px"><table id="t-ven"></table></div>
+  <p class="note">Note: "Bank of Guam" is the re-issued wire for the IMO-meeting hotel contract (see Data Quality tab) — the economic vendor is the London Hyatt/Crowne Plaza.</p>
+</section>
+
+<!-- ============ DATA QUALITY ============ -->
+<section class="panel" id="p-dq">
+  <h2>Data quality &amp; audit-readiness flags</h2>
+  <p class="desc">Items an external auditor would question, ordered by severity — directly relevant to the ongoing Ernst &amp; Young engagement visible in this ledger. Green items are checks that passed.</p>
+  <div id="dqlist"></div>
+</section>
+
+
+<!-- ============ QUARTER DRILL-DOWN MODAL ============ -->
+<div class="qmodal-bg" id="qmodalbg" aria-hidden="true">
+  <div class="qmodal" role="dialog" aria-modal="true" aria-labelledby="qmtitle">
+    <div class="qmhead">
+      <div><h3 id="qmtitle"></h3><div class="qsub" id="qmsub"></div></div>
+      <div style="text-align:right"><div class="qmnet" id="qmnet"></div><div style="font-size:11.5px;color:#cdd2f0" id="qmshare"></div></div>
+      <button class="qclose" id="qclose" aria-label="Close quarter details">✕</button>
+    </div>
+    <div class="qmtabs" id="qmtabs">
+      <button class="qmtab active" data-qp="sum">Summary</button>
+      <button class="qmtab" data-qp="cat">Categories</button>
+      <button class="qmtab" data-qp="dep">Departments</button>
+      <button class="qmtab" data-qp="ven">Vendors</button>
+    </div>
+    <div class="qmbody">
+      <div class="qpartial" id="qpartialnote">⚠ This quarter is partial — postings through June 25, 2026 only. Figures will rise at quarter close.</div>
+      <div class="qmini">
+        <div class="card kpi"><div class="lbl">Transactions</div><div class="val" id="qm-txn"></div></div>
+        <div class="card kpi"><div class="lbl">Payroll (PRS)</div><div class="val" id="qm-pay"></div></div>
+        <div class="card kpi"><div class="lbl">General Fund 0</div><div class="val" id="qm-gen"></div></div>
+        <div class="card kpi"><div class="lbl">Restricted Funds</div><div class="val" id="qm-res"></div></div>
+      </div>
+      <div class="qpanel active" id="qp-sum">
+        <div class="grid g2">
+          <div class="card"><h2 style="margin-top:0;font-size:15px">Monthly breakdown</h2><table class="qtbl" id="qm-months"></table></div>
+          <div class="card"><h2 style="margin-top:0;font-size:15px">Spending by category group</h2><div class="chartbox" style="height:290px"><canvas id="qm-chart"></canvas></div></div>
+        </div>
+      </div>
+      <div class="qpanel" id="qp-cat"><div class="card" style="padding:0"><table class="qtbl" id="qm-cat"></table></div>
+        <p class="note">Top 8 GL accounts this quarter, with each account's share of the quarter's spending.</p></div>
+      <div class="qpanel" id="qp-dep"><div class="card" style="padding:0"><table class="qtbl" id="qm-dep"></table></div>
+        <p class="note">Top 8 departments this quarter.</p></div>
+      <div class="qpanel" id="qp-ven"><div class="card" style="padding:0"><table class="qtbl" id="qm-ven"></table></div>
+        <p class="note">Top 8 non-payroll payees this quarter (TransSource PRS excluded).</p></div>
+    </div>
+  </div>
+</div>
+
+</main>
+<footer>
+  Prepared from FY2026_GL_Details.csv (22,804 rows, GL 5000-series, Windows-1252) · Gross debits $14,964,195.11 − gross credits $861,639.40 = net $14,102,555.71 · All figures computed from source; none estimated · <b>Q3 data through June 25, 2026</b> · College of the Marshall Islands, Institutional Research / FABS
+</footer>
+
+<script>
+const D = {"total": 14102555.71, "quarters": {"Q1": 5242637.44, "Q2": 5874179.79, "Q3": 2985738.48}, "months": {"labels": ["2025-10", "2025-11", "2025-12", "2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06"], "net": [2561587.17, 1321286.52, 1359763.75, 3792506.68, 1000338.03, 1081335.08, 1055429.34, 1386925.88, 543383.26], "txns": [3952, 2469, 2346, 3042, 2149, 2454, 2194, 3250, 948]}, "groups": [{"name": "Personnel & Benefits", "q1": 2087790.36, "q2": 1783389.3, "q3": 1585720.26, "total": 5456899.92}, {"name": "Student Aid & Scholarships", "q1": 1987234.48, "q2": 3066663.57, "q3": 291341.86, "total": 5345239.91}, {"name": "Contractual & Professional Services", "q1": 338671.28, "q2": 341376.51, "q3": 198408.48, "total": 878456.27}, {"name": "Travel", "q1": 102976.6, "q2": 5052.8, "q3": 598865.14, "total": 706894.54}, {"name": "Utilities & Communications", "q1": 232774.08, "q2": 199196.95, "q3": 199846.94, "total": 631817.97}, {"name": "Subscriptions & Software", "q1": 174722.66, "q2": 116457.23, "q3": 36005.66, "total": 327185.55}, {"name": "Supplies, Books & Equipment", "q1": 89752.57, "q2": 224861.31, "q3": 2482.33, "total": 317096.21}, {"name": "Other Operating", "q1": 172617.42, "q2": 60967.77, "q3": 62667.81, "total": 296253.0}, {"name": "Facilities, Leases & Insurance", "q1": 56097.99, "q2": 76214.35, "q3": 10400.0, "total": 142712.34}], "gl": [{"gl": "5531", "title": "Student Aid", "group": "Student Aid & Scholarships", "q1": 1815449.0, "q2": 2989842.0, "q3": 153211.0, "total": 4958502.0}, {"gl": "5001", "title": "Salaries & Wages - Regular", "group": "Personnel & Benefits", "q1": 1337150.78, "q2": 1108606.43, "q3": 1074756.0, "total": 3520513.21}, {"gl": "5101", "title": "Contractual Services", "group": "Contractual & Professional Services", "q1": 313089.48, "q2": 333481.51, "q3": 183375.78, "total": 829946.77}, {"gl": "5031", "title": "Travel", "group": "Travel", "q1": 102976.6, "q2": 5052.8, "q3": 598865.14, "total": 706894.54}, {"gl": "5361", "title": "Utilities (Water and Electricty)", "group": "Utilities & Communications", "q1": 182654.25, "q2": 170542.51, "q3": 145518.4, "total": 498715.16}, {"gl": "5003", "title": "Salaries & Wages - Overload", "group": "Personnel & Benefits", "q1": 188862.5, "q2": 102250.0, "q3": 101537.5, "total": 392650.0}, {"gl": "5011", "title": "Social Security Tax", "group": "Personnel & Benefits", "q1": 132560.36, "q2": 105375.97, "q3": 101312.96, "total": 339249.29}, {"gl": "5004", "title": "Salaries & Wages - Adjunct", "group": "Personnel & Benefits", "q1": 148000.0, "q2": 99075.0, "q3": 81625.0, "total": 328700.0}, {"gl": "5213", "title": "Subscriptions/Periodicals", "group": "Subscriptions & Software", "q1": 174722.66, "q2": 116457.23, "q3": 36005.66, "total": 327185.55}, {"gl": "5021", "title": "Staff/Faculty Housing", "group": "Personnel & Benefits", "q1": 113785.53, "q2": 122200.0, "q3": 87875.0, "total": 323860.53}, {"gl": "5261", "title": "Others", "group": "Other Operating", "q1": 141024.16, "q2": 40508.26, "q3": 32352.5, "total": 213884.92}, {"gl": "5541", "title": "Student Wages", "group": "Student Aid & Scholarships", "q1": 148971.97, "q2": 25709.3, "q3": 29082.17, "total": 203763.44}, {"gl": "5401", "title": "Purchases - Books", "group": "Supplies, Books & Equipment", "q1": 0.0, "q2": 134991.0, "q3": 0.0, "total": 134991.0}, {"gl": "5041", "title": "Recruitment & Expatriation", "group": "Personnel & Benefits", "q1": 42714.35, "q2": 23622.65, "q3": 61051.45, "total": 127388.45}, {"gl": "5012", "title": "Social Security Health Fund", "group": "Personnel & Benefits", "q1": 42214.82, "q2": 34822.29, "q3": 33229.16, "total": 110266.27}, {"gl": "5231", "title": "Telephone & Fax", "group": "Utilities & Communications", "q1": 45918.83, "q2": 28354.44, "q3": 25142.44, "total": 99415.71}, {"gl": "5352", "title": "Lease - Land/Equipment/Others", "group": "Facilities, Leases & Insurance", "q1": 53324.13, "q2": 23200.0, "q3": 10400.0, "total": 86924.13}, {"gl": "5551", "title": "Scholarship & Grants", "group": "Student Aid & Scholarships", "q1": 12686.0, "q2": 39574.49, "q3": 33612.41, "total": 85872.9}, {"gl": "5017", "title": "ASC-401K", "group": "Personnel & Benefits", "q1": 16191.27, "q2": 40781.72, "q3": 26130.53, "total": 83103.52}, {"gl": "5201", "title": "Materials/Supplies", "group": "Supplies, Books & Equipment", "q1": 45935.19, "q2": 34852.47, "q3": 393.33, "total": 81180.99}, {"gl": "5571", "title": "Stipends", "group": "Student Aid & Scholarships", "q1": 0.0, "q2": 3480.0, "q3": 66097.0, "total": 69577.0}, {"gl": "5014", "title": "Insurance - Supplemental", "group": "Personnel & Benefits", "q1": 0.0, "q2": 58860.0, "q3": 0.0, "total": 58860.0}, {"gl": "5016", "title": "Insurance - General/Workmens Comp./Fire", "group": "Personnel & Benefits", "q1": 9878.28, "q2": 38044.69, "q3": 0.0, "total": 47922.97}, {"gl": "5245", "title": "Representation & Entertainment", "group": "Other Operating", "q1": 12108.73, "q2": 7477.49, "q3": 26866.56, "total": 46452.78}, {"gl": "5007", "title": "Additional Duties", "group": "Personnel & Benefits", "q1": 20482.77, "q2": 10678.43, "q3": 9942.79, "total": 41103.99}, {"gl": "5111", "title": "Consultancy/Professional Fees", "group": "Contractual & Professional Services", "q1": 19481.8, "q2": 3595.0, "q3": 13132.7, "total": 36209.5}, {"gl": "5900", "title": "Small Tools", "group": "Supplies, Books & Equipment", "q1": 22526.45, "q2": 9473.22, "q3": 990.0, "total": 32989.67}, {"gl": "5251", "title": "Insurance-Vehicle", "group": "Facilities, Leases & Insurance", "q1": -332.65, "q2": 32528.55, "q3": 0.0, "total": 32195.9}, {"gl": "5402", "title": "Purchases - Supplies", "group": "Supplies, Books & Equipment", "q1": 16971.38, "q2": 13535.12, "q3": 0.0, "total": 30506.5}, {"gl": "5310", "title": "Fuel - Generator Tank", "group": "Utilities & Communications", "q1": 0.0, "q2": 0.0, "q3": 29186.1, "total": 29186.1}, {"gl": "5905", "title": "Vehicles", "group": "Supplies, Books & Equipment", "q1": 0.0, "q2": 25995.0, "q3": 0.0, "total": 25995.0}, {"gl": "5015", "title": "Employee Benefits - Tuition Reimbursemen", "group": "Personnel & Benefits", "q1": 21180.0, "q2": 3052.0, "q3": 0.0, "total": 24232.0}, {"gl": "5501", "title": "Student Activities", "group": "Student Aid & Scholarships", "q1": 9119.51, "q2": 4637.78, "q3": 9339.28, "total": 23096.57}, {"gl": "5331", "title": "Repair-Vehicles/Equipments", "group": "Facilities, Leases & Insurance", "q1": 2311.76, "q2": 17319.35, "q3": 0.0, "total": 19631.11}, {"gl": "5025", "title": "Staff Development", "group": "Personnel & Benefits", "q1": 6450.0, "q2": 10056.0, "q3": 0.0, "total": 16506.0}, {"gl": "5255", "title": "Membership Dues", "group": "Other Operating", "q1": 6344.0, "q2": 5299.0, "q3": 2960.0, "total": 14603.0}, {"gl": "5009", "title": "Hardship Differential", "group": "Personnel & Benefits", "q1": 4598.79, "q2": 4848.42, "q3": 3879.18, "total": 13326.39}, {"gl": "5121", "title": "Sitting Fee", "group": "Contractual & Professional Services", "q1": 6100.0, "q2": 4300.0, "q3": 1900.0, "total": 12300.0}, {"gl": "5002", "title": "Salaries & Wages - Overtime", "group": "Personnel & Benefits", "q1": 3720.91, "q2": 2824.4, "q3": 4380.69, "total": 10926.0}, {"gl": "5233", "title": "Postage & Shipping", "group": "Other Operating", "q1": 6803.76, "q2": 3037.45, "q3": 0.0, "total": 9841.21}, {"gl": "5206", "title": "Instructional Supplies", "group": "Supplies, Books & Equipment", "q1": 3266.21, "q2": 3648.81, "q3": 1099.0, "total": 8014.02}, {"gl": "5027", "title": "Faculty Development", "group": "Personnel & Benefits", "q1": 0.0, "q2": 7621.5, "q3": 0.0, "total": 7621.5}, {"gl": "5232", "title": "Import Tax", "group": "Other Operating", "q1": 3684.09, "q2": 3684.38, "q3": 0.0, "total": 7368.47}, {"gl": "5019", "title": "Employee Benefits - Tuition Waiver", "group": "Personnel & Benefits", "q1": 0.0, "q2": 5636.25, "q3": 0.0, "total": 5636.25}, {"gl": "5005", "title": "Incentive/Bonus", "group": "Personnel & Benefits", "q1": 0.0, "q2": 5033.55, "q3": 0.0, "total": 5033.55}, {"gl": "5311", "title": "POL-Gasoline and Lubricants", "group": "Utilities & Communications", "q1": 4201.0, "q2": 300.0, "q3": 0.0, "total": 4501.0}, {"gl": "5431", "title": "Student Workshop Meals", "group": "Student Aid & Scholarships", "q1": 978.0, "q2": 3420.0, "q3": 0.0, "total": 4398.0}, {"gl": "5341", "title": "Minor Repairs & Maintenance-CMI Bldg.", "group": "Facilities, Leases & Insurance", "q1": 794.75, "q2": 3166.45, "q3": 0.0, "total": 3961.2}, {"gl": "5262", "title": "Bank Charges", "group": "Other Operating", "q1": 2542.68, "q2": 961.19, "q3": 0.0, "total": 3503.87}, {"gl": "5321", "title": "Cleaning/Maintenance Supplies", "group": "Supplies, Books & Equipment", "q1": 1053.34, "q2": 1000.8, "q3": 0.0, "total": 2054.14}, {"gl": "5901", "title": "Furniture/Equipment", "group": "Supplies, Books & Equipment", "q1": 0.0, "q2": 1364.89, "q3": 0.0, "total": 1364.89}, {"gl": "5221", "title": "Printing & Reproduction", "group": "Other Operating", "q1": 0.0, "q2": 0.0, "q3": 488.75, "total": 488.75}, {"gl": "5225", "title": "Advertising", "group": "Other Operating", "q1": 110.0, "q2": 0.0, "q3": 0.0, "total": 110.0}, {"gl": "5561", "title": "International Testing", "group": "Student Aid & Scholarships", "q1": 30.0, "q2": 0.0, "q3": 0.0, "total": 30.0}], "depts": [{"code": "7011", "title": "Pell Grant", "q1": 1971144.63, "q2": 2991019.89, "q3": 153211.0, "total": 5115375.52}, {"code": "5023", "title": "Office of MCST Projects", "q1": 287025.83, "q2": 222306.88, "q3": 725673.37, "total": 1235006.08}, {"code": "5320", "title": "Physical Plant Department", "q1": 318879.99, "q2": 387832.04, "q3": 266111.43, "total": 972823.46}, {"code": "5317", "title": "Information Technology Department", "q1": 301346.21, "q2": 190514.39, "q3": 124693.72, "total": 616554.32}, {"code": "5911", "title": "Auxiliary Commercial Services", "q1": 166978.2, "q2": 307480.94, "q3": 121300.9, "total": 595760.04}, {"code": "5313", "title": "Human Resources Department", "q1": 147898.99, "q2": 241332.82, "q3": 152797.68, "total": 542029.49}, {"code": "5312", "title": "FABS (Business Office) Department", "q1": 235865.37, "q2": 177197.56, "q3": 104632.92, "total": 517695.85}, {"code": "5014", "title": "Science, Technology Engineer & Math", "q1": 178209.34, "q2": 133999.31, "q3": 108803.26, "total": 421011.91}, {"code": "6012", "title": "Continuing Education", "q1": 150633.11, "q2": 120412.11, "q3": 83464.31, "total": 354509.53}, {"code": "5411", "title": "Student & Community Services Department", "q1": 118862.61, "q2": 117572.3, "q3": 104338.86, "total": 340773.77}, {"code": "5015", "title": "Developmental Education Department", "q1": 131118.22, "q2": 97280.25, "q3": 95774.94, "total": 324173.41}, {"code": "5311", "title": "Office of the President", "q1": 147438.82, "q2": 72175.22, "q3": 82399.27, "total": 302013.31}, {"code": "9000", "title": "Land Grant Programs - Majuro", "q1": 90262.7, "q2": 93881.61, "q3": 91318.81, "total": 275463.12}, {"code": "5013", "title": "Liberal Arts Department", "q1": 99097.6, "q2": 86789.44, "q3": 88858.63, "total": 274745.67}, {"code": "5100", "title": "VP-Business & Administration Affairs", "q1": 140522.77, "q2": 40103.32, "q3": 61718.41, "total": 242344.5}, {"code": "5016", "title": "Education Department", "q1": 80429.68, "q2": 72361.1, "q3": 61102.72, "total": 213893.5}, {"code": "5112", "title": "VP-Academic and Student Affairs", "q1": 72087.27, "q2": 29338.49, "q3": 67198.83, "total": 168624.59}, {"code": "5012", "title": "Nursing & Allied Health Department", "q1": 54955.92, "q2": 46910.27, "q3": 46260.27, "total": 148126.46}, {"code": "5031", "title": "Vocational Department", "q1": 56286.48, "q2": 41527.31, "q3": 50010.62, "total": 147824.41}, {"code": "5324", "title": "Distance Education Department", "q1": 48699.1, "q2": 43426.24, "q3": 49648.97, "total": 141774.31}, {"code": "7101", "title": "Upward Bound Programs", "q1": 44748.14, "q2": 51571.08, "q3": 41948.13, "total": 138267.35}, {"code": "5011", "title": "Academic Affairs Department", "q1": 40783.36, "q2": 45509.6, "q3": 51302.09, "total": 137595.05}, {"code": "5306", "title": "Financial Aid Department", "q1": 48764.99, "q2": 42436.31, "q3": 40021.14, "total": 131222.44}, {"code": "5018", "title": "Arrak", "q1": 37795.55, "q2": 30289.49, "q3": 34934.51, "total": 103019.55}, {"code": "5032", "title": "Business Info. Technology Department", "q1": 33155.98, "q2": 28533.91, "q3": 26483.91, "total": 88173.8}, {"code": "6000", "title": "Ebeye Center", "q1": 34584.66, "q2": 26923.97, "q3": 24547.78, "total": 86056.41}, {"code": "5019", "title": "Marshallese Studies Department", "q1": 34201.96, "q2": 25340.92, "q3": 23295.62, "total": 82838.5}, {"code": "5319", "title": "Library Department", "q1": 27807.05, "q2": 29446.31, "q3": 19413.06, "total": 76666.42}, {"code": "6011", "title": "Research & Planning Department", "q1": 30841.21, "q2": 17359.81, "q3": 17859.24, "total": 66060.26}, {"code": "5326", "title": "Marshall Islands Youth Services Corp", "q1": 41401.46, "q2": 7588.12, "q3": 7588.12, "total": 56577.7}, {"code": "5103", "title": "Internal Auditor", "q1": 15659.56, "q2": 13472.49, "q3": 13472.51, "total": 42604.56}, {"code": "5322", "title": "Grant and Resources Development", "q1": 14564.36, "q2": 12560.95, "q3": 12560.94, "total": 39686.25}, {"code": "5022", "title": "Liaison Office", "q1": 12334.38, "q2": 10953.53, "q3": 9996.64, "total": 33284.55}, {"code": "5318", "title": "Nuclear Institute Department", "q1": 9778.39, "q2": 8193.04, "q3": 8191.29, "total": 26162.72}, {"code": "5021", "title": "Communication Department", "q1": 6839.97, "q2": 5970.58, "q3": 5970.58, "total": 18781.13}, {"code": "5314", "title": "Board of Regents", "q1": 6100.0, "q2": 3607.0, "q3": 7084.0, "total": 16791.0}, {"code": "5308", "title": "Executive Vice President", "q1": 2766.03, "q2": 0.0, "q3": 1750.0, "total": 4516.03}, {"code": "5110", "title": "VP-Finance", "q1": 2542.68, "q2": 961.19, "q3": 0.0, "total": 3503.87}, {"code": "8000", "title": "Marshall Islands Conservation Society", "q1": 224.87, "q2": 0.0, "q3": 0.0, "total": 224.87}], "funds": [{"fund": "1700", "net": 5115375.52, "txns": 3416, "topDept": "Pell Grant", "topGL": "Student Aid", "q1": 1971144.63, "q2": 2991019.89, "q3": 153211.0}, {"fund": "0", "net": 4621470.83, "txns": 11725, "topDept": "Physical Plant Department", "topGL": "Salaries & Wages - Regular", "q1": 1663145.37, "q2": 1678478.43, "q3": 1279847.03}, {"fund": "1024", "net": 1734975.38, "txns": 2821, "topDept": "Science, Technology Engineer & Math", "topGL": "Salaries & Wages - Regular", "q1": 677233.57, "q2": 540935.55, "q3": 516806.26}, {"fund": "1651", "net": 1237893.08, "txns": 296, "topDept": "Office of MCST Projects", "topGL": "Contractual Services", "q1": 289912.83, "q2": 222306.88, "q3": 725673.37}, {"fund": "1613", "net": 313790.29, "txns": 698, "topDept": "Continuing Education", "topGL": "Salaries & Wages - Regular", "q1": 132908.87, "q2": 99117.11, "q3": 81764.31}, {"fund": "1815", "net": 225764.6, "txns": 17, "topDept": "FABS (Business Office) Department", "topGL": "Contractual Services", "q1": 203081.65, "q2": 19905.17, "q3": 2777.78}, {"fund": "1902", "net": 162039.05, "txns": 536, "topDept": "Land Grant Programs - Majuro", "topGL": "Salaries & Wages - Regular", "q1": 59459.75, "q2": 52342.85, "q3": 50236.45}, {"fund": "1602", "net": 145359.35, "txns": 1502, "topDept": "Physical Plant Department", "topGL": "Salaries & Wages - Regular", "q1": 40901.61, "q2": 73240.27, "q3": 31217.47}, {"fund": "1710", "net": 138807.35, "txns": 757, "topDept": "Upward Bound Programs", "topGL": "Salaries & Wages - Regular", "q1": 44748.14, "q2": 52111.08, "q3": 41948.13}, {"fund": "1901", "net": 113424.07, "txns": 364, "topDept": "Land Grant Programs - Majuro", "topGL": "Salaries & Wages - Regular", "q1": 30802.95, "q2": 41538.76, "q3": 41082.36}, {"fund": "1124", "net": 104927.23, "txns": 171, "topDept": "Office of the President", "topGL": "Salaries & Wages - Regular", "q1": 52448.74, "q2": 28605.69, "q3": 23872.8}, {"fund": "1711", "net": 92856.41, "txns": 300, "topDept": "Ebeye Center", "topGL": "Salaries & Wages - Regular", "q1": 37134.66, "q2": 29473.97, "q3": 26247.78}, {"fund": "1075", "net": 65510.64, "txns": 71, "topDept": "Physical Plant Department", "topGL": "Materials/Supplies", "q1": 21215.85, "q2": 42799.11, "q3": 1495.68}, {"fund": "1051", "net": 15301.95, "txns": 41, "topDept": "VP-Academic and Student Affairs", "topGL": "Salaries & Wages - Regular", "q1": 3438.86, "q2": 2305.03, "q3": 9558.06}, {"fund": "1503", "net": 14451.45, "txns": 80, "topDept": "Information Technology Department", "topGL": "Salaries & Wages - Regular", "q1": 14451.45, "q2": 0.0, "q3": 0.0}, {"fund": "1050", "net": 608.51, "txns": 9, "topDept": "Student & Community Services Department", "topGL": "Salaries & Wages - Regular", "q1": 608.51, "q2": 0.0, "q3": 0.0}], "vendors": [{"name": "Marshall Energy Company", "net": 482544.23, "txns": 18, "topGL": "Utilities (Water and Electricty)"}, {"name": "JAD International", "net": 212727.0, "txns": 4, "topGL": "Travel"}, {"name": "Ernst & Young LLP", "net": 143331.65, "txns": 21, "topGL": "Contractual Services"}, {"name": "CENGAGE Learning Asia Pte Ltd", "net": 134991.0, "txns": 1, "topGL": "Purchases - Books"}, {"name": "Nauru Air Corporation", "net": 128431.79, "txns": 1, "topGL": "Travel"}, {"name": "Jenzabar, Inc.", "net": 119691.98, "txns": 8, "topGL": "Subscriptions/Periodicals"}, {"name": "Sahib, Maria Rizwana", "net": 108889.31, "txns": 8, "topGL": "Contractual Services"}, {"name": "National Telecom Authority", "net": 106536.1, "txns": 19, "topGL": "Telephone & Fax"}, {"name": "Bordahandy, Pierre-Jean Philippe Claude", "net": 105907.74, "txns": 8, "topGL": "Contractual Services"}, {"name": "Bank of Guam", "net": 84939.18, "txns": 2, "topGL": "Travel"}, {"name": "Sefeti, Aileen", "net": 82256.66, "txns": 10, "topGL": "Contractual Services"}, {"name": "Moylan's Insurance", "net": 80451.52, "txns": 9, "topGL": "Insurance - General/Workmens Comp./Fire"}, {"name": "Carte, Kevin Brad", "net": 70205.07, "txns": 7, "topGL": "Contractual Services"}, {"name": "Namotu, Penijamini Verekauta", "net": 69046.5, "txns": 9, "topGL": "Contractual Services"}, {"name": "Ministry of Health & Human Services", "net": 67860.0, "txns": 3, "topGL": "Insurance - Supplemental"}], "rows": 22804, "debits": 14964195.11, "credits": 861639.4, "negRows": 477, "negTotal": -853806.4, "dq": [{"sev": "high", "title": "IMO meeting hotel payment nets to $0 after double reversal", "detail": "The $83,852.96 Hyatt/Crowne Plaza contract for the IMO meeting (Office of MCST Projects, Travel) was posted 2/27, voided via A/P credit the same day (PO 26-PO-571), voided a second time on 3/17 as a returned wire marked \u201cINVALID CREDITOR\u201d (recorded under PO 24-PO-571), then re-paid 4/17 via a wire recorded under payee \u201cBank of Guam.\u201d The five entries (plus the matching $1,086.22 extras on PO 26-433) currently net to $0 expenditure. Either one reversal is duplicated or the re-issued payment is misclassified \u2014 MCST travel may be understated by ~$84,939. The vendor also appears as both \u201cCrowne Plaza\u201d and \u201cCrown Plaza,\u201d and the true payee (the hotel) is masked by the bank name.", "amount": "$84,939.18 at stake"}, {"sev": "high", "title": "Ernst & Young invoice posted twice", "detail": "Invoice GU07GU70000190 ($16,250, \u201c26-PO-33 Progress Billing: Audit ended Sept 2023\u201d) was posted on 10/9/2025 and again on 12/23/2025, with only one offsetting credit. E&Y activity overall shows $346,413.30 in gross debits against $203,081.65 in credits (net $143,331.65 paid FY2026 YTD), with a large adjustment batch on 12/23 (session 26ADJ083) reclassifying FY2022\u2013FY2023 audit billings. Recommend a payee-level reconciliation with E&Y statements before the current engagement closes.", "amount": "$16,250 possible duplicate"}, {"sev": "medium", "title": "Duplicate housing rental payment \u2014 same check, same amount", "detail": "Check/DocNum 14718 (3/27/2026) pays \u201cApril 2026 Housing Rental\u201d to Momotaro, Almo and Mareen Maddison twice at $600 each, with identical descriptions. Unlike other multi-line housing checks (which name different tenants per line), both lines here are identical \u2014 a likely double posting.", "amount": "$600"}, {"sev": "medium", "title": "Corrupted invoice number (scientific notation)", "detail": "Three monthly $6,300 billings to Remote Team Solutions LLC carry DocNum \u201c4.65532E+12\u201d \u2014 a long invoice number converted to scientific notation, almost certainly by an Excel round-trip. The original document reference is unrecoverable from this extract, weakening the audit trail for $18,900 of contractual services.", "amount": "$18,900 affected"}, {"sev": "medium", "title": "34 journal-voucher lines with no payee name", "detail": "All 34 blank-payee rows are TransSource JV (journal vouchers) totaling $3,176.37 net. Expected for reclassifications, but auditors will ask that JV support documentation identify the counterparty where one exists.", "amount": "$3,176.37"}, {"sev": "low", "title": "477 negative-net lines totaling \u2212$853,806.40", "detail": "Credits exceed debits on 477 lines (\u22485.7% of gross debits). Most are routine \u2014 payroll corrections, the E&Y reclass batch, NTA billing credits, and the IMO-meeting reversals above \u2014 but the concentration in Contractual Services and Travel means the category tables in this report reflect post-reversal nets. No action needed beyond the specific items flagged.", "amount": "\u2212$853,806.40"}, {"sev": "pass", "title": "Posting window clean", "detail": "All 22,804 rows fall inside 10/1/2025\u20136/25/2026. No transactions posted outside the FY2026 window, no zero-amount rows, and no unparseable dates or amounts.", "amount": "0 exceptions"}, {"sev": "pass", "title": "Shared document numbers are mostly legitimate", "detail": "210 non-payroll rows share a DocNum + payee + amount, but nearly all are single checks legitimately split across multiple lines (e.g., one landlord check covering several staff housing units, one tuition check covering several dependents). Only the two items flagged above warrant follow-up.", "amount": "66 doc numbers reviewed"}], "qdetail": {"Q1": {"net": 5242637.44, "txns": 8767, "months": [{"label": "October 2025", "net": 2561587.17, "txns": 3952}, {"label": "November 2025", "net": 1321286.52, "txns": 2469}, {"label": "December 2025", "net": 1359763.75, "txns": 2346}], "topGL": [{"title": "Student Aid", "net": 1815449.0}, {"title": "Salaries & Wages - Regular", "net": 1337150.78}, {"title": "Contractual Services", "net": 313089.48}, {"title": "Salaries & Wages - Overload", "net": 188862.5}, {"title": "Utilities (Water and Electricty)", "net": 182654.25}, {"title": "Subscriptions/Periodicals", "net": 174722.66}, {"title": "Student Wages", "net": 148971.97}, {"title": "Salaries & Wages - Adjunct", "net": 148000.0}], "topDept": [{"title": "Pell Grant", "net": 1971144.63}, {"title": "Physical Plant Department", "net": 318879.99}, {"title": "Information Technology Department", "net": 301346.21}, {"title": "Office of MCST Projects", "net": 287025.83}, {"title": "FABS (Business Office) Department", "net": 235865.37}, {"title": "Science, Technology Engineer & Math", "net": 178209.34}, {"title": "Auxiliary Commercial Services", "net": 166978.2}, {"title": "Continuing Education", "net": 150633.11}], "topVen": [{"name": "Marshall Energy Company", "net": 178977.95}, {"name": "Jenzabar, Inc.", "net": 100662.5}, {"name": "Ernst & Young LLP", "net": 72081.65}, {"name": "National Telecom Authority", "net": 50261.44}, {"name": "DocuSign Inc.", "net": 49826.6}, {"name": "JAD International", "net": 45533.0}, {"name": "Sahib, Maria Rizwana", "net": 41024.0}, {"name": "Bordahandy, Pierre-Jean Philippe Claude", "net": 40718.99}], "groups": [{"name": "Personnel & Benefits", "net": 2087790.36}, {"name": "Student Aid & Scholarships", "net": 1987234.48}, {"name": "Contractual & Professional Services", "net": 338671.28}, {"name": "Utilities & Communications", "net": 232774.08}, {"name": "Subscriptions & Software", "net": 174722.66}, {"name": "Other Operating", "net": 172617.42}, {"name": "Travel", "net": 102976.6}, {"name": "Supplies, Books & Equipment", "net": 89752.57}, {"name": "Facilities, Leases & Insurance", "net": 56097.99}], "gen": 1663145.37, "res": 3579492.07, "payroll": 2086655.98}, "Q2": {"net": 5874179.79, "txns": 7645, "months": [{"label": "January 2026", "net": 3792506.68, "txns": 3042}, {"label": "February 2026", "net": 1000338.03, "txns": 2149}, {"label": "March 2026", "net": 1081335.08, "txns": 2454}], "topGL": [{"title": "Student Aid", "net": 2989842.0}, {"title": "Salaries & Wages - Regular", "net": 1108606.43}, {"title": "Contractual Services", "net": 333481.51}, {"title": "Utilities (Water and Electricty)", "net": 170542.51}, {"title": "Purchases - Books", "net": 134991.0}, {"title": "Staff/Faculty Housing", "net": 122200.0}, {"title": "Subscriptions/Periodicals", "net": 116457.23}, {"title": "Social Security Tax", "net": 105375.97}], "topDept": [{"title": "Pell Grant", "net": 2991019.89}, {"title": "Physical Plant Department", "net": 387832.04}, {"title": "Auxiliary Commercial Services", "net": 307480.94}, {"title": "Human Resources Department", "net": 241332.82}, {"title": "Office of MCST Projects", "net": 222306.88}, {"title": "Information Technology Department", "net": 190514.39}, {"title": "FABS (Business Office) Department", "net": 177197.56}, {"title": "Science, Technology Engineer & Math", "net": 133999.31}], "topVen": [{"name": "Marshall Energy Company", "net": 161526.23}, {"name": "CENGAGE Learning Asia Pte Ltd", "net": 134991.0}, {"name": "Moylan's Insurance", "net": 70573.24}, {"name": "Ministry of Health & Human Services", "net": 58860.0}, {"name": "Ernst & Young LLP", "net": 50000.0}, {"name": "Bordahandy, Pierre-Jean Philippe Claude", "net": 43537.39}, {"name": "Abila MIP Fund Accounting", "net": 38458.54}, {"name": "Pacific Basin Payless", "net": 33961.2}], "groups": [{"name": "Student Aid & Scholarships", "net": 3066663.57}, {"name": "Personnel & Benefits", "net": 1783389.3}, {"name": "Contractual & Professional Services", "net": 341376.51}, {"name": "Supplies, Books & Equipment", "net": 224861.31}, {"name": "Utilities & Communications", "net": 199196.95}, {"name": "Subscriptions & Software", "net": 116457.23}, {"name": "Facilities, Leases & Insurance", "net": 76214.35}, {"name": "Other Operating", "net": 60967.77}, {"name": "Travel", "net": 5052.8}], "gen": 1678478.43, "res": 4195701.36, "payroll": 1545137.02}, "Q3": {"net": 2985738.48, "txns": 6392, "months": [{"label": "April 2026", "net": 1055429.34, "txns": 2194}, {"label": "May 2026", "net": 1386925.88, "txns": 3250}, {"label": "June 2026", "net": 543383.26, "txns": 948}], "topGL": [{"title": "Salaries & Wages - Regular", "net": 1074756.0}, {"title": "Travel", "net": 598865.14}, {"title": "Contractual Services", "net": 183375.78}, {"title": "Student Aid", "net": 153211.0}, {"title": "Utilities (Water and Electricty)", "net": 145518.4}, {"title": "Salaries & Wages - Overload", "net": 101537.5}, {"title": "Social Security Tax", "net": 101312.96}, {"title": "Staff/Faculty Housing", "net": 87875.0}], "topDept": [{"title": "Office of MCST Projects", "net": 725673.37}, {"title": "Physical Plant Department", "net": 266111.43}, {"title": "Pell Grant", "net": 153211.0}, {"title": "Human Resources Department", "net": 152797.68}, {"title": "Information Technology Department", "net": 124693.72}, {"title": "Auxiliary Commercial Services", "net": 121300.9}, {"title": "Science, Technology Engineer & Math", "net": 108803.26}, {"title": "FABS (Business Office) Department", "net": 104632.92}], "topVen": [{"name": "JAD International", "net": 167194.0}, {"name": "Marshall Energy Company", "net": 142040.05}, {"name": "Nauru Air Corporation", "net": 128431.79}, {"name": "Bank of Guam", "net": 84939.18}, {"name": "Sahib, Maria Rizwana", "net": 47353.31}, {"name": "United Airlines", "net": 37985.83}, {"name": "Marshall Islands Resort", "net": 36648.54}, {"name": "Sefeti, Aileen", "net": 29414.19}], "groups": [{"name": "Personnel & Benefits", "net": 1585720.26}, {"name": "Travel", "net": 598865.14}, {"name": "Student Aid & Scholarships", "net": 291341.86}, {"name": "Utilities & Communications", "net": 199846.94}, {"name": "Contractual & Professional Services", "net": 198408.48}, {"name": "Other Operating", "net": 62667.81}, {"name": "Subscriptions & Software", "net": 36005.66}, {"name": "Facilities, Leases & Insurance", "net": 10400.0}, {"name": "Supplies, Books & Equipment", "net": 2482.33}], "gen": 1279847.03, "res": 1705891.45, "payroll": 1489603.66}}};
+
+const fmt = n => (n<0?'(':'') + '$' + Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}) + (n<0?')':'');
+const fmt2 = n => (n<0?'(':'') + '$' + Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) + (n<0?')':'');
+const pct = n => (n>=0?'+':'−') + Math.abs(n).toFixed(1) + '%';
+
+const NAVY='#00008a', NAVY2='#3333a1', GOLD='#F4B942';
+const PAL=['#00008a','#3333a1','#F4B942','#6f74c9','#d99b1c','#9aa0e0','#4b4fb0','#c7cbf0','#8a6d1a'];
+Chart.defaults.font.family="'IBM Plex Sans',sans-serif";
+Chart.defaults.color='#5c6078';
+
+/* tabs */
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.getElementById('p-'+b.dataset.t).classList.add('active');
+}));
+
+/* ---- KPIs ---- */
+const q1=D.quarters.Q1,q2=D.quarters.Q2,q3=D.quarters.Q3;
+document.getElementById('k-total').textContent=fmt(D.total);
+document.getElementById('k-q1').textContent=fmt(q1);
+document.getElementById('k-q2').textContent=fmt(q2);
+document.getElementById('k-q3').textContent=fmt(q3);
+const q2c=(q2-q1)/q1*100, q3c=(q3-q2)/q2*100;
+document.getElementById('k-q2c').innerHTML=`<span class="up">▲ ${pct(q2c)} vs Q1</span>`;
+document.getElementById('k-q3c').innerHTML=`<span class="down">▼ ${pct(q3c)} vs Q2</span> <span class="badge b-part">partial qtr</span>`;
+
+/* ---- Findings ---- */
+const F=[
+ `<b>CMI has spent ${fmt(D.total)} through June 25</b> — ${fmt(q1)} in Q1, ${fmt(q2)} in Q2 (up ${Math.abs(q2c).toFixed(0)}%), and ${fmt(q3)} so far in the still-open Q3. The Q3 figure will rise once late-June postings close; it should not be read as a spending cut.`,
+ `<b>Federal Pell student aid drives the swings, not operations.</b> Pell disbursements total $5,115,375.52 (36% of everything) and arrive in two waves — $1.19M in October for fall and $2.84M in January for spring. Strip Pell out and core operating spend is steady: $3.27M → $2.88M → $2.83M per quarter.`,
+ `<b>Personnel is the largest cost CMI controls.</b> Salaries, benefits, housing and payroll taxes total $5,456,899.92 (38.7% of all spending), led by regular salaries at $3,520,513.21. Personnel cost is drifting <i>down</i> each quarter ($2.09M → $1.78M → $1.59M partial).`,
+ `<b>The MCST maritime project tripled its spending in Q3</b> — $725,673 vs $222,307 in Q2, driven by IMO-meeting travel: a $128,432 Air Nauru charter, $167,194 in air tickets through JAD International, and the London hotel contract. This is grant-funded (Fund 1651) but merits Board visibility given the sums and the payment-reversal issue flagged on the Data Quality tab.`,
+ `<b>Two-thirds of spending is restricted money.</b> Only ${fmt(D.funds.find(f=>f.fund==='0').net)} (32.8%) runs through the general operating fund; the rest is Pell, federal grants, land-grant programs (Funds 1901/1902, $275K combined) and project funds — a fund mix the accreditation and land-grant report sections should reflect.`,
+ `<b>Audit housekeeping needed before E&amp;Y closes.</b> The ledger shows a duplicated $16,250 E&amp;Y audit invoice, an ~$84,939 IMO-meeting hotel payment that currently nets to zero after being reversed twice, and a $600 double-posted housing check — small in total but exactly what auditors sample. Details on the Data Quality tab.`
+];
+document.getElementById('findings').innerHTML=F.map(f=>`<div class="finding">${f}</div>`).join('');
+
+/* ---- Overview charts ---- */
+const mLabels=D.months.labels.map(m=>{const[y,mm]=m.split('-');return['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+mm-1]+" '"+y.slice(2)});
+new Chart(document.getElementById('c-monthly'),{type:'bar',
+ data:{labels:mLabels,datasets:[
+  {label:'Net expenditure',data:D.months.net,backgroundColor:D.months.labels.map(m=>m==='2026-06'?'#c7cbf0':NAVY2),borderRadius:4}]},
+ options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt2(c.raw)+(c.label.startsWith("Jun")?' (through Jun 25)':'')}}},
+  scales:{y:{ticks:{callback:v=>'$'+(v/1e6).toFixed(1)+'M'},grid:{color:'#eceef6'}},x:{grid:{display:false}}},maintainAspectRatio:false}});
+
+new Chart(document.getElementById('c-groupdonut'),{type:'doughnut',
+ data:{labels:D.groups.map(g=>g.name),datasets:[{data:D.groups.map(g=>g.total),backgroundColor:PAL,borderWidth:2,borderColor:'#fff'}]},
+ options:{plugins:{legend:{position:'right',labels:{boxWidth:12,font:{size:11}}},
+  tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.raw)} (${(c.raw/D.total*100).toFixed(1)}%)`}}},cutout:'58%',maintainAspectRatio:false}});
+
+/* ---- Quarter tab ---- */
+const qBarChart = new Chart(document.getElementById('c-qbar'),{type:'bar',
+ data:{labels:['Q1 (Oct–Dec)','Q2 (Jan–Mar)','Q3 (Apr–Jun 25)*'],datasets:[{label:'Net expenditure',data:[q1,q2,q3],
+  backgroundColor:[NAVY,NAVY2,GOLD],borderRadius:6}]},
+ options:{plugins:{legend:{display:false},title:{display:true,text:'Total net expenditure per quarter (*Q3 partial)',color:'#1b1e2e',font:{weight:'600',size:13}},
+  tooltip:{callbacks:{label:c=>fmt2(c.raw)}}},
+  scales:{y:{ticks:{callback:v=>'$'+(v/1e6).toFixed(1)+'M'},grid:{color:'#eceef6'}},x:{grid:{display:false}}},maintainAspectRatio:false}});
+
+const pellQ=[1971144.63,2991019.89,153211.00];
+new Chart(document.getElementById('c-qexpell'),{type:'bar',
+ data:{labels:['Q1','Q2','Q3*'],datasets:[
+  {label:'Pell student aid',data:pellQ,backgroundColor:GOLD,borderRadius:4},
+  {label:'All other spending',data:[q1-pellQ[0],q2-pellQ[1],q3-pellQ[2]],backgroundColor:NAVY2,borderRadius:4}]},
+ options:{plugins:{legend:{position:'bottom'},title:{display:true,text:'Pell vs. core operating spend (*Q3 partial)',color:'#1b1e2e',font:{weight:'600',size:13}},
+  tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmt2(c.raw)}`}}},
+  scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,ticks:{callback:v=>'$'+(v/1e6).toFixed(1)+'M'},grid:{color:'#eceef6'}}},maintainAspectRatio:false}});
+
+document.getElementById('t-quarter').innerHTML=`
+<thead><tr><th>Quarter</th><th>Period</th><th class="r">Net Expenditure</th><th class="r">% of YTD</th><th class="r">Change vs prior qtr</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td><b>Q1</b></td><td>Oct 1 – Dec 31, 2025</td><td class="r">${fmt2(q1)}</td><td class="r">${(q1/D.total*100).toFixed(1)}%</td><td class="r">—</td><td><span class="badge b-navy">Closed</span></td></tr>
+<tr><td><b>Q2</b></td><td>Jan 1 – Mar 31, 2026</td><td class="r">${fmt2(q2)}</td><td class="r">${(q2/D.total*100).toFixed(1)}%</td><td class="r"><span class="up">${pct(q2c)}</span></td><td><span class="badge b-navy">Closed</span></td></tr>
+<tr><td><b>Q3</b></td><td>Apr 1 – Jun 25, 2026</td><td class="r">${fmt2(q3)}</td><td class="r">${(q3/D.total*100).toFixed(1)}%</td><td class="r"><span class="down">${pct(q3c)}</span></td><td><span class="badge b-gold">Partial — thru Jun 25</span></td></tr>
+</tbody>
+<tfoot><tr><td colspan="2">FY2026 YTD</td><td class="r">${fmt2(D.total)}</td><td class="r">100.0%</td><td class="r"></td><td></td></tfoot>`;
+
+let mrows='',prev=null;
+D.months.labels.forEach((m,i)=>{
+ const v=D.months.net[i];const ch=prev===null?null:(v-prev)/Math.abs(prev)*100;
+ const qlab=i<3?'Q1':i<6?'Q2':'Q3';
+ mrows+=`<tr><td>${mLabels[i]}${m==='2026-06'?' <span class="badge b-part">thru Jun 25</span>':''}</td><td>${qlab}</td><td class="r">${fmt2(v)}</td><td class="r">${D.months.txns[i].toLocaleString()}</td><td class="r">${ch===null?'—':`<span class="${ch>=0?'up':'down'}">${pct(ch)}</span>`}</td></tr>`;
+ prev=v;});
+document.getElementById('t-monthly').innerHTML=`<thead><tr><th>Month</th><th>Quarter</th><th class="r">Net Expenditure</th><th class="r">Transactions</th><th class="r">MoM change</th></tr></thead><tbody>${mrows}</tbody>`;
+
+/* ---- Category tab ---- */
+new Chart(document.getElementById('c-groupbar'),{type:'bar',
+ data:{labels:D.groups.map(g=>g.name),datasets:[
+  {label:'Q1',data:D.groups.map(g=>g.q1),backgroundColor:NAVY,borderRadius:3},
+  {label:'Q2',data:D.groups.map(g=>g.q2),backgroundColor:NAVY2,borderRadius:3},
+  {label:'Q3 (partial)',data:D.groups.map(g=>g.q3),backgroundColor:GOLD,borderRadius:3}]},
+ options:{indexAxis:'y',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmt2(c.raw)}`}}},
+  scales:{x:{stacked:true,ticks:{callback:v=>'$'+(v/1e6).toFixed(1)+'M'},grid:{color:'#eceef6'}},y:{stacked:true,grid:{display:false},ticks:{font:{size:11.5}}}},maintainAspectRatio:false}});
+
+let grows='';
+D.groups.forEach(g=>{grows+=`<tr><td><b>${g.name}</b></td><td class="r">${fmt2(g.q1)}</td><td class="r">${fmt2(g.q2)}</td><td class="r ${g.q3<0?'neg':''}">${fmt2(g.q3)}</td><td class="r"><b>${fmt2(g.total)}</b></td><td class="r">${(g.total/D.total*100).toFixed(1)}%</td></tr>`});
+document.getElementById('t-groups').innerHTML=`<thead><tr><th>Category group</th><th class="r">Q1</th><th class="r">Q2</th><th class="r">Q3 (partial)</th><th class="r">FY2026 YTD</th><th class="r">% of Total</th></tr></thead><tbody>${grows}</tbody>
+<tfoot><tr><td>Total</td><td class="r">${fmt2(q1)}</td><td class="r">${fmt2(q2)}</td><td class="r">${fmt2(q3)}</td><td class="r">${fmt2(D.total)}</td><td class="r">100.0%</td></tr></tfoot>`;
+
+const top10sum=D.gl.slice(0,10).reduce((s,g)=>s+g.total,0);
+document.getElementById('top10share').innerHTML=`<b>${(top10sum/D.total*100).toFixed(1)}%</b> (${fmt(top10sum)})`;
+let glrows='';
+D.gl.forEach((g,i)=>{glrows+=`<tr class="${i<10?'top10':''}"><td class="mono">${g.gl}</td><td>${g.title}${i<10?' <span class="badge b-gold">Top 10</span>':''}</td><td style="font-size:12px;color:var(--muted)">${g.group}</td><td class="r ${g.total<0?'neg':''}">${fmt2(g.total)}</td><td class="r">${(g.total/D.total*100).toFixed(2)}%</td></tr>`});
+document.getElementById('t-gl').innerHTML=`<thead><tr><th>GL</th><th>Account Title</th><th>Group</th><th class="r">FY2026 Net</th><th class="r">% of Total</th></tr></thead><tbody>${glrows}</tbody>`;
+
+/* ---- Department tab ---- */
+const dtop=D.depts.slice(0,10);
+new Chart(document.getElementById('c-deptbar'),{type:'bar',
+ data:{labels:dtop.map(d=>d.title),datasets:[
+  {label:'Q1',data:dtop.map(d=>d.q1),backgroundColor:NAVY,borderRadius:3},
+  {label:'Q2',data:dtop.map(d=>d.q2),backgroundColor:NAVY2,borderRadius:3},
+  {label:'Q3 (partial)',data:dtop.map(d=>d.q3),backgroundColor:GOLD,borderRadius:3}]},
+ options:{indexAxis:'y',plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmt2(c.raw)}`}}},
+  scales:{x:{stacked:true,ticks:{callback:v=>'$'+(v/1e6).toFixed(1)+'M'},grid:{color:'#eceef6'}},y:{stacked:true,grid:{display:false},ticks:{font:{size:11.5}}}},maintainAspectRatio:false}});
+
+function swing(a,b){if(a===0)return null;return (b-a)/Math.abs(a)*100}
+let drows='';
+D.depts.forEach((d,i)=>{
+ const s1=swing(d.q1,d.q2), s2=swing(d.q2,d.q3);
+ let badges='';
+ if(d.total>100000){
+  if(s1!==null&&Math.abs(s1)>25)badges+=`<span class="badge ${s1>0?'b-up':'b-down'}">Q1→Q2 ${pct(s1)}</span> `;
+  if(s2!==null&&Math.abs(s2)>25)badges+=`<span class="badge ${s2>0?'b-up':'b-down'}">Q2→Q3 ${pct(s2)}</span>`;}
+ drows+=`<tr class="${i<10?'top10':''}"><td class="mono">${d.code}</td><td>${d.title}${i<10?' <span class="badge b-gold">Top 10</span>':''}</td><td class="r">${fmt2(d.q1)}</td><td class="r">${fmt2(d.q2)}</td><td class="r">${fmt2(d.q3)}</td><td class="r"><b>${fmt2(d.total)}</b></td><td class="r">${(d.total/D.total*100).toFixed(1)}%</td><td>${badges}</td></tr>`});
+document.getElementById('t-dept').innerHTML=`<thead><tr><th>Dept</th><th>Department Title</th><th class="r">Q1</th><th class="r">Q2</th><th class="r">Q3 (partial)</th><th class="r">FY2026 YTD</th><th class="r">% of Total</th><th>QoQ swings &gt;25% (depts &gt;$100K)</th></tr></thead><tbody>${drows}</tbody>`;
+
+/* ---- Fund tab ---- */
+const gen=D.funds.find(f=>f.fund==='0').net, res=D.total-gen;
+document.getElementById('k-gen').textContent=fmt(gen);
+document.getElementById('k-genp').textContent=(gen/D.total*100).toFixed(1)+'% of total spending';
+document.getElementById('k-res').textContent=fmt(res);
+document.getElementById('k-resp').textContent=(res/D.total*100).toFixed(1)+'% of total spending';
+document.getElementById('k-bigres').textContent=fmt(D.funds[0].fund==='0'?D.funds[1].net:D.funds[0].net);
+
+new Chart(document.getElementById('c-funddonut'),{type:'doughnut',
+ data:{labels:['Fund 1700 — Pell student aid','Fund 0 — General / operating','Fund 1024 — restricted (payroll-heavy)','Fund 1651 — MCST maritime project','12 other restricted funds'],
+  datasets:[{data:[5115375.52,gen,1734975.38,1237893.08,D.total-5115375.52-gen-1734975.38-1237893.08],
+  backgroundColor:[GOLD,NAVY,NAVY2,'#6f74c9','#c7cbf0'],borderWidth:2,borderColor:'#fff'}]},
+ options:{plugins:{legend:{position:'right',labels:{boxWidth:12,font:{size:11}}},
+  tooltip:{callbacks:{label:c=>` ${c.label}: ${fmt(c.raw)} (${(c.raw/D.total*100).toFixed(1)}%)`}}},cutout:'58%',maintainAspectRatio:false}});
+
+let frows='';
+D.funds.forEach(f=>{
+ const isGen=f.fund==='0';
+ frows+=`<tr><td class="mono"><b>${f.fund}</b></td><td>${isGen?'<span class="badge b-navy">General / Operating</span>':'<span class="badge b-gold">Restricted / Grant</span>'}</td><td style="font-size:12.5px">${f.topDept}<br><span style="color:var(--muted);font-size:11.5px">mostly ${f.topGL}</span></td><td class="r">${fmt2(f.q1)}</td><td class="r">${fmt2(f.q2)}</td><td class="r">${fmt2(f.q3)}</td><td class="r"><b>${fmt2(f.net)}</b></td><td class="r">${(f.net/D.total*100).toFixed(1)}%</td><td class="r">${f.txns.toLocaleString()}</td></tr>`});
+document.getElementById('t-fund').innerHTML=`<thead><tr><th>Fund</th><th>Type</th><th>Inferred profile (dominant dept / account)</th><th class="r">Q1</th><th class="r">Q2</th><th class="r">Q3 (partial)</th><th class="r">FY2026 Net</th><th class="r">% of Total</th><th class="r">Txns</th></tr></thead><tbody>${frows}</tbody>
+<tfoot><tr><td colspan="6">Total — all funds</td><td class="r">${fmt2(D.total)}</td><td class="r">100.0%</td><td class="r">${D.rows.toLocaleString()}</td></tr></tfoot>`;
+
+/* ---- Vendors tab ---- */
+new Chart(document.getElementById('c-venbar'),{type:'bar',
+ data:{labels:D.vendors.map(v=>v.name),datasets:[{label:'Net paid',data:D.vendors.map(v=>v.net),
+  backgroundColor:D.vendors.map((v,i)=>i%2?NAVY2:NAVY),borderRadius:3}]},
+ options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt2(c.raw)}}},
+  scales:{x:{ticks:{callback:v=>'$'+(v/1e3).toFixed(0)+'K'},grid:{color:'#eceef6'}},y:{grid:{display:false},ticks:{font:{size:11.5}}}},maintainAspectRatio:false}});
+
+let vrows='';
+D.vendors.forEach((v,i)=>{vrows+=`<tr><td class="mono">${i+1}</td><td><b>${v.name}</b></td><td>${v.topGL}</td><td class="r">${v.txns.toLocaleString()}</td><td class="r"><b>${fmt2(v.net)}</b></td><td class="r">${(v.net/D.total*100).toFixed(2)}%</td></tr>`});
+document.getElementById('t-ven').innerHTML=`<thead><tr><th>#</th><th>Vendor / Payee</th><th>Primary expense account</th><th class="r">Txns</th><th class="r">Net Paid FY2026</th><th class="r">% of Total Spend</th></tr></thead><tbody>${vrows}</tbody>`;
+
+/* ---- Data quality tab ---- */
+document.getElementById('dqlist').innerHTML=D.dq.map(f=>`
+ <div class="dqcard"><span class="dqsev sev-${f.sev}">${f.sev==='pass'?'passed':f.sev}</span>
+ <div><h4>${f.title}</h4><p>${f.detail}</p><div class="dqamt">${f.amount}</div></div></div>`).join('');
+
+/* ================= QUARTER DRILL-DOWN ================= */
+const QMETA={Q1:{name:'Quarter 1',period:'October 1 – December 31, 2025',partial:false},
+ Q2:{name:'Quarter 2',period:'January 1 – March 31, 2026',partial:false},
+ Q3:{name:'Quarter 3',period:'April 1 – June 25, 2026 (partial)',partial:true}};
+let qmChart=null;
+const qbg=document.getElementById('qmodalbg');
+
+function openQuarter(Q){
+ const d=D.qdetail[Q], m=QMETA[Q];
+ document.getElementById('qmtitle').textContent=m.name+' — FY2026';
+ document.getElementById('qmsub').textContent=m.period+' · '+d.txns.toLocaleString()+' transactions';
+ document.getElementById('qmnet').textContent=fmt(d.net);
+ document.getElementById('qmshare').textContent=(d.net/D.total*100).toFixed(1)+'% of FY2026 YTD';
+ document.getElementById('qpartialnote').classList.toggle('show',m.partial);
+ document.getElementById('qm-txn').textContent=d.txns.toLocaleString();
+ document.getElementById('qm-pay').textContent=fmt(d.payroll);
+ document.getElementById('qm-gen').textContent=fmt(d.gen);
+ document.getElementById('qm-res').textContent=fmt(d.res);
+
+ document.getElementById('qm-months').innerHTML='<thead><tr><th>Month</th><th class="r">Net Expenditure</th><th class="r">Txns</th><th class="r">% of Qtr</th></tr></thead><tbody>'+
+  d.months.map(x=>`<tr><td>${x.label}${m.partial&&x.label.startsWith('June')?' <span class="badge b-part">thru Jun 25</span>':''}</td><td class="r">${fmt2(x.net)}</td><td class="r">${x.txns.toLocaleString()}</td><td class="r">${(x.net/d.net*100).toFixed(1)}%</td></tr>`).join('')+'</tbody>';
+
+ document.getElementById('qm-cat').innerHTML='<thead><tr><th>#</th><th>GL Account</th><th class="r">Net</th><th class="r">% of Qtr</th></tr></thead><tbody>'+
+  d.topGL.map((x,i)=>`<tr><td class="mono">${i+1}</td><td>${x.title}</td><td class="r">${fmt2(x.net)}</td><td class="r">${(x.net/d.net*100).toFixed(1)}%</td></tr>`).join('')+'</tbody>';
+
+ document.getElementById('qm-dep').innerHTML='<thead><tr><th>#</th><th>Department</th><th class="r">Net</th><th class="r">% of Qtr</th></tr></thead><tbody>'+
+  d.topDept.map((x,i)=>`<tr><td class="mono">${i+1}</td><td>${x.title}</td><td class="r">${fmt2(x.net)}</td><td class="r">${(x.net/d.net*100).toFixed(1)}%</td></tr>`).join('')+'</tbody>';
+
+ document.getElementById('qm-ven').innerHTML='<thead><tr><th>#</th><th>Vendor / Payee</th><th class="r">Net Paid</th></tr></thead><tbody>'+
+  d.topVen.map((x,i)=>`<tr><td class="mono">${i+1}</td><td>${x.name}</td><td class="r">${fmt2(x.net)}</td></tr>`).join('')+'</tbody>';
+
+ if(qmChart)qmChart.destroy();
+ qmChart=new Chart(document.getElementById('qm-chart'),{type:'bar',
+  data:{labels:d.groups.map(g=>g.name),datasets:[{data:d.groups.map(g=>g.net),
+   backgroundColor:d.groups.map((g,i)=>i===0?GOLD:(i%2?NAVY2:NAVY)),borderRadius:3}]},
+  options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt2(c.raw)}}},
+   scales:{x:{ticks:{callback:v=>'$'+(Math.abs(v)>=1e6?(v/1e6).toFixed(1)+'M':(v/1e3).toFixed(0)+'K')},grid:{color:'#eceef6'}},
+    y:{grid:{display:false},ticks:{font:{size:10.5}}}},maintainAspectRatio:false}});
+
+ qbg.querySelectorAll('.qmtab').forEach((t,i)=>t.classList.toggle('active',i===0));
+ qbg.querySelectorAll('.qpanel').forEach((p,i)=>p.classList.toggle('active',i===0));
+ qbg.classList.add('open');qbg.setAttribute('aria-hidden','false');
+ document.getElementById('qclose').focus();
+}
+function closeQuarter(){qbg.classList.remove('open');qbg.setAttribute('aria-hidden','true');}
+document.getElementById('qclose').addEventListener('click',closeQuarter);
+qbg.addEventListener('click',e=>{if(e.target===qbg)closeQuarter()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeQuarter()});
+qbg.querySelectorAll('.qmtab').forEach(t=>t.addEventListener('click',()=>{
+ qbg.querySelectorAll('.qmtab').forEach(x=>x.classList.remove('active'));
+ qbg.querySelectorAll('.qpanel').forEach(x=>x.classList.remove('active'));
+ t.classList.add('active');document.getElementById('qp-'+t.dataset.qp).classList.add('active');}));
+
+document.querySelectorAll('.clickq').forEach(el=>{
+ el.addEventListener('click',()=>openQuarter(el.dataset.q));
+ el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openQuarter(el.dataset.q)}});});
+
+/* clickable quarterly bar chart + summary rows */
+qBarChart.options.onClick=(e,els)=>{if(els.length)openQuarter(['Q1','Q2','Q3'][els[0].index])};
+qBarChart.options.onHover=(e,els)=>{e.native.target.style.cursor=els.length?'pointer':'default'};
+qBarChart.update();
+document.querySelectorAll('#t-quarter tbody tr').forEach((tr,i)=>{
+ tr.style.cursor='pointer';tr.title='Click for Q'+(i+1)+' details';
+ tr.addEventListener('click',()=>openQuarter('Q'+(i+1)));});
+
+</script>
+</body>
+</html>
