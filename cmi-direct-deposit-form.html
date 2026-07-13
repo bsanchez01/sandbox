@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMI Payroll Direct Deposit Form</title>
+<style>
+  :root{
+    --cmi-blue:#1a2a7a;
+    --cmi-blue-dark:#101c5c;
+    --ink:#111;
+    --red:#e00000;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Times New Roman", Times, serif;
+    background:#e8eaf0;
+    color:var(--ink);
+  }
+
+  /* ---------- Toolbar (screen only) ---------- */
+  .toolbar{
+    position:sticky;top:0;z-index:10;
+    background:#fff;border-bottom:1px solid #ccc;
+    padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+    font-family:Arial, Helvetica, sans-serif;
+  }
+  .toolbar .hint{color:#555;font-size:13px;margin-left:auto;}
+  button{
+    font-family:Arial, Helvetica, sans-serif;
+    font-size:14px;padding:8px 16px;border-radius:4px;cursor:pointer;
+    border:1px solid var(--cmi-blue);
+  }
+  .btn-primary{background:var(--cmi-blue);color:#fff;}
+  .btn-primary:hover{background:var(--cmi-blue-dark);}
+  .btn-secondary{background:#fff;color:var(--cmi-blue);}
+  .btn-secondary:hover{background:#eef0fa;}
+  button:focus-visible{outline:3px solid #7a8be0;outline-offset:2px;}
+
+  /* ---------- Page ---------- */
+  .page{
+    width:8.5in;max-width:100%;
+    margin:24px auto;background:#fff;
+    box-shadow:0 2px 12px rgba(0,0,0,.18);
+    min-height:11in;
+  }
+
+  /* ---------- Letterhead ---------- */
+  .letterhead{
+    background:linear-gradient(180deg,var(--cmi-blue) 0%,var(--cmi-blue-dark) 100%);
+    color:#fff;padding:22px 32px 34px;
+    position:relative;
+  }
+  .letterhead-row{display:flex;align-items:flex-start;gap:18px;}
+  .seal{
+    width:70px;height:70px;border-radius:50%;
+    border:2px solid #fff;flex:none;
+    display:flex;align-items:center;justify-content:center;
+    font-size:9px;text-align:center;line-height:1.2;
+    font-family:Arial, Helvetica, sans-serif;letter-spacing:.5px;
+    padding:6px;
+  }
+  .wordmark{
+    font-family:Arial, Helvetica, sans-serif;
+    font-weight:900;font-size:54px;letter-spacing:2px;line-height:1;
+    flex:none;
+  }
+  .wordmark small{
+    display:block;font-size:9.5px;font-weight:700;letter-spacing:2.4px;margin-top:4px;
+  }
+  .divider{width:2px;background:#fff;align-self:stretch;flex:none;}
+  .inst{font-family:Arial, Helvetica, sans-serif;flex:1;min-width:0;}
+  .inst h1{margin:0;font-size:19px;font-weight:700;}
+  .inst .accred{font-size:9.5px;margin:2px 0 10px;}
+  .inst .contact{display:flex;justify-content:space-between;gap:16px;font-size:10px;line-height:1.5;flex-wrap:wrap;}
+  .swoosh{
+    height:26px;background:#fff;
+    border-top-left-radius:100% 52px;
+  }
+
+  /* ---------- Body ---------- */
+  .form-body{padding:10px 56px 40px;}
+  h2.form-title{
+    text-align:center;font-size:17px;letter-spacing:.3px;
+    text-decoration:underline;margin:18px 0 22px;
+  }
+  p{font-size:15.5px;line-height:1.7;}
+
+  .field-line{display:flex;align-items:flex-end;gap:6px;flex-wrap:wrap;margin:26px 0 4px;font-size:15.5px;}
+  .fill{
+    border:none;border-bottom:1.5px solid var(--ink);
+    font:inherit;font-size:15.5px;padding:2px 6px;background:transparent;
+  }
+  .fill:focus{outline:2px solid #b9c3f0;border-bottom-color:var(--cmi-blue);}
+  #fullName{width:330px;text-align:center;}
+  .under-label{font-size:14px;margin:0 0 0 40px;}
+  .under-label.center{text-align:center;margin:2px 0 0;}
+
+  .section-label{font-size:15.5px;margin:26px 0 10px;}
+  .check-group{margin-left:110px;}
+  .check-row{display:flex;align-items:center;gap:12px;margin:10px 0;font-size:15.5px;}
+  .check-row input[type="checkbox"]{
+    width:20px;height:20px;margin:0;accent-color:var(--cmi-blue);cursor:pointer;
+  }
+  .check-row label{cursor:pointer;}
+  .check-group.tight{margin-left:0;}
+  .acct-type{display:flex;align-items:flex-start;gap:18px;margin-top:30px;}
+  .acct-type .section-label{margin:0;padding-top:2px;}
+  .acct-type .check-row{margin:2px 0 8px;}
+  .acct-type .check-row input[type="checkbox"]{width:16px;height:16px;}
+
+  /* Account number boxes */
+  .acct-wrap{margin:18px 0 4px;}
+  .acct-lead{font-size:15.5px;margin:0 0 8px;}
+  .acct-boxes{display:flex;justify-content:center;}
+  .acct-boxes input{
+    width:36px;height:44px;text-align:center;
+    font:inherit;font-size:20px;
+    border:1.5px solid var(--ink);border-right:none;
+    background:transparent;
+  }
+  .acct-boxes input:last-child{border-right:1.5px solid var(--ink);}
+  .acct-boxes input:focus{outline:none;background:#eef1fb;}
+
+  /* Signature row */
+  .sig-row{display:flex;gap:40px;margin-top:48px;align-items:flex-end;flex-wrap:wrap;}
+  .sig-col{flex:1.3;min-width:300px;}
+  .sig-tools{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:6px;font-family:Arial, Helvetica, sans-serif;
+  }
+  .sig-tabs{display:flex;gap:4px;}
+  .sig-tab{
+    font-size:12px;padding:4px 12px;border-radius:3px;
+    border:1px solid #aab;background:#fff;color:#334;cursor:pointer;
+  }
+  .sig-tab.active{background:var(--cmi-blue);border-color:var(--cmi-blue);color:#fff;}
+  .sig-clear{
+    font-size:12px;padding:4px 10px;border-radius:3px;
+    border:1px solid #c99;background:#fff;color:#a33;cursor:pointer;
+  }
+  .sig-clear:hover{background:#fdf0f0;}
+  .sig-area{
+    display:flex;gap:10px;align-items:flex-end;
+    border-bottom:1.5px solid var(--ink);padding-bottom:2px;
+  }
+  #sigCanvas{
+    flex:1;width:100%;height:70px;min-width:0;
+    background:#fafbff;border:1px dashed #b8c0dd;border-radius:3px;
+    cursor:crosshair;touch-action:none;display:block;
+  }
+  .sig-typed{
+    flex:1;min-width:0;border:none;background:#fafbff;
+    border-radius:3px;border:1px dashed #b8c0dd;
+    font-family:"Brush Script MT","Segoe Script","Lucida Handwriting",cursive;
+    font-size:30px;padding:14px 10px 8px;color:#101c5c;
+  }
+  .sig-typed:focus{outline:2px solid #b9c3f0;}
+  .sig-date{width:100px;border-bottom:none;flex:none;}
+  .sig-caption{display:flex;font-size:14.5px;margin-top:4px;justify-content:space-between;max-width:100%;}
+  .sig-caption span:last-child{margin-right:20px;}
+  .email-col{flex:1;min-width:260px;}
+  .email-line{display:flex;align-items:flex-end;gap:2px;}
+  #emailUser{flex:1;text-align:right;}
+  .email-caption{font-size:14.5px;margin-top:4px;}
+
+  .notice{
+    color:var(--red);font-weight:bold;font-size:15px;line-height:1.5;
+    margin-top:56px;
+  }
+  .notice a{color:var(--red);}
+  .confidential{
+    border-top:2.5px solid var(--ink);
+    margin-top:18px;padding-top:8px;
+    font-weight:bold;font-size:12.5px;
+  }
+
+  /* ---------- Print ---------- */
+  @media print{
+    @page{size:letter;margin:0;}
+    body{background:#fff;}
+    .toolbar{display:none;}
+    .page{margin:0;box-shadow:none;width:100%;min-height:auto;}
+    .letterhead,.swoosh,.seal,.acct-boxes input:focus{
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;
+    }
+    .fill:focus,.acct-boxes input:focus{outline:none;background:transparent;}
+    .sig-tools{display:none;}
+    #sigCanvas,.sig-typed{background:transparent;border:none;border-radius:0;}
+  }
+
+  @media (max-width:700px){
+    .form-body{padding:10px 20px 30px;}
+    .wordmark{font-size:36px;}
+    .check-group{margin-left:20px;}
+    #fullName{width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button type="button" class="btn-primary" onclick="window.print()">Save / Print as PDF</button>
+  <button type="button" class="btn-secondary" onclick="clearForm()">Clear form</button>
+  <span class="hint">Fill out the form, then choose "Save as PDF" as the printer destination.</span>
+</div>
+
+<div class="page">
+
+  <!-- Letterhead -->
+  <header class="letterhead">
+    <div class="letterhead-row">
+      <div class="seal">COLLEGE OF THE MARSHALL ISLANDS &middot; 1993</div>
+      <div class="wordmark">CMI<small>COLLEGE OF THE MARSHALL ISLANDS</small></div>
+      <div class="divider"></div>
+      <div class="inst">
+        <h1>College of the Marshall Islands</h1>
+        <div class="accred">Accredited by the Western Association of Schools and Colleges</div>
+        <div class="contact">
+          <div>
+            P.O. Box 1258<br>
+            Uliga Campus<br>
+            Majuro, Marshall Islands, MH 96960
+          </div>
+          <div>
+            Tel: (692) 625-3394/3291/4931<br>
+            Fax: (692) 625-7203<br>
+            Email: bo@cmi.edu
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+  <div class="swoosh"></div>
+
+  <!-- Form body -->
+  <main class="form-body">
+    <h2 class="form-title">CMI PAYROLL DIRECT DEPOSIT FORM</h2>
+
+    <p>I certify that the information I provided below is correct and my payroll check will directly
+    deposit into my personal bank account listed below.</p>
+
+    <div class="field-line">
+      <span>I,</span>
+      <input type="text" id="fullName" class="fill" aria-label="Full name" autocomplete="name">
+      <span>wish to be on CMI Direct Deposit program,</span>
+    </div>
+    <div class="under-label" style="margin-left:120px;">Full Name</div>
+
+    <div class="section-label">Check box for the bank name</div>
+    <div class="check-group">
+      <div class="check-row">
+        <input type="checkbox" id="bankGuam" name="bank" value="BANK OF GUAM">
+        <label for="bankGuam">BANK OF GUAM</label>
+      </div>
+      <div class="check-row">
+        <input type="checkbox" id="bankMarshall" name="bank" value="BANK OF THE MARSHALL ISLANDS">
+        <label for="bankMarshall">BANK OF THE MARSHALL ISLANDS</label>
+      </div>
+    </div>
+
+    <div class="acct-wrap">
+      <p class="acct-lead">and number is</p>
+      <div class="acct-boxes" id="acctBoxes" role="group" aria-label="Account number, 10 digits">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="Account digit 1">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="Account digit 2">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="Account digit 3">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="Account digit 4">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="Account digit 5">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="Account digit 6">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="Account digit 7">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="Account digit 8">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="Account digit 9">
+        <input type="text" inputmode="numeric" maxlength="1" aria-label="Account digit 10">
+      </div>
+      <div class="under-label center">Account Number</div>
+    </div>
+
+    <div class="acct-type">
+      <div class="section-label">Please select one</div>
+      <div class="check-group tight">
+        <div class="check-row">
+          <input type="checkbox" id="saving" name="acctType" value="Saving Account">
+          <label for="saving">Saving Account</label>
+        </div>
+        <div class="check-row">
+          <input type="checkbox" id="checking" name="acctType" value="Checking Account">
+          <label for="checking">Checking Account</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="sig-row">
+      <div class="sig-col">
+        <div class="sig-tools">
+          <div class="sig-tabs" role="tablist" aria-label="Signature method">
+            <button type="button" id="tabDraw" class="sig-tab active" onclick="setSigMode('draw')">Draw</button>
+            <button type="button" id="tabType" class="sig-tab" onclick="setSigMode('type')">Type</button>
+          </div>
+          <button type="button" class="sig-clear" onclick="clearSignature()">Clear signature</button>
+        </div>
+        <div class="sig-area">
+          <canvas id="sigCanvas" width="640" height="130" aria-label="Draw your signature here"></canvas>
+          <input type="text" id="sigTyped" class="sig-typed" aria-label="Type your signature" placeholder="Type your name" hidden>
+          <input type="text" id="sigDate" class="fill sig-date" aria-label="Date">
+        </div>
+        <div class="sig-caption"><span>Signature of the Requestor</span><span>Date</span></div>
+      </div>
+      <div class="email-col">
+        <div class="email-line">
+          <input type="text" id="emailUser" class="fill" aria-label="Requestor email address (before @cmi.edu)">
+          <span>@cmi.edu</span>
+        </div>
+        <div class="email-caption">Requestor email address</div>
+      </div>
+    </div>
+
+    <div class="notice">
+      THIS FORM NEEDS TO BE EMAILED TO THE BUSINESS OFFICE AT
+      <a href="mailto:businessoffice@cmi.edu">businessoffice@cmi.edu</a>.
+      WE DO NOT ACCEPT HARD COPY OF THIS FORM, ONLY THROUGH EMAIL.
+    </div>
+
+    <div class="confidential">
+      **ACCOUNT INFORMATION GIVEN ABOVE WOULD BE TREATED IN STRICTEST CONFIDENTIALITY**
+    </div>
+  </main>
+</div>
+
+<script>
+  // Account number boxes: digits only, auto-advance, backspace navigation, paste support
+  const boxes = Array.from(document.querySelectorAll('#acctBoxes input'));
+
+  boxes.forEach((box, i) => {
+    box.addEventListener('input', () => {
+      box.value = box.value.replace(/\D/g, '').slice(0, 1);
+      if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
+    });
+
+    box.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !box.value && i > 0) {
+        boxes[i - 1].focus();
+        boxes[i - 1].value = '';
+        e.preventDefault();
+      } else if (e.key === 'ArrowLeft' && i > 0) {
+        boxes[i - 1].focus(); e.preventDefault();
+      } else if (e.key === 'ArrowRight' && i < boxes.length - 1) {
+        boxes[i + 1].focus(); e.preventDefault();
+      }
+    });
+
+    box.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const digits = (e.clipboardData.getData('text') || '').replace(/\D/g, '');
+      let j = i;
+      for (const d of digits) {
+        if (j >= boxes.length) break;
+        boxes[j].value = d;
+        j++;
+      }
+      boxes[Math.min(j, boxes.length - 1)].focus();
+    });
+  });
+
+  // Mutually exclusive checkbox pairs (kept as checkboxes to match the paper form)
+  function exclusive(idA, idB) {
+    const a = document.getElementById(idA), b = document.getElementById(idB);
+    a.addEventListener('change', () => { if (a.checked) b.checked = false; });
+    b.addEventListener('change', () => { if (b.checked) a.checked = false; });
+  }
+  exclusive('bankGuam', 'bankMarshall');
+  exclusive('saving', 'checking');
+
+  // Default today's date into the date field (editable)
+  const d = new Date();
+  document.getElementById('sigDate').value =
+    String(d.getMonth() + 1).padStart(2, '0') + '/' +
+    String(d.getDate()).padStart(2, '0') + '/' + d.getFullYear();
+
+  // ---------- Electronic signature ----------
+  const canvas = document.getElementById('sigCanvas');
+  const ctx = canvas.getContext('2d');
+  const sigTyped = document.getElementById('sigTyped');
+  let drawing = false, lastX = 0, lastY = 0, sigMode = 'draw';
+
+  // Keep the drawing buffer matched to the displayed size (crisp on retina, correct after resize)
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0) return;
+    const dpr = window.devicePixelRatio || 1;
+    // preserve existing drawing across resize
+    const prev = document.createElement('canvas');
+    prev.width = canvas.width; prev.height = canvas.height;
+    prev.getContext('2d').drawImage(canvas, 0, 0);
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.drawImage(prev, 0, 0, prev.width, prev.height, 0, 0, rect.width, rect.height);
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#101c5c';
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  function pos(e) {
+    const rect = canvas.getBoundingClientRect();
+    return [e.clientX - rect.left, e.clientY - rect.top];
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    canvas.setPointerCapture(e.pointerId);
+    drawing = true;
+    [lastX, lastY] = pos(e);
+    // dot for single taps
+    ctx.beginPath();
+    ctx.arc(lastX, lastY, 1, 0, Math.PI * 2);
+    ctx.fillStyle = '#101c5c';
+    ctx.fill();
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (!drawing) return;
+    const [x, y] = pos(e);
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+    [lastX, lastY] = [x, y];
+  });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev =>
+    canvas.addEventListener(ev, () => { drawing = false; })
+  );
+
+  function setSigMode(mode) {
+    sigMode = mode;
+    const isDraw = mode === 'draw';
+    canvas.hidden = !isDraw;
+    sigTyped.hidden = isDraw;
+    document.getElementById('tabDraw').classList.toggle('active', isDraw);
+    document.getElementById('tabType').classList.toggle('active', !isDraw);
+    if (isDraw) {
+      resizeCanvas();
+    } else {
+      // pre-fill typed signature from full name if empty
+      if (!sigTyped.value) sigTyped.value = document.getElementById('fullName').value;
+      sigTyped.focus();
+    }
+  }
+
+  function clearSignature() {
+    if (sigMode === 'draw') {
+      const rect = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, rect.width, rect.height);
+    } else {
+      sigTyped.value = '';
+      sigTyped.focus();
+    }
+  }
+
+  function clearForm() {
+    document.querySelectorAll('input[type="text"]').forEach(el => el.value = '');
+    document.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+    const rect = canvas.getBoundingClientRect();
+    ctx.clearRect(0, 0, rect.width, rect.height);
+    document.getElementById('fullName').focus();
+  }
+</script>
+</body>
+</html>
