@@ -146,35 +146,121 @@ function keyFor(row, includeSession) {
   return parts.join('~~');
 }
 
-async function readWorkbook(file) {
-  const buf = await file.arrayBuffer();
-  try { return XLSX.read(buf, { type:'array', raw:false }); }
-  catch (e) {
-    const text = await file.text();
-    return XLSX.read(text, { type:'string', raw:false });
-  }
+function normalizedHeader(v) {
+  return clean(v).replace(/\u00a0/g, ' ').toLowerCase();
 }
 
-function rowsFromWorkbook(wb) {
-  const sheetName = wb.SheetNames[0];
-  const ws = wb.Sheets[sheetName];
-  const matrix = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+function matrixToRows(matrix) {
+  const required = ['course', 'section', 'credits'];
   let headerRow = -1;
-  for (let i=0; i<matrix.length; i++) {
-    const vals = matrix[i].map(clean);
-    if (vals.includes('Course') && vals.includes('Section') && vals.includes('Credits')) { headerRow = i; break; }
+
+  for (let i = 0; i < matrix.length; i++) {
+    const vals = matrix[i].map(normalizedHeader);
+    if (required.every(h => vals.includes(h))) {
+      headerRow = i;
+      break;
+    }
   }
-  if (headerRow < 0) throw new Error('Could not find a header row containing Course, Section, and Credits.');
-  const headers = matrix[headerRow].map(clean);
-  const missing = ['Last Name','First Name','Course','Credits','Section'].filter(h => !headers.includes(h));
-  if (missing.length) throw new Error('Missing required column(s): ' + missing.join(', '));
+
+  if (headerRow < 0) {
+    const sample = matrix.slice(0, 8)
+      .map(r => r.map(clean).filter(Boolean).slice(0, 8).join(' | '))
+      .filter(Boolean)
+      .join(' / ');
+    throw new Error('Could not find a header row containing Course, Section, and Credits.' +
+      (sample ? ' Detected content: ' + sample.substring(0, 350) : ''));
+  }
+
+  const canonical = new Map(expectedHeaders.map(h => [normalizedHeader(h), h]));
+  const headers = matrix[headerRow].map(h => canonical.get(normalizedHeader(h)) || clean(h));
+  const normalizedHeaders = headers.map(normalizedHeader);
+  const missing = ['last name', 'first name', 'course', 'credits', 'section']
+    .filter(h => !normalizedHeaders.includes(h));
+
+  if (missing.length) {
+    throw new Error('Missing required column(s): ' + missing.map(h => canonical.get(h) || h).join(', '));
+  }
+
   const data = [];
-  for (let r=headerRow+1; r<matrix.length; r++) {
+  for (let r = headerRow + 1; r < matrix.length; r++) {
     const obj = {};
-    headers.forEach((h, i) => obj[h] = clean(matrix[r][i]));
+    headers.forEach((h, i) => {
+      if (h) obj[h] = clean(matrix[r][i]);
+    });
     if (clean(obj.Course) && clean(obj.Section)) data.push(obj);
   }
+
+  if (!data.length) throw new Error('The header was found, but no course-section data rows were detected.');
   return data;
+}
+
+function htmlToMatrix(htmlText) {
+  const doc = new DOMParser().parseFromString(htmlText, 'text/html');
+  const tables = [...doc.querySelectorAll('table')];
+
+  for (const table of tables) {
+    const matrix = [...table.querySelectorAll('tr')].map(tr =>
+      [...tr.querySelectorAll(':scope > th, :scope > td')].map(cell => clean(cell.textContent))
+    ).filter(row => row.length);
+
+    const hasRequiredHeader = matrix.some(row => {
+      const vals = row.map(normalizedHeader);
+      return ['course', 'section', 'credits'].every(h => vals.includes(h));
+    });
+
+    if (hasRequiredHeader) return matrix;
+  }
+
+  throw new Error('The report was recognized as HTML/MHTML, but no table contained Course, Section, and Credits.');
+}
+
+function extractHtmlFromMhtml(text) {
+  const lower = text.toLowerCase();
+  const start = lower.indexOf('<html');
+  const end = lower.lastIndexOf('</html>');
+  if (start >= 0 && end > start) return text.slice(start, end + 7);
+
+  const bodyStart = lower.indexOf('<body');
+  const bodyEnd = lower.lastIndexOf('</body>');
+  if (bodyStart >= 0 && bodyEnd > bodyStart) {
+    return '<html>' + text.slice(bodyStart, bodyEnd + 7) + '</html>';
+  }
+  return '';
+}
+
+async function rowsFromFile(file) {
+  const buf = await file.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  const probe = new TextDecoder('utf-8', { fatal:false }).decode(bytes.slice(0, Math.min(bytes.length, 4096)));
+  const looksTextReport = /multipart\/related|mime-version:|<html|<table/i.test(probe);
+
+  if (looksTextReport) {
+    const text = new TextDecoder('utf-8', { fatal:false }).decode(bytes);
+    const html = extractHtmlFromMhtml(text) || text;
+    return matrixToRows(htmlToMatrix(html));
+  }
+
+  let wb;
+  try {
+    wb = XLSX.read(buf, { type:'array', raw:false });
+  } catch (binaryError) {
+    const text = new TextDecoder('utf-8', { fatal:false }).decode(bytes);
+    const html = extractHtmlFromMhtml(text);
+    if (html) return matrixToRows(htmlToMatrix(html));
+    throw binaryError;
+  }
+
+  for (const sheetName of wb.SheetNames) {
+    const ws = wb.Sheets[sheetName];
+    const matrix = XLSX.utils.sheet_to_json(ws, { header:1, defval:'', raw:false });
+    try {
+      return matrixToRows(matrix);
+    } catch (e) {
+      // Try the next worksheet. Some reports include a cover or blank first sheet.
+    }
+  }
+
+  throw new Error('Could not find a worksheet header row containing Course, Section, and Credits.');
 }
 
 function combineRows(rows, includeSession) {
@@ -227,8 +313,7 @@ async function processFile() {
   try {
     if (!selectedFile) return;
     showStatus('Processing...', false);
-    const wb = await readWorkbook(selectedFile);
-    const raw = rowsFromWorkbook(wb);
+    const raw = await rowsFromFile(selectedFile);
     const includeSession = document.getElementById('includeSession').checked;
     const dedupe = document.getElementById('dedupeFacultyCredits').checked;
     const combined = combineRows(raw, includeSession);
