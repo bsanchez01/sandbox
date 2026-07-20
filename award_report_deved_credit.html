@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CMI Developmental Education Course and Financial Aid Award Report">
+  <title>CMI Developmental Education Course &amp; Award Report</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <noscript>This application requires JavaScript to run.</noscript>
+
+  <script type="text/babel">
+    const { useState, useMemo, useCallback, useRef } = React;
+/* ------------------------------------------------------------------ */
+/*  Data pipeline — mirrors fao1_dev_course_award.py                   */
+/* ------------------------------------------------------------------ */
+
+const COURSE_REQUIRED = ["Soc Sec", "First Name", "Last Name", "Course", "Credits"];
+const AWARD_REQUIRED = ["SONIS_ID", "AMOUNT2"];
+
+const stripBom = (s) => (s ? s.replace(/^\uFEFF/, "") : s);
+const trim = (v) => (v == null ? "" : String(v).trim());
+
+function parseCsvFile(file) {
+  return new Promise((resolve, reject) => {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: "greedy",
+      transformHeader: (h) => stripBom(trim(h)),
+      complete: (res) => resolve(res.data),
+      error: (err) => reject(err),
+    });
+  });
+}
+
+function requireColumns(rows, required, sourceName) {
+  if (!rows.length) throw new Error(`${sourceName} contains no data rows.`);
+  const cols = Object.keys(rows[0]);
+  const missing = required.filter((c) => !cols.includes(c));
+  if (missing.length)
+    throw new Error(`${sourceName} is missing required column(s): ${missing.join(", ")}`);
+}
+
+function toNumber(v) {
+  const s = trim(v).replace(/,/g, "");
+  if (s === "") return null;
+  const n = Number(s);
+  return Number.isFinite(n) ? n : NaN; // NaN = invalid (was non-blank)
+}
+
+function buildReport(courseRows, awardRows) {
+  requireColumns(courseRows, COURSE_REQUIRED, "DevED courses file");
+  requireColumns(awardRows, AWARD_REQUIRED, "FAAwards file");
+
+  const warnings = [];
+
+  // ---- clean courses ----
+  let invalidCredits = 0;
+  const courses = courseRows.map((r) => {
+    let credits = toNumber(r["Credits"]);
+    if (Number.isNaN(credits)) {
+      invalidCredits += 1;
+      credits = null;
+    }
+    return {
+      socSec: trim(r["Soc Sec"]),
+      firstName: trim(r["First Name"]),
+      lastName: trim(r["Last Name"]),
+      course: trim(r["Course"]),
+      credits,
+      schYr: trim(r["Sch Yr"]),
+      semester: trim(r["Semester"]),
+    };
+  });
+  if (invalidCredits)
+    warnings.push(`${invalidCredits} invalid Credits value(s) were set to blank.`);
+
+  // ---- clean awards ----
+  let invalidAmounts = 0;
+  const awards = awardRows.map((r) => {
+    let amount = toNumber(r["AMOUNT2"]);
+    if (Number.isNaN(amount)) {
+      invalidAmounts += 1;
+      amount = null;
+    }
+    return { sonisId: trim(r["SONIS_ID"]), amount };
+  });
+  if (invalidAmounts)
+    warnings.push(`${invalidAmounts} invalid AMOUNT2 value(s) were set to blank.`);
+
+  // ---- aggregate courses by Soc Sec ----
+  const courseMap = new Map();
+  for (const c of courses) {
+    if (!courseMap.has(c.socSec)) {
+      courseMap.set(c.socSec, {
+        socSec: c.socSec,
+        firstName: c.firstName,
+        lastName: c.lastName,
+        courseSet: new Set(),
+        totalCredits: 0,
+      });
+    }
+    const g = courseMap.get(c.socSec);
+    if (c.course) g.courseSet.add(c.course);
+    if (c.credits != null) g.totalCredits += c.credits;
+  }
+  const courseSummary = [...courseMap.values()].map((g) => ({
+    ...g,
+    courses: [...g.courseSet].sort().join(", "),
+  }));
+
+  // ---- aggregate awards by SONIS_ID (min_count=1: null if all blank) ----
+  const awardMap = new Map();
+  for (const a of awards) {
+    if (!awardMap.has(a.sonisId)) awardMap.set(a.sonisId, { sum: 0, count: 0 });
+    const g = awardMap.get(a.sonisId);
+    if (a.amount != null) {
+      g.sum += a.amount;
+      g.count += 1;
+    }
+  }
+  const awardSummary = [...awardMap.entries()].map(([id, g]) => ({
+    socSec: id,
+    amount: g.count > 0 ? g.sum : null,
+  }));
+  const awardLookup = new Map(awardSummary.map((a) => [a.socSec, a.amount]));
+
+  // ---- final merge (left join courses -> awards) ----
+  const finalData = courseSummary.map((c) => ({
+    socSec: c.socSec,
+    firstName: c.firstName,
+    lastName: c.lastName,
+    totalUsedDevCredits: c.totalCredits,
+    amountX: null,
+    amountY: awardLookup.has(c.socSec) ? awardLookup.get(c.socSec) : null,
+    courses: c.courses,
+    totalCourseCredits: c.totalCredits,
+  }));
+
+  const courseDetail = courses.map((c) => ({
+    socSec: c.socSec,
+    firstName: c.firstName,
+    lastName: c.lastName,
+    schYr: c.schYr,
+    semester: c.semester,
+    course: c.course,
+    creditsInCourse: c.credits,
+  }));
+
+  const matched = finalData.filter((r) => r.amountY != null).length;
+  const stats = {
+    students: finalData.length,
+    courseRows: courseDetail.length,
+    awardees: awardSummary.length,
+    matched,
+    totalCredits: finalData.reduce((s, r) => s + (r.totalCourseCredits || 0), 0),
+    totalAwarded: finalData.reduce((s, r) => s + (r.amountY || 0), 0),
+  };
+
+  return { finalData, awardSummary, courseDetail, warnings, stats };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Formatting + export helpers                                        */
+/* ------------------------------------------------------------------ */
+
+const fmt = (v) =>
+  v == null
+    ? ""
+    : Number(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+function exportExcel(report) {
+  const wb = XLSX.utils.book_new();
+
+  const finalRows = report.finalData.map((r) => ({
+    SocSec: r.socSec,
+    "First Name": r.firstName,
+    "Last Name": r.lastName,
+    "Total Used Development Credits (All Years)": r.totalUsedDevCredits,
+    Amount_x: r.amountX,
+    Amount_y: r.amountY,
+    Courses: r.courses,
+    "Total Course Credits": r.totalCourseCredits,
+  }));
+  const amountRows = report.awardSummary.map((r) => ({ SocSec: r.socSec, Amount: r.amount }));
+  const detailRows = report.courseDetail.map((r) => ({
+    SocSec: r.socSec,
+    "First Name": r.firstName,
+    "Last Name": r.lastName,
+    "Sch Yr": r.schYr,
+    Semester: r.semester,
+    Course: r.course,
+    "Credits in Course": r.creditsInCourse,
+  }));
+
+  const addSheet = (rows, name) => {
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const cols = rows.length ? Object.keys(rows[0]) : [];
+    ws["!cols"] = cols.map((c) => ({
+      wch: Math.min(
+        Math.max(c.length + 2, ...rows.slice(0, 200).map((r) => String(r[c] ?? "").length + 2), 10),
+        45
+      ),
+    }));
+    ws["!autofilter"] = ws["!ref"] ? { ref: ws["!ref"] } : undefined;
+    XLSX.utils.book_append_sheet(wb, ws, name);
+  };
+
+  addSheet(finalRows, "Final Data");
+  addSheet(amountRows, "Amount");
+  addSheet(detailRows, "Course Detail");
+  XLSX.writeFile(wb, "updated_with_courses.xlsx");
+}
+
+/* ------------------------------------------------------------------ */
+/*  UI                                                                 */
+/* ------------------------------------------------------------------ */
+
+const css = `
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap');
+
+:root{
+  --cmi-navy:#003A70;
+  --cmi-blue:#005AA7;
+  --cmi-sky:#DCECF8;
+  --cmi-gold:#F4C542;
+  --cmi-gold-deep:#D8A900;
+  --cmi-white:#FFFFFF;
+  --cmi-bg:#F4F7FA;
+  --cmi-text:#172536;
+  --cmi-muted:#607184;
+  --cmi-line:#D7E0E8;
+  --cmi-success:#18794E;
+  --cmi-warning:#8A5A00;
+  --cmi-danger:#A12626;
+  --shadow:0 12px 32px rgba(0,58,112,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--cmi-bg);color:var(--cmi-text);font-family:'Source Sans 3',Arial,sans-serif;line-height:1.45}
+button,input{font:inherit}
+.app{min-height:100vh;display:flex;flex-direction:column}
+
+.topline{height:6px;background:linear-gradient(90deg,var(--cmi-gold) 0 18%,var(--cmi-blue) 18% 100%)}
+.masthead{background:linear-gradient(135deg,var(--cmi-navy) 0%,#034E8A 58%,var(--cmi-blue) 100%);color:#fff;position:relative;overflow:hidden;padding:24px 32px 28px;box-shadow:0 4px 16px rgba(0,40,80,.20)}
+.masthead::before{content:'';position:absolute;right:-120px;top:-140px;width:430px;height:430px;border:70px solid rgba(255,255,255,.06);border-radius:50%}
+.masthead::after{content:'';position:absolute;right:-90px;bottom:-70px;width:310px;height:72px;background:var(--cmi-gold);transform:rotate(-13deg);opacity:.95}
+.brandrow{width:min(1240px,100%);margin:0 auto;display:flex;align-items:center;gap:18px;position:relative;z-index:2}
+.cmi-mark{width:78px;height:78px;border-radius:50%;background:#fff;border:4px solid var(--cmi-gold);display:grid;place-items:center;box-shadow:0 6px 18px rgba(0,0,0,.18);flex:0 0 auto}
+.cmi-mark-inner{width:58px;height:58px;border-radius:50%;background:var(--cmi-navy);color:#fff;display:grid;place-items:center;text-align:center;font-family:'Montserrat',sans-serif;font-size:19px;font-weight:800;line-height:.9;letter-spacing:.04em}
+.brandtext{min-width:0}
+.org{font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--cmi-gold);margin-bottom:4px}
+.masthead h1{font-family:'Montserrat',sans-serif;font-weight:800;font-size:clamp(23px,3vw,34px);line-height:1.15;letter-spacing:-.02em}
+.masthead .sub{font-size:14px;color:rgba(255,255,255,.84);margin-top:7px;max-width:820px}
+.office-chip{margin-left:auto;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);padding:8px 12px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;backdrop-filter:blur(4px)}
+
+.wrap{width:min(1240px,100%);margin:0 auto;padding:28px 32px 64px;flex:1}
+.introcard{background:#fff;border:1px solid var(--cmi-line);border-top:5px solid var(--cmi-gold);border-radius:14px;padding:18px 20px;margin-bottom:18px;box-shadow:var(--shadow)}
+.introcard h2{font-family:'Montserrat',sans-serif;font-size:17px;color:var(--cmi-navy);margin-bottom:4px}
+.introcard p{font-size:13.5px;color:var(--cmi-muted)}
+
+.uploads{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.drop{background:var(--cmi-white);border:2px dashed #B6C6D5;border-radius:14px;padding:22px;cursor:pointer;transition:.18s ease;position:relative;box-shadow:0 5px 18px rgba(20,55,85,.06)}
+.drop:hover,.drop.over{border-color:var(--cmi-blue);background:#F3F9FE;transform:translateY(-1px)}
+.drop.loaded{border-style:solid;border-color:var(--cmi-success);background:#F5FBF8}
+.drop:focus-visible{outline:3px solid var(--cmi-gold);outline-offset:3px}
+.drop .tag{display:inline-flex;align-items:center;gap:6px;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--cmi-navy);background:var(--cmi-sky);padding:5px 9px;border-radius:999px}
+.drop h3{font-family:'Montserrat',sans-serif;font-size:17px;color:var(--cmi-navy);margin:10px 0 4px}
+.drop p{font-size:13px;color:var(--cmi-muted)}
+.drop .file{margin-top:12px;font-size:13px;font-weight:700;color:var(--cmi-success);word-break:break-word}
+.drop input{display:none}
+
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:20px;background:#fff;border:1px solid var(--cmi-line);border-radius:12px;padding:12px;box-shadow:0 4px 16px rgba(20,55,85,.05)}
+.btn{font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;border:none;border-radius:9px;padding:11px 18px;cursor:pointer;transition:.15s ease;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible{outline:3px solid var(--cmi-gold);outline-offset:2px}
+.btn.primary{background:var(--cmi-navy);color:#fff;border:1px solid var(--cmi-navy)}
+.btn.primary:hover{background:var(--cmi-blue);box-shadow:0 5px 14px rgba(0,90,167,.24)}
+.btn.primary:disabled{background:#9EB2C5;border-color:#9EB2C5;cursor:not-allowed;box-shadow:none}
+.btn.ghost{background:#fff;color:var(--cmi-navy);border:1.5px solid var(--cmi-navy)}
+.btn.ghost:hover{background:var(--cmi-sky)}
+.btn.ghost:disabled{color:#9AA8B6;border-color:#CBD4DD;cursor:not-allowed;background:#fff}
+
+.error{background:#FFF1F1;border:1px solid #E6B6B6;border-left:5px solid var(--cmi-danger);color:var(--cmi-danger);border-radius:9px;padding:12px 16px;font-size:14px;margin-bottom:16px}
+.warns{background:#FFF9E7;border:1px solid #E8D28D;border-left:5px solid var(--cmi-gold-deep);color:var(--cmi-warning);border-radius:9px;padding:12px 16px;font-size:13px;margin-bottom:16px}
+.warns li{margin-left:18px}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:22px}
+.stat{background:#fff;border:1px solid var(--cmi-line);border-top:4px solid var(--cmi-gold);border-radius:12px;padding:14px 16px;box-shadow:0 5px 16px rgba(20,55,85,.06)}
+.stat .k{font-family:'Montserrat',sans-serif;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cmi-muted)}
+.stat .v{font-family:'Montserrat',sans-serif;font-weight:800;font-size:24px;margin-top:3px;color:var(--cmi-navy);font-variant-numeric:tabular-nums}
+
+.tabs{display:flex;gap:4px;border:1px solid var(--cmi-line);border-bottom:none;background:#fff;border-radius:12px 12px 0 0;padding:8px 8px 0;overflow-x:auto}
+.tab{font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;padding:10px 16px;background:none;border:none;border-bottom:4px solid transparent;color:var(--cmi-muted);cursor:pointer;white-space:nowrap}
+.tab:hover{color:var(--cmi-blue);background:#F4F9FD}
+.tab.active{color:var(--cmi-navy);border-bottom-color:var(--cmi-gold)}
+.tab:focus-visible{outline:3px solid var(--cmi-gold);outline-offset:-3px}
+
+.tablewrap{background:#fff;border:1px solid var(--cmi-line);border-radius:0 0 12px 12px;overflow:auto;max-height:62vh;box-shadow:0 8px 24px rgba(20,55,85,.07)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+thead th{position:sticky;top:0;background:var(--cmi-navy);color:#fff;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;text-align:left;padding:11px 12px;border-bottom:3px solid var(--cmi-gold);white-space:nowrap;z-index:1}
+tbody td{padding:9px 12px;border-bottom:1px solid #E9EEF3;vertical-align:top}
+tbody tr:nth-child(even){background:#F8FBFD}
+tbody tr:hover{background:#EDF6FD}
+td.num{font-family:'Roboto Mono',monospace;font-size:12px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+td.id{font-family:'Roboto Mono',monospace;font-size:12px;white-space:nowrap}
+td.courses{min-width:260px}
+
+.empty{background:#fff;border:1px solid var(--cmi-line);border-radius:14px;padding:54px 30px;text-align:center;color:var(--cmi-muted);box-shadow:var(--shadow)}
+.empty::before{content:'CMI';display:grid;place-items:center;width:64px;height:64px;margin:0 auto 14px;border-radius:50%;background:var(--cmi-navy);border:4px solid var(--cmi-gold);color:#fff;font-family:'Montserrat',sans-serif;font-size:18px;font-weight:800}
+.empty h2{font-family:'Montserrat',sans-serif;color:var(--cmi-navy);font-size:19px;margin-bottom:6px}
+.footer{margin-top:auto;background:var(--cmi-navy);color:rgba(255,255,255,.78);text-align:center;padding:14px 20px;font-size:12px;border-top:4px solid var(--cmi-gold)}
+.footer strong{color:#fff}
+
+.printonly{display:none}
+@media(max-width:800px){
+  .masthead{padding:20px 18px 24px}.brandrow{align-items:flex-start}.cmi-mark{width:64px;height:64px}.cmi-mark-inner{width:47px;height:47px;font-size:16px}.office-chip{display:none}.wrap{padding:20px 16px 48px}.uploads{grid-template-columns:1fr}.bar .btn{flex:1 1 180px}
+}
+@media print{
+  @page{size:landscape;margin:10mm}
+  body{background:#fff}
+  .noprint,.footer,.topline{display:none!important}
+  .printonly{display:block}
+  .wrap{padding:0;width:100%}
+  .tablewrap{max-height:none;overflow:visible;border:none;border-radius:0;box-shadow:none}
+  thead th{position:static;background:var(--cmi-navy)!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;border-bottom:3px solid var(--cmi-gold)!important}
+  .print-section{page-break-after:always}
+  .print-section:last-child{page-break-after:auto}
+  .print-title{font-family:'Montserrat',sans-serif;font-size:15px;color:var(--cmi-navy);margin:14px 0 8px;border-bottom:3px solid var(--cmi-gold);padding-bottom:5px}
+  .print-head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:4px solid var(--cmi-navy);padding-bottom:8px;margin-bottom:8px}
+  .print-head h1{font-family:'Montserrat',sans-serif;font-size:18px;color:var(--cmi-navy)}
+  .print-head span{font-family:'Roboto Mono',monospace;font-size:10px;color:var(--cmi-muted)}
+  table{font-size:9.5px}
+  tbody td{padding:4px 6px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+`
+
+function Drop({ label, title, hint, file, onFile }) {
+  const inputRef = useRef(null);
+  const [over, setOver] = useState(false);
+  const handle = (f) => f && onFile(f);
+  return (
+    <div
+      className={`drop ${over ? "over" : ""} ${file ? "loaded" : ""}`}
+      role="button"
+      tabIndex={0}
+      onClick={() => inputRef.current?.click()}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && inputRef.current?.click()}
+      onDragOver={(e) => { e.preventDefault(); setOver(true); }}
+      onDragLeave={() => setOver(false)}
+      onDrop={(e) => { e.preventDefault(); setOver(false); handle(e.dataTransfer.files[0]); }}
+    >
+      <div className="tag">{label}</div>
+      <h3>{title}</h3>
+      <p>{hint}</p>
+      {file && <div className="file">✓ {file.name}</div>}
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".csv,text/csv"
+        onChange={(e) => handle(e.target.files[0])}
+      />
+    </div>
+  );
+}
+
+function ReportTable({ columns, rows }) {
+  return (
+    <table>
+      <thead>
+        <tr>{columns.map((c) => <th key={c.key}>{c.label}</th>)}</tr>
+      </thead>
+      <tbody>
+        {rows.map((r, i) => (
+          <tr key={i}>
+            {columns.map((c) => (
+              <td key={c.key} className={c.cls || ""}>
+                {c.render ? c.render(r) : r[c.key]}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+const FINAL_COLS = [
+  { key: "socSec", label: "SocSec", cls: "id" },
+  { key: "firstName", label: "First Name" },
+  { key: "lastName", label: "Last Name" },
+  { key: "totalUsedDevCredits", label: "Total Used Development Credits (All Years)", cls: "num", render: (r) => fmt(r.totalUsedDevCredits) },
+  { key: "amountX", label: "Amount_x", cls: "num", render: (r) => fmt(r.amountX) },
+  { key: "amountY", label: "Amount_y", cls: "num", render: (r) => fmt(r.amountY) },
+  { key: "courses", label: "Courses", cls: "courses" },
+  { key: "totalCourseCredits", label: "Total Course Credits", cls: "num", render: (r) => fmt(r.totalCourseCredits) },
+];
+const AMOUNT_COLS = [
+  { key: "socSec", label: "SocSec", cls: "id" },
+  { key: "amount", label: "Amount", cls: "num", render: (r) => fmt(r.amount) },
+];
+const DETAIL_COLS = [
+  { key: "socSec", label: "SocSec", cls: "id" },
+  { key: "firstName", label: "First Name" },
+  { key: "lastName", label: "Last Name" },
+  { key: "schYr", label: "Sch Yr" },
+  { key: "semester", label: "Semester" },
+  { key: "course", label: "Course" },
+  { key: "creditsInCourse", label: "Credits in Course", cls: "num", render: (r) => fmt(r.creditsInCourse) },
+];
+
+function App() {
+  const [courseFile, setCourseFile] = useState(null);
+  const [awardFile, setAwardFile] = useState(null);
+  const [report, setReport] = useState(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState("final");
+
+  const run = useCallback(async () => {
+    setError("");
+    setBusy(true);
+    try {
+      const [courseRows, awardRows] = await Promise.all([
+        parseCsvFile(courseFile),
+        parseCsvFile(awardFile),
+      ]);
+      setReport(buildReport(courseRows, awardRows));
+      setTab("final");
+    } catch (e) {
+      setReport(null);
+      setError(e.message || String(e));
+    } finally {
+      setBusy(false);
+    }
+  }, [courseFile, awardFile]);
+
+  const today = useMemo(
+    () => new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }),
+    []
+  );
+
+  const tabs = [
+    { id: "final", label: "Final Data", cols: FINAL_COLS, rows: report?.finalData },
+    { id: "amount", label: "Amount", cols: AMOUNT_COLS, rows: report?.awardSummary },
+    { id: "detail", label: "Course Detail", cols: DETAIL_COLS, rows: report?.courseDetail },
+  ];
+  const active = tabs.find((t) => t.id === tab);
+
+  return (
+    <div className="app">
+      <style>{css}</style>
+
+      <div className="topline noprint"></div>
+      <header className="masthead noprint">
+        <div className="brandrow">
+          <div className="cmi-mark" aria-hidden="true">
+            <div className="cmi-mark-inner">CMI</div>
+          </div>
+          <div className="brandtext">
+            <div className="org">College of the Marshall Islands</div>
+            <h1>Developmental Education Course &amp; Award Report</h1>
+            <div className="sub">
+              Financial Aid Office reporting tool for consolidating developmental education course usage and award information.
+            </div>
+          </div>
+          <div className="office-chip">Financial Aid Office</div>
+        </div>
+      </header>
+
+      <main className="wrap">
+        <div className="noprint">
+          <section className="introcard">
+            <h2>Generate the CMI Developmental Education Report</h2>
+            <p>Upload both source CSV files, generate the combined report, then export the results to Excel or print them as a PDF.</p>
+          </section>
+          <div className="uploads">
+            <Drop
+              label="Input 1"
+              title="DevED Courses CSV"
+              hint="Requires columns: Soc Sec, First Name, Last Name, Course, Credits"
+              file={courseFile}
+              onFile={setCourseFile}
+            />
+            <Drop
+              label="Input 2"
+              title="FAAwards CSV"
+              hint="Requires columns: SONIS_ID, AMOUNT2"
+              file={awardFile}
+              onFile={setAwardFile}
+            />
+          </div>
+
+          <div className="bar">
+            <button className="btn primary" disabled={!courseFile || !awardFile || busy} onClick={run}>
+              {busy ? "Processing…" : "Generate report"}
+            </button>
+            <button className="btn ghost" disabled={!report} onClick={() => exportExcel(report)}>
+              Export Excel (.xlsx)
+            </button>
+            <button className="btn ghost" disabled={!report} onClick={() => window.print()}>
+              Export PDF
+            </button>
+          </div>
+
+          {error && <div className="error">{error}</div>}
+          {report?.warnings.length > 0 && (
+            <div className="warns">
+              <ul>{report.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
+            </div>
+          )}
+
+          {report ? (
+            <>
+              <div className="stats">
+                <div className="stat"><div className="k">Students</div><div className="v">{report.stats.students}</div></div>
+                <div className="stat"><div className="k">Course rows</div><div className="v">{report.stats.courseRows}</div></div>
+                <div className="stat"><div className="k">Awardees</div><div className="v">{report.stats.awardees}</div></div>
+                <div className="stat"><div className="k">Matched awards</div><div className="v">{report.stats.matched}</div></div>
+                <div className="stat"><div className="k">Total credits</div><div className="v">{fmt(report.stats.totalCredits)}</div></div>
+                <div className="stat"><div className="k">Matched award total</div><div className="v">${fmt(report.stats.totalAwarded)}</div></div>
+              </div>
+
+              <div className="tabs" role="tablist">
+                {tabs.map((t) => (
+                  <button
+                    key={t.id}
+                    role="tab"
+                    aria-selected={tab === t.id}
+                    className={`tab ${tab === t.id ? "active" : ""}`}
+                    onClick={() => setTab(t.id)}
+                  >
+                    {t.label} ({t.rows?.length ?? 0})
+                  </button>
+                ))}
+              </div>
+              <div className="tablewrap">
+                <ReportTable columns={active.cols} rows={active.rows || []} />
+              </div>
+            </>
+          ) : (
+            <div className="empty">
+              <h2>No report yet</h2>
+              <p>Choose both CSV files above, then select Generate report.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Print layout: all three sheets, one per page */}
+        {report && (
+          <div className="printonly">
+            <div className="print-head">
+              <h1>Developmental Education Course &amp; Award Report</h1>
+              <span>College of the Marshall Islands · {today}</span>
+            </div>
+            {tabs.map((t) => (
+              <section className="print-section" key={t.id}>
+                <div className="print-title">{t.label}</div>
+                <ReportTable columns={t.cols} rows={t.rows || []} />
+              </section>
+            ))}
+          </div>
+        )}
+      </main>
+      <footer className="footer noprint">
+        <strong>College of the Marshall Islands</strong> · Financial Aid Office · Developmental Education Reporting System
+      </footer>
+    </div>
+  );
+}
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>
