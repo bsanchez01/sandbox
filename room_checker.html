@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Classroom Schedule Conflict Checker</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root{--navy:#11223d;--blue:#2267d8;--pale:#eef4ff;--ink:#172033;--muted:#657188;--red:#b42318;--amber:#b54708;--line:#dce3ef;--green:#087a55}
+    *{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:var(--ink);font:14px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+    header{padding:34px max(24px,calc((100vw - 1220px)/2));background:linear-gradient(120deg,var(--navy),#193c70);color:#fff}
+    header h1{margin:0 0 8px;font-size:clamp(25px,4vw,40px);letter-spacing:-.04em}header p{margin:0;color:#d9e6ff;max-width:780px}
+    main{max-width:1220px;margin:auto;padding:24px}.panel{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 28px #1f37600d;padding:20px;margin-bottom:18px}
+    .drop{display:grid;place-items:center;min-height:150px;border:2px dashed #9db4d8;border-radius:13px;background:var(--pale);text-align:center;padding:24px;cursor:pointer}.drop.drag{border-color:var(--blue);background:#e2edff}.drop strong{font-size:18px}.drop small{display:block;color:var(--muted);margin-top:5px}.drop input{display:none}
+    .status{margin-top:12px;color:var(--muted)}.status.ok{color:var(--green)}.status.err{color:var(--red)}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:17px}.stat b{font-size:27px;display:block}.stat span{color:var(--muted)}
+    .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}.toolbar input,.toolbar select,.toolbar button{border:1px solid var(--line);border-radius:9px;background:#fff;padding:10px 12px;font:inherit}.toolbar input{flex:1;min-width:220px}.toolbar button{background:var(--navy);color:#fff;border:0;cursor:pointer}.toolbar button:disabled{opacity:.45;cursor:not-allowed}
+    .tabs{display:flex;gap:8px;margin-bottom:14px}.tab{border:1px solid var(--line);border-radius:999px;padding:8px 13px;background:#fff;cursor:pointer}.tab.active{background:var(--blue);border-color:var(--blue);color:white}
+    .tablewrap{overflow:auto;border:1px solid var(--line);border-radius:12px}table{width:100%;border-collapse:collapse;min-width:980px}th{position:sticky;top:0;background:#f0f4fa;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#56637a}th,td{padding:11px;border-bottom:1px solid var(--line);vertical-align:top}tr:last-child td{border-bottom:0}.badge{display:inline-block;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:700}.room{background:#fee4e2;color:var(--red)}.course{background:#fff1da;color:var(--amber)}.empty{text-align:center;color:var(--muted);padding:40px!important}.pair{font-weight:650}.sub{color:var(--muted);font-size:12px;margin-top:3px}
+    .note{color:var(--muted);font-size:12px;margin-top:10px}@media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}main{padding:14px}header{padding:27px 20px}}
+  </style>
+</head>
+<body>
+<header><h1>Schedule Conflict Checker</h1><p>Upload an Excel course schedule to find cases where two different instructors are assigned different non-Hybrid classes in the same room at overlapping times.</p></header>
+<main>
+  <section class="panel">
+    <label class="drop" id="drop"><input id="file" type="file" accept=".xls,.xlsx,.xlsm,.csv"><div><strong>Drop an Excel file here, or click to browse</strong><small>Supports .xls, .xlsx, .xlsm, and .csv — your file stays in this browser</small></div></label>
+    <div id="status" class="status">Waiting for a schedule file.</div>
+  </section>
+  <section class="stats">
+    <div class="stat"><b id="meetingCount">0</b><span>Meeting rows</span></div><div class="stat"><b id="roomCount">0</b><span>Room conflicts</span></div><div class="stat"><b id="instructorCount">0</b><span>Instructors affected</span></div><div class="stat"><b id="issueCount">0</b><span>Total issues</span></div>
+  </section>
+  <section class="panel">
+    <div class="toolbar"><input id="search" placeholder="Search course, instructor, room, campus, or day…"><select id="day"><option value="">All days</option></select><button id="export" disabled>Export conflicts CSV</button></div>
+    <div class="tablewrap"><table><thead><tr><th>Type</th><th>Day & overlap</th><th>Room / Campus</th><th>First class</th><th>Second class</th><th>Details</th></tr></thead><tbody id="results"><tr><td colspan="6" class="empty">Upload a schedule to begin.</td></tr></tbody></table></div>
+    <div class="note">A conflict requires two named, different instructors teaching different course sections in the same campus/room at overlapping times. Hybrid meetings, duplicate rows for the same course section, and back-to-back classes are not flagged.</div>
+  </section>
+</main>
+<script>
+const $=s=>document.querySelector(s), DAY_ORDER=['MON','TUE','WED','THU','FRI','SAT','SUN'];
+let conflicts=[];
+const norm=v=>String(v??'').trim().replace(/\s+/g,' '), key=v=>norm(v).toUpperCase();
+function minutes(text){const m=norm(text).match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i);if(!m)return null;let h=+m[1]%12;if(m[3].toLowerCase()==='pm')h+=12;return h*60+(+(m[2]||0));}
+function parseMeeting(row,i){
+  const dt=norm(row['Day/Time']||row['Day Time']||row['Days/Times']||row['Meeting Time']);
+  const tm=dt.match(/(\d{1,2}(?::\d{2})?\s*(?:am|pm))\s*-\s*(\d{1,2}(?::\d{2})?\s*(?:am|pm))/i);
+  if(!tm)return null;const dayMatch=dt.toUpperCase().match(/\b(MON|TUE|WED|THU|FRI|SAT|SUN)\b/);if(!dayMatch)return null;
+  const start=minutes(tm[1]),end=minutes(tm[2]);if(start===null||end===null||end<=start)return null;
+  const hybridLabel=Object.values(row).some(v=>/\bHYBRID\b/i.test(norm(v)));
+  return {i,course:norm(row.Course),section:norm(row.Sect||row.Section),session:norm(row.Sess||row.Session),description:norm(row.Description),instructor:norm(row.Instructor),campus:norm(row.Campus),room:norm(row.Room),day:dayMatch[1],start,end,time:`${norm(tm[1])} - ${norm(tm[2])}`,hybridLabel};
+}
+function isHybridMeeting(x,roomKeys){const r=key(x.room);if(x.hybridLabel||/-H$/.test(r))return true;if(r.endsWith('H')&&roomKeys.has(r.slice(0,-1).trim()))return true;return false;}
+function classLabel(x){return [x.course,x.section&&`Sec ${x.section}`].filter(Boolean).join(' · ')||'(unnamed course)'}
+function overlapLabel(a,b){const s=Math.max(a.start,b.start),e=Math.min(a.end,b.end),fmt=n=>{let h=Math.floor(n/60),m=n%60,ap=h>=12?'pm':'am';h=h%12||12;return `${h}:${String(m).padStart(2,'0')} ${ap}`};return `${fmt(s)} – ${fmt(e)}`}
+function detect(meetings){const out=[];for(let i=0;i<meetings.length;i++)for(let j=i+1;j<meetings.length;j++){const a=meetings[i],b=meetings[j];if(a.day!==b.day||a.start>=b.end||b.start>=a.end)continue;
+    const sameSection=key(a.course)===key(b.course)&&key(a.section)===key(b.section);if(sameSection)continue;
+    const differentInstructors=a.instructor&&b.instructor&&key(a.instructor)!==key(b.instructor);if(!differentInstructors)continue;
+    const sameRoom=a.room&&b.room&&key(a.room)===key(b.room)&&key(a.campus)===key(b.campus);if(sameRoom)out.push({type:'room',a,b});
+  }return out;}
+function esc(s){return norm(s).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function render(){const q=key($('#search').value),d=$('#day').value;const rows=conflicts.filter(c=>(!d||c.a.day===d)&&(!q||key(JSON.stringify(c)).includes(q)));
+  $('#results').innerHTML=rows.length?rows.map(c=>`<tr><td><span class="badge room">Room</span></td><td><b>${c.a.day}</b><div>${overlapLabel(c.a,c.b)}</div></td><td>${esc(c.a.room||'—')}<div class="sub">${esc(c.a.campus||'Campus not listed')}</div></td><td><div class="pair">${esc(classLabel(c.a))}</div><div>${esc(c.a.time)}</div><div class="sub">${esc(c.a.description)} · ${esc(c.a.instructor)}</div></td><td><div class="pair">${esc(classLabel(c.b))}</div><div>${esc(c.b.time)}</div><div class="sub">${esc(c.b.description)} · ${esc(c.b.instructor)}</div></td><td>Different instructors, different course sections, same room, overlapping time</td></tr>`).join(''):`<tr><td colspan="6" class="empty">No conflicts match these filters.</td></tr>`;}
+function setStats(meetings){const instructors=new Set(conflicts.flatMap(x=>[key(x.a.instructor),key(x.b.instructor)]).filter(Boolean));$('#meetingCount').textContent=meetings.length;$('#roomCount').textContent=conflicts.length;$('#instructorCount').textContent=instructors.size;$('#issueCount').textContent=conflicts.length;}
+async function load(file){const status=$('#status');try{status.className='status';status.textContent=`Reading ${file.name}…`;const data=await file.arrayBuffer();const wb=XLSX.read(data,{type:'array'});let rows=[];wb.SheetNames.forEach(name=>{rows.push(...XLSX.utils.sheet_to_json(wb.Sheets[name],{defval:''}))});const allMeetings=rows.map(parseMeeting).filter(Boolean);if(!allMeetings.length)throw new Error('No valid meeting rows found. Expected columns such as Course, Sect, Campus, Room, and Day/Time.');const roomKeys=new Set(allMeetings.map(x=>key(x.room)).filter(Boolean));const hybridCount=allMeetings.filter(x=>isHybridMeeting(x,roomKeys)).length;const meetings=allMeetings.filter(x=>!isHybridMeeting(x,roomKeys));conflicts=detect(meetings);setStats(meetings);const days=[...new Set(meetings.map(x=>x.day))].sort((a,b)=>DAY_ORDER.indexOf(a)-DAY_ORDER.indexOf(b));$('#day').innerHTML='<option value="">All days</option>'+days.map(x=>`<option>${x}</option>`).join('');$('#export').disabled=!conflicts.length;status.className='status ok';status.textContent=`Analyzed ${meetings.length} non-Hybrid meeting rows from ${file.name}; excluded ${hybridCount} Hybrid rows. Found ${conflicts.length} conflicts.`;render();}catch(e){status.className='status err';status.textContent='Could not analyze file: '+e.message;conflicts=[];setStats([]);render();}}
+function csvCell(v){return '"'+norm(v).replace(/"/g,'""')+'"'}
+function exportCsv(){const head=['Type','Day','Overlap','Campus','Room','Course 1','Section 1','Time 1','Instructor 1','Course 2','Section 2','Time 2','Instructor 2'];const data=conflicts.map(c=>[c.type,c.a.day,overlapLabel(c.a,c.b),c.a.campus,c.a.room,c.a.course,c.a.section,c.a.time,c.a.instructor,c.b.course,c.b.section,c.b.time,c.b.instructor]);const blob=new Blob([[head,...data].map(r=>r.map(csvCell).join(',')).join('\r\n')],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='schedule-conflicts.csv';a.click();URL.revokeObjectURL(a.href)}
+$('#file').addEventListener('change',e=>e.target.files[0]&&load(e.target.files[0]));const drop=$('#drop');['dragenter','dragover'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.add('drag')}));['dragleave','drop'].forEach(n=>drop.addEventListener(n,e=>{e.preventDefault();drop.classList.remove('drag')}));drop.addEventListener('drop',e=>e.dataTransfer.files[0]&&load(e.dataTransfer.files[0]));$('#search').oninput=render;$('#day').onchange=render;$('#export').onclick=exportCsv;
+</script>
+</body></html>
