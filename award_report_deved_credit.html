@@ -54,6 +54,25 @@ function toNumber(v) {
   return Number.isFinite(n) ? n : NaN; // NaN = invalid (was non-blank)
 }
 
+const SEMESTER_NAMES = { "1": "Fall", "2": "Spring", "3": "Summer" };
+
+function termSortKey(schYr, semester) {
+  const year = Number(String(schYr).replace(/\D/g, "")) || 0;
+  const termOrder = { "1": 1, "2": 2, "3": 3 }[trim(semester)] || 0;
+  return year * 10 + termOrder;
+}
+
+function schoolYearLabel(schYr) {
+  const s = trim(schYr);
+  if (/^\d{6}$/.test(s)) return `${s.slice(0, 4)}-${s.slice(4)}`;
+  return s;
+}
+
+function currentTermLabel(schYr, semester) {
+  const name = SEMESTER_NAMES[trim(semester)] || `Semester ${trim(semester)}`;
+  return `${name} ${schoolYearLabel(schYr)}`;
+}
+
 function buildReport(courseRows, awardRows) {
   requireColumns(courseRows, COURSE_REQUIRED, "DevED courses file");
   requireColumns(awardRows, AWARD_REQUIRED, "FAAwards file");
@@ -153,6 +172,44 @@ function buildReport(courseRows, awardRows) {
     creditsInCourse: c.credits,
   }));
 
+  // ---- latest/current semester summary ----
+  // The newest Sch Yr + Semester found in the course file is treated as current.
+  const validTerms = courses.filter((c) => c.schYr && c.semester);
+  const latest = validTerms.reduce(
+    (best, c) => !best || termSortKey(c.schYr, c.semester) > termSortKey(best.schYr, best.semester) ? c : best,
+    null
+  );
+  const currentTerm = latest
+    ? { schYr: latest.schYr, semester: latest.semester, label: currentTermLabel(latest.schYr, latest.semester) }
+    : { schYr: "", semester: "", label: "Current Semester" };
+  const allYearLookup = new Map(courseSummary.map((r) => [r.socSec, r.totalCredits]));
+  const currentMap = new Map();
+  for (const c of courses) {
+    if (c.schYr !== currentTerm.schYr || c.semester !== currentTerm.semester) continue;
+    if (!currentMap.has(c.socSec)) {
+      currentMap.set(c.socSec, {
+        socSec: c.socSec,
+        firstName: c.firstName,
+        lastName: c.lastName,
+        courseSet: new Set(),
+        currentSemesterCredits: 0,
+      });
+    }
+    const g = currentMap.get(c.socSec);
+    if (c.course) g.courseSet.add(c.course);
+    if (c.credits != null) g.currentSemesterCredits += c.credits;
+  }
+  const currentSemester = [...currentMap.values()]
+    .map((g) => ({
+      socSec: g.socSec,
+      firstName: g.firstName,
+      lastName: g.lastName,
+      currentSemesterCourses: [...g.courseSet].sort().join(", "),
+      currentSemesterCredits: g.currentSemesterCredits,
+      allYearsCredits: allYearLookup.get(g.socSec) || 0,
+    }))
+    .sort((a, b) => a.lastName.localeCompare(b.lastName) || a.firstName.localeCompare(b.firstName));
+
   const matched = finalData.filter((r) => r.amountY != null).length;
   const stats = {
     students: finalData.length,
@@ -163,7 +220,7 @@ function buildReport(courseRows, awardRows) {
     totalAwarded: finalData.reduce((s, r) => s + (r.amountY || 0), 0),
   };
 
-  return { finalData, awardSummary, courseDetail, warnings, stats };
+  return { finalData, awardSummary, courseDetail, currentSemester, currentTerm, warnings, stats };
 }
 
 /* ------------------------------------------------------------------ */
@@ -198,6 +255,14 @@ function exportExcel(report) {
     Course: r.course,
     "Credits in Course": r.creditsInCourse,
   }));
+  const currentRows = report.currentSemester.map((r) => ({
+    SocSec: r.socSec,
+    "First Name": r.firstName,
+    "Last Name": r.lastName,
+    [`${report.currentTerm.label} Courses`]: r.currentSemesterCourses,
+    [`${report.currentTerm.label} Credits`]: r.currentSemesterCredits,
+    "Total Used Development Credits (All Years)": r.allYearsCredits,
+  }));
 
   const addSheet = (rows, name) => {
     const ws = XLSX.utils.json_to_sheet(rows);
@@ -215,6 +280,7 @@ function exportExcel(report) {
   addSheet(finalRows, "Final Data");
   addSheet(amountRows, "Amount");
   addSheet(detailRows, "Course Detail");
+  addSheet(currentRows, report.currentTerm.label.slice(0, 31));
   XLSX.writeFile(wb, "updated_with_courses.xlsx");
 }
 
@@ -416,6 +482,17 @@ const DETAIL_COLS = [
   { key: "creditsInCourse", label: "Credits in Course", cls: "num", render: (r) => fmt(r.creditsInCourse) },
 ];
 
+function currentCols(termLabel) {
+  return [
+    { key: "socSec", label: "SocSec", cls: "id" },
+    { key: "firstName", label: "First Name" },
+    { key: "lastName", label: "Last Name" },
+    { key: "currentSemesterCourses", label: `${termLabel} Courses`, cls: "courses" },
+    { key: "currentSemesterCredits", label: `${termLabel} Credits`, cls: "num", render: (r) => fmt(r.currentSemesterCredits) },
+    { key: "allYearsCredits", label: "Total Used Development Credits (All Years)", cls: "num", render: (r) => fmt(r.allYearsCredits) },
+  ];
+}
+
 function App() {
   const [courseFile, setCourseFile] = useState(null);
   const [awardFile, setAwardFile] = useState(null);
@@ -451,6 +528,7 @@ function App() {
     { id: "final", label: "Final Data", cols: FINAL_COLS, rows: report?.finalData },
     { id: "amount", label: "Amount", cols: AMOUNT_COLS, rows: report?.awardSummary },
     { id: "detail", label: "Course Detail", cols: DETAIL_COLS, rows: report?.courseDetail },
+    { id: "current", label: report?.currentTerm.label || "Current Semester", cols: currentCols(report?.currentTerm.label || "Current Semester"), rows: report?.currentSemester },
   ];
   const active = tabs.find((t) => t.id === tab);
 
@@ -553,7 +631,7 @@ function App() {
           )}
         </div>
 
-        {/* Print layout: all three sheets, one per page */}
+        {/* Print layout: all report sheets, one per page */}
         {report && (
           <div className="printonly">
             <div className="print-head">
